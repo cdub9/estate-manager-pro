@@ -15,15 +15,18 @@ import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollV
 import { AssigneePicker } from "@/components/AssigneePicker";
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
+import { CategoryPicker } from "@/components/CategoryPicker";
 import { InventoryLinkPicker } from "@/components/InventoryLinkPicker";
 import { PhotoGrid } from "@/components/PhotoGrid";
+import { RecurrencePicker } from "@/components/RecurrencePicker";
 import { StatusSegmented } from "@/components/StatusSegmented";
 import { TextField } from "@/components/TextField";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCategories } from "@/contexts/CategoriesContext";
 import { useInventory } from "@/contexts/InventoryContext";
 import { useTasks } from "@/contexts/TasksContext";
 import { useColors } from "@/hooks/useColors";
-import { TaskStatus } from "@/types";
+import { Recurrence, TaskStatus } from "@/types";
 
 const QUICK_DUE: { label: string; daysFromNow: number | null }[] = [
   { label: "None", daysFromNow: null },
@@ -63,6 +66,7 @@ export default function TaskDetailScreen() {
   const { tasks, updateTask, deleteTask } = useTasks();
   const { users } = useAuth();
   const { items } = useInventory();
+  const { categories } = useCategories();
 
   const task = tasks.find((t) => t.id === id);
 
@@ -72,6 +76,8 @@ export default function TaskDetailScreen() {
   const [assigneeId, setAssigneeId] = useState<string | null>(task?.assigneeId ?? null);
   const [photos, setPhotos] = useState<string[]>(task?.photos ?? []);
   const [inventoryIds, setInventoryIds] = useState<string[]>(task?.inventoryIds ?? []);
+  const [categoryId, setCategoryId] = useState<string | null>(task?.categoryId ?? null);
+  const [recurrence, setRecurrence] = useState<Recurrence>(task?.recurrence ?? "none");
   const [dueDays, setDueDays] = useState<number | null>(daysFromDue(task?.dueDate ?? null));
 
   useEffect(() => {
@@ -82,6 +88,8 @@ export default function TaskDetailScreen() {
     setAssigneeId(task.assigneeId);
     setPhotos(task.photos);
     setInventoryIds(task.inventoryIds);
+    setCategoryId(task.categoryId);
+    setRecurrence(task.recurrence);
     setDueDays(daysFromDue(task.dueDate));
   }, [task?.id]);
 
@@ -92,11 +100,24 @@ export default function TaskDetailScreen() {
       task.description !== description.trim() ||
       task.status !== status ||
       task.assigneeId !== assigneeId ||
+      task.categoryId !== categoryId ||
+      task.recurrence !== recurrence ||
       JSON.stringify(task.photos) !== JSON.stringify(photos) ||
       JSON.stringify(task.inventoryIds) !== JSON.stringify(inventoryIds) ||
       daysFromDue(task.dueDate) !== dueDays
     );
-  }, [task, title, description, status, assigneeId, photos, inventoryIds, dueDays]);
+  }, [
+    task,
+    title,
+    description,
+    status,
+    assigneeId,
+    categoryId,
+    recurrence,
+    photos,
+    inventoryIds,
+    dueDays,
+  ]);
 
   if (!task) {
     return (
@@ -137,6 +158,8 @@ export default function TaskDetailScreen() {
       assigneeId,
       photos,
       inventoryIds,
+      categoryId,
+      recurrence,
       dueDate: dueDateAtDays(dueDays),
     });
     router.back();
@@ -203,6 +226,17 @@ export default function TaskDetailScreen() {
 
         <View style={styles.field}>
           <Text style={[styles.label, { color: colors.foreground, fontFamily: "Inter_500Medium" }]}>
+            Category
+          </Text>
+          <CategoryPicker
+            categories={categories}
+            value={categoryId}
+            onChange={setCategoryId}
+          />
+        </View>
+
+        <View style={styles.field}>
+          <Text style={[styles.label, { color: colors.foreground, fontFamily: "Inter_500Medium" }]}>
             Due date
           </Text>
           <View style={styles.chipRow}>
@@ -234,6 +268,24 @@ export default function TaskDetailScreen() {
               );
             })}
           </View>
+        </View>
+
+        <View style={styles.field}>
+          <Text style={[styles.label, { color: colors.foreground, fontFamily: "Inter_500Medium" }]}>
+            Repeats
+          </Text>
+          <RecurrencePicker value={recurrence} onChange={setRecurrence} />
+          {recurrence !== "none" ? (
+            <Text
+              style={{
+                color: colors.mutedForeground,
+                fontFamily: "Inter_400Regular",
+                fontSize: 12,
+              }}
+            >
+              A new task will be created automatically when this one is completed.
+            </Text>
+          ) : null}
         </View>
 
         <View style={styles.field}>

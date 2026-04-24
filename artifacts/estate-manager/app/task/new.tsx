@@ -13,15 +13,18 @@ import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollV
 
 import { AssigneePicker } from "@/components/AssigneePicker";
 import { Button } from "@/components/Button";
+import { CategoryPicker } from "@/components/CategoryPicker";
 import { InventoryLinkPicker } from "@/components/InventoryLinkPicker";
 import { PhotoGrid } from "@/components/PhotoGrid";
+import { RecurrencePicker } from "@/components/RecurrencePicker";
 import { StatusSegmented } from "@/components/StatusSegmented";
 import { TextField } from "@/components/TextField";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCategories } from "@/contexts/CategoriesContext";
 import { useInventory } from "@/contexts/InventoryContext";
 import { useTasks } from "@/contexts/TasksContext";
 import { useColors } from "@/hooks/useColors";
-import { TaskStatus } from "@/types";
+import { Recurrence, TaskStatus } from "@/types";
 
 const QUICK_DUE: { label: string; daysFromNow: number | null }[] = [
   { label: "None", daysFromNow: null },
@@ -44,6 +47,7 @@ export default function NewTaskScreen() {
   const router = useRouter();
   const { users, currentUser } = useAuth();
   const { items } = useInventory();
+  const { categories } = useCategories();
   const { createTask } = useTasks();
 
   const [title, setTitle] = useState("");
@@ -54,6 +58,8 @@ export default function NewTaskScreen() {
   );
   const [photos, setPhotos] = useState<string[]>([]);
   const [inventoryIds, setInventoryIds] = useState<string[]>([]);
+  const [categoryId, setCategoryId] = useState<string | null>(null);
+  const [recurrence, setRecurrence] = useState<Recurrence>("none");
   const [dueDays, setDueDays] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -75,6 +81,8 @@ export default function NewTaskScreen() {
         dueDate: dueDateAtDays(dueDays),
         photos,
         inventoryIds,
+        categoryId,
+        recurrence,
       });
       router.back();
     } catch (e) {
@@ -134,6 +142,17 @@ export default function NewTaskScreen() {
 
       <View style={styles.field}>
         <Text style={[styles.label, { color: colors.foreground, fontFamily: "Inter_500Medium" }]}>
+          Category
+        </Text>
+        <CategoryPicker
+          categories={categories}
+          value={categoryId}
+          onChange={setCategoryId}
+        />
+      </View>
+
+      <View style={styles.field}>
+        <Text style={[styles.label, { color: colors.foreground, fontFamily: "Inter_500Medium" }]}>
           Due date
         </Text>
         <View style={styles.chipRow}>
@@ -165,6 +184,24 @@ export default function NewTaskScreen() {
             );
           })}
         </View>
+      </View>
+
+      <View style={styles.field}>
+        <Text style={[styles.label, { color: colors.foreground, fontFamily: "Inter_500Medium" }]}>
+          Repeats
+        </Text>
+        <RecurrencePicker value={recurrence} onChange={setRecurrence} />
+        {recurrence !== "none" ? (
+          <Text
+            style={{
+              color: colors.mutedForeground,
+              fontFamily: "Inter_400Regular",
+              fontSize: 12,
+            }}
+          >
+            A new task will be created automatically when this one is completed.
+          </Text>
+        ) : null}
       </View>
 
       <View style={styles.field}>

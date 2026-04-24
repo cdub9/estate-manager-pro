@@ -5,16 +5,21 @@ import React from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
+import { CategoryBadge } from "@/components/CategoryBadge";
 import { StatusPill } from "@/components/StatusPill";
 import { useColors } from "@/hooks/useColors";
-import { Task, User } from "@/types";
+import { Category, Task, User } from "@/types";
 
 interface Props {
   task: Task;
   assignee: User | null;
+  category: Category | null;
   inventoryCount: number;
   onPress: () => void;
   onToggleComplete: () => void;
+  onLongPress?: () => void;
+  isDragging?: boolean;
+  draggable?: boolean;
 }
 
 function formatDue(due: number | null): string | null {
@@ -35,9 +40,13 @@ function formatDue(due: number | null): string | null {
 export function TaskCard({
   task,
   assignee,
+  category,
   inventoryCount,
   onPress,
   onToggleComplete,
+  onLongPress,
+  isDragging,
+  draggable,
 }: Props) {
   const colors = useColors();
   const isDone = task.status === "done";
@@ -47,13 +56,20 @@ export function TaskCard({
   return (
     <Pressable
       onPress={onPress}
+      onLongPress={onLongPress}
+      delayLongPress={250}
       style={({ pressed }) => [
         styles.card,
         {
           backgroundColor: colors.card,
           borderRadius: colors.radius,
-          borderColor: colors.border,
-          opacity: pressed ? 0.92 : 1,
+          borderColor: isDragging ? colors.primary : colors.border,
+          opacity: pressed && !isDragging ? 0.92 : 1,
+          shadowOpacity: isDragging ? 0.18 : 0,
+          shadowRadius: isDragging ? 14 : 0,
+          shadowOffset: { width: 0, height: 6 },
+          elevation: isDragging ? 6 : 0,
+          transform: isDragging ? [{ scale: 1.02 }] : undefined,
         },
       ]}
     >
@@ -77,19 +93,25 @@ export function TaskCard({
       </Pressable>
 
       <View style={{ flex: 1, gap: 8 }}>
-        <Text
-          style={[
-            styles.title,
-            {
-              color: isDone ? colors.mutedForeground : colors.foreground,
-              fontFamily: "Inter_600SemiBold",
-              textDecorationLine: isDone ? "line-through" : "none",
-            },
-          ]}
-          numberOfLines={2}
-        >
-          {task.title}
-        </Text>
+        <View style={styles.titleRow}>
+          <Text
+            style={[
+              styles.title,
+              {
+                color: isDone ? colors.mutedForeground : colors.foreground,
+                fontFamily: "Inter_600SemiBold",
+                textDecorationLine: isDone ? "line-through" : "none",
+                flex: 1,
+              },
+            ]}
+            numberOfLines={2}
+          >
+            {task.title}
+          </Text>
+          {task.recurrence !== "none" ? (
+            <Feather name="repeat" size={13} color={colors.mutedForeground} />
+          ) : null}
+        </View>
         {task.description ? (
           <Text
             numberOfLines={2}
@@ -105,6 +127,7 @@ export function TaskCard({
         ) : null}
 
         <View style={styles.metaRow}>
+          {category ? <CategoryBadge category={category} /> : null}
           <StatusPill status={task.status} />
           {dueLabel ? (
             <View style={styles.metaItem}>
@@ -164,6 +187,14 @@ export function TaskCard({
           />
         ) : null}
         <Avatar user={assignee} size={28} fallbackLabel="—" />
+        {draggable ? (
+          <Feather
+            name="menu"
+            size={14}
+            color={colors.mutedForeground}
+            style={{ opacity: 0.6 }}
+          />
+        ) : null}
       </View>
     </Pressable>
   );
@@ -176,6 +207,7 @@ const styles = StyleSheet.create({
     padding: 14,
     gap: 12,
     borderWidth: 1,
+    shadowColor: "#000",
   },
   checkbox: {
     width: 24,
@@ -186,6 +218,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 2,
   },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
   title: {
     fontSize: 16,
     lineHeight: 21,
@@ -193,7 +230,7 @@ const styles = StyleSheet.create({
   metaRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 8,
     flexWrap: "wrap",
   },
   metaItem: {

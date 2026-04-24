@@ -1,3 +1,4 @@
+import { Feather } from "@expo/vector-icons";
 import {
   Inter_400Regular,
   Inter_500Medium,
@@ -15,6 +16,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { CategoriesProvider } from "@/contexts/CategoriesContext";
 import { InventoryProvider } from "@/contexts/InventoryContext";
 import { TasksProvider } from "@/contexts/TasksContext";
 import { useColors } from "@/hooks/useColors";
@@ -76,6 +78,10 @@ function RootLayoutNav() {
         name="inventory/[id]"
         options={{ title: "Equipment" }}
       />
+      <Stack.Screen
+        name="categories"
+        options={{ title: "Categories" }}
+      />
     </Stack>
   );
 }
@@ -86,6 +92,7 @@ export default function RootLayout() {
     Inter_500Medium,
     Inter_600SemiBold,
     Inter_700Bold,
+    ...Feather.font,
   });
 
   useEffect(() => {
@@ -103,11 +110,13 @@ export default function RootLayout() {
           <GestureHandlerRootView style={{ flex: 1 }}>
             <KeyboardProvider>
               <AuthProvider>
-                <InventoryProvider>
-                  <TasksProvider>
-                    <RootLayoutNav />
-                  </TasksProvider>
-                </InventoryProvider>
+                <CategoriesProvider>
+                  <InventoryProvider>
+                    <TasksProvider>
+                      <RootLayoutNav />
+                    </TasksProvider>
+                  </InventoryProvider>
+                </CategoriesProvider>
               </AuthProvider>
             </KeyboardProvider>
           </GestureHandlerRootView>

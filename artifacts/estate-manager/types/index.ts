@@ -1,10 +1,19 @@
 export type TaskStatus = "open" | "in_progress" | "done";
 
+export type Recurrence = "none" | "daily" | "weekly" | "monthly" | "yearly";
+
 export interface User {
   id: string;
   name: string;
   password: string;
   colorIndex: number;
+  createdAt: number;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  color: string;
   createdAt: number;
 }
 
@@ -18,6 +27,8 @@ export interface Task {
   dueDate: number | null;
   photos: string[];
   inventoryIds: string[];
+  categoryId: string | null;
+  recurrence: Recurrence;
   createdAt: number;
   updatedAt: number;
   completedAt: number | null;

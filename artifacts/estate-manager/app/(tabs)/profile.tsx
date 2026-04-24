@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
   Alert,
@@ -15,6 +16,7 @@ import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
 import { TextField } from "@/components/TextField";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCategories } from "@/contexts/CategoriesContext";
 import { useInventory } from "@/contexts/InventoryContext";
 import { useTasks } from "@/contexts/TasksContext";
 import { useColors } from "@/hooks/useColors";
@@ -22,9 +24,11 @@ import { useColors } from "@/hooks/useColors";
 export default function ProfileScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { currentUser, users, logout, switchUser, updateProfile } = useAuth();
   const { tasks } = useTasks();
   const { items } = useInventory();
+  const { categories } = useCategories();
 
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(currentUser?.name ?? "");
@@ -291,6 +295,56 @@ export default function ProfileScreen() {
         </View>
       </View>
 
+      <Pressable
+        onPress={() => router.push("/categories")}
+        style={({ pressed }) => [
+          styles.linkRow,
+          {
+            backgroundColor: colors.card,
+            borderColor: colors.border,
+            borderRadius: colors.radius,
+            opacity: pressed ? 0.85 : 1,
+          },
+        ]}
+      >
+        <View
+          style={[
+            styles.linkIcon,
+            { backgroundColor: colors.secondary },
+          ]}
+        >
+          <Feather name="tag" size={16} color={colors.secondaryForeground} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text
+            style={{
+              color: colors.foreground,
+              fontFamily: "Inter_600SemiBold",
+              fontSize: 15,
+            }}
+          >
+            Categories
+          </Text>
+          <Text
+            style={{
+              color: colors.mutedForeground,
+              fontFamily: "Inter_400Regular",
+              fontSize: 12,
+              marginTop: 2,
+            }}
+          >
+            {categories.length === 0
+              ? "Create labels to group your tasks"
+              : `${categories.length} ${categories.length === 1 ? "category" : "categories"}`}
+          </Text>
+        </View>
+        <Feather
+          name="chevron-right"
+          size={16}
+          color={colors.mutedForeground}
+        />
+      </Pressable>
+
       {otherUsers.length > 0 ? (
         <View style={styles.section}>
           <Text
@@ -413,6 +467,20 @@ const styles = StyleSheet.create({
   divider: {
     width: StyleSheet.hairlineWidth,
     alignSelf: "stretch",
+  },
+  linkRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    padding: 14,
+    borderWidth: 1,
+  },
+  linkIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
   },
   section: {
     gap: 10,

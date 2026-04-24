@@ -1,23 +1,29 @@
 import { Feather } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
-  FlatList,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import DraggableFlatList, {
+  RenderItemParams,
+} from "react-native-draggable-flatlist";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { CategoryBadge } from "@/components/CategoryBadge";
 import { EmptyState } from "@/components/EmptyState";
 import { TaskCard } from "@/components/TaskCard";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCategories } from "@/contexts/CategoriesContext";
 import { useTasks } from "@/contexts/TasksContext";
 import { useColors } from "@/hooks/useColors";
-import { TaskStatus } from "@/types";
+import { Task, TaskStatus } from "@/types";
 
 type Filter = "all" | "mine" | "open" | "done";
 
@@ -32,10 +38,12 @@ export default function TasksScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { tasks, toggleComplete } = useTasks();
+  const { tasks, toggleComplete, reorderTasks } = useTasks();
   const { users, currentUser } = useAuth();
+  const { categories, getCategory } = useCategories();
 
   const [filter, setFilter] = useState<Filter>("all");
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
   const counts = useMemo(() => {
@@ -46,11 +54,17 @@ export default function TasksScreen() {
     return { open, mine, total: tasks.length };
   }, [tasks, currentUser]);
 
+  const filtersActive =
+    filter !== "all" || categoryFilter !== null || search.trim() !== "";
+
   const visible = useMemo(() => {
     let list = tasks;
-    if (filter === "mine") list = list.filter((t) => t.assigneeId === currentUser?.id);
+    if (filter === "mine")
+      list = list.filter((t) => t.assigneeId === currentUser?.id);
     if (filter === "open") list = list.filter((t) => t.status !== "done");
     if (filter === "done") list = list.filter((t) => t.status === "done");
+    if (categoryFilter)
+      list = list.filter((t) => t.categoryId === categoryFilter);
     const q = search.trim().toLowerCase();
     if (q) {
       list = list.filter(
@@ -59,138 +73,245 @@ export default function TasksScreen() {
           t.description.toLowerCase().includes(q),
       );
     }
-    const order: Record<TaskStatus, number> = { in_progress: 0, open: 1, done: 2 };
-    return [...list].sort((a, b) => {
-      if (a.status !== b.status) return order[a.status] - order[b.status];
-      if (a.dueDate && b.dueDate) return a.dueDate - b.dueDate;
-      if (a.dueDate) return -1;
-      if (b.dueDate) return 1;
-      return b.createdAt - a.createdAt;
-    });
-  }, [tasks, filter, search, currentUser]);
+    if (filtersActive) {
+      const order: Record<TaskStatus, number> = {
+        in_progress: 0,
+        open: 1,
+        done: 2,
+      };
+      return [...list].sort((a, b) => {
+        if (a.status !== b.status) return order[a.status] - order[b.status];
+        if (a.dueDate && b.dueDate) return a.dueDate - b.dueDate;
+        if (a.dueDate) return -1;
+        if (b.dueDate) return 1;
+        return b.createdAt - a.createdAt;
+      });
+    }
+    // Manual order: keep storage order, push completed to bottom.
+    const open: Task[] = [];
+    const done: Task[] = [];
+    for (const t of list) {
+      (t.status === "done" ? done : open).push(t);
+    }
+    return [...open, ...done];
+  }, [tasks, filter, categoryFilter, search, currentUser, filtersActive]);
+
+  const dragEnabled = !filtersActive;
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad =
     Platform.OS === "web" ? 84 + 16 : insets.bottom + 60 + 24;
 
-  return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <View style={[styles.header, { paddingTop: topPad + 12 }]}>
-        <View style={styles.headerRow}>
-          <View>
-            <Text
-              style={{
-                color: colors.mutedForeground,
-                fontFamily: "Inter_500Medium",
-                fontSize: 13,
-              }}
-            >
-              {counts.open} open · {counts.mine} for you
-            </Text>
-            <Text
-              style={[
-                styles.h1,
-                { color: colors.foreground, fontFamily: "Inter_700Bold" },
+  function renderItem({ item, drag, isActive }: RenderItemParams<Task>) {
+    const assignee = users.find((u) => u.id === item.assigneeId) ?? null;
+    const category = getCategory(item.categoryId) ?? null;
+    return (
+      <View style={{ marginBottom: 10 }}>
+        <TaskCard
+          task={item}
+          assignee={assignee}
+          category={category}
+          inventoryCount={item.inventoryIds.length}
+          onPress={() => router.push(`/task/${item.id}`)}
+          onToggleComplete={() => toggleComplete(item.id)}
+          onLongPress={
+            dragEnabled
+              ? () => {
+                  if (Platform.OS !== "web") {
+                    Haptics.impactAsync(
+                      Haptics.ImpactFeedbackStyle.Medium,
+                    ).catch(() => {});
+                  }
+                  drag();
+                }
+              : undefined
+          }
+          isDragging={isActive}
+          draggable={dragEnabled}
+        />
+      </View>
+    );
+  }
+
+  const Header = (
+    <View style={[styles.header, { paddingTop: topPad + 12 }]}>
+      <View style={styles.headerRow}>
+        <View>
+          <Text
+            style={{
+              color: colors.mutedForeground,
+              fontFamily: "Inter_500Medium",
+              fontSize: 13,
+            }}
+          >
+            {counts.open} open · {counts.mine} for you
+          </Text>
+          <Text
+            style={[
+              styles.h1,
+              { color: colors.foreground, fontFamily: "Inter_700Bold" },
+            ]}
+          >
+            Tasks
+          </Text>
+        </View>
+        <Pressable
+          onPress={() => router.push("/task/new")}
+          style={({ pressed }) => [
+            styles.addBtn,
+            {
+              backgroundColor: colors.primary,
+              borderRadius: colors.radius,
+              opacity: pressed ? 0.85 : 1,
+            },
+          ]}
+          hitSlop={6}
+        >
+          <Feather name="plus" size={20} color="#fff" />
+        </Pressable>
+      </View>
+
+      <View
+        style={[
+          styles.searchBox,
+          {
+            backgroundColor: colors.card,
+            borderColor: colors.border,
+            borderRadius: colors.radius,
+          },
+        ]}
+      >
+        <Feather name="search" size={16} color={colors.mutedForeground} />
+        <TextInput
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Search tasks"
+          placeholderTextColor={colors.mutedForeground}
+          style={{
+            flex: 1,
+            color: colors.foreground,
+            fontFamily: "Inter_400Regular",
+            fontSize: 15,
+            paddingVertical: Platform.OS === "web" ? 8 : 0,
+          }}
+        />
+      </View>
+
+      <View style={styles.filterRow}>
+        {FILTERS.map((f) => {
+          const active = f.value === filter;
+          return (
+            <Pressable
+              key={f.value}
+              onPress={() => setFilter(f.value)}
+              style={({ pressed }) => [
+                styles.filterChip,
+                {
+                  backgroundColor: active ? colors.primary : colors.secondary,
+                  borderRadius: 999,
+                  opacity: pressed ? 0.85 : 1,
+                },
               ]}
             >
-              Tasks
-            </Text>
-          </View>
+              <Text
+                style={{
+                  color: active ? "#fff" : colors.secondaryForeground,
+                  fontFamily: "Inter_600SemiBold",
+                  fontSize: 12,
+                  letterSpacing: 0.3,
+                }}
+              >
+                {f.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      {categories.length > 0 ? (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.catRow}
+        >
           <Pressable
-            onPress={() => router.push("/task/new")}
+            onPress={() => setCategoryFilter(null)}
             style={({ pressed }) => [
-              styles.addBtn,
+              styles.allCatChip,
               {
-                backgroundColor: colors.primary,
-                borderRadius: colors.radius,
+                backgroundColor:
+                  categoryFilter === null ? colors.foreground : colors.secondary,
+                borderRadius: 999,
                 opacity: pressed ? 0.85 : 1,
               },
             ]}
-            hitSlop={6}
           >
-            <Feather name="plus" size={20} color="#fff" />
+            <Text
+              style={{
+                color:
+                  categoryFilter === null ? "#fff" : colors.secondaryForeground,
+                fontFamily: "Inter_600SemiBold",
+                fontSize: 12,
+              }}
+            >
+              All categories
+            </Text>
           </Pressable>
-        </View>
-
-        <View
-          style={[
-            styles.searchBox,
-            {
-              backgroundColor: colors.card,
-              borderColor: colors.border,
-              borderRadius: colors.radius,
-            },
-          ]}
-        >
-          <Feather name="search" size={16} color={colors.mutedForeground} />
-          <TextInput
-            value={search}
-            onChangeText={setSearch}
-            placeholder="Search tasks"
-            placeholderTextColor={colors.mutedForeground}
-            style={{
-              flex: 1,
-              color: colors.foreground,
-              fontFamily: "Inter_400Regular",
-              fontSize: 15,
-              paddingVertical: Platform.OS === "web" ? 8 : 0,
-            }}
-          />
-        </View>
-
-        <View style={styles.filterRow}>
-          {FILTERS.map((f) => {
-            const active = f.value === filter;
+          {categories.map((c) => {
+            const active = categoryFilter === c.id;
             return (
               <Pressable
-                key={f.value}
-                onPress={() => setFilter(f.value)}
+                key={c.id}
+                onPress={() => setCategoryFilter(active ? null : c.id)}
                 style={({ pressed }) => [
-                  styles.filterChip,
+                  styles.catChip,
                   {
-                    backgroundColor: active ? colors.primary : colors.secondary,
+                    backgroundColor: active ? c.color : colors.secondary,
                     borderRadius: 999,
                     opacity: pressed ? 0.85 : 1,
                   },
                 ]}
               >
+                <View
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: active ? "#fff" : c.color,
+                  }}
+                />
                 <Text
                   style={{
                     color: active ? "#fff" : colors.secondaryForeground,
                     fontFamily: "Inter_600SemiBold",
                     fontSize: 12,
-                    letterSpacing: 0.3,
                   }}
                 >
-                  {f.label}
+                  {c.name}
                 </Text>
               </Pressable>
             );
           })}
-        </View>
-      </View>
+        </ScrollView>
+      ) : null}
+    </View>
+  );
 
-      <FlatList
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <DraggableFlatList<Task>
         data={visible}
         keyExtractor={(t) => t.id}
-        contentContainerStyle={{
-          padding: 16,
-          paddingBottom: bottomPad,
-          gap: 10,
-          flexGrow: 1,
+        onDragEnd={({ data }) => {
+          if (!dragEnabled) return;
+          reorderTasks(data.map((t) => t.id));
         }}
-        ItemSeparatorComponent={() => <View style={{ height: 0 }} />}
-        renderItem={({ item }) => {
-          const assignee = users.find((u) => u.id === item.assigneeId) ?? null;
-          return (
-            <TaskCard
-              task={item}
-              assignee={assignee}
-              inventoryCount={item.inventoryIds.length}
-              onPress={() => router.push(`/task/${item.id}`)}
-              onToggleComplete={() => toggleComplete(item.id)}
-            />
-          );
+        renderItem={renderItem}
+        ListHeaderComponent={Header}
+        contentContainerStyle={{
+          paddingHorizontal: 16,
+          paddingBottom: bottomPad,
+          flexGrow: 1,
         }}
         ListEmptyComponent={
           <EmptyState
@@ -207,6 +328,7 @@ export default function TasksScreen() {
             }
           />
         }
+        activationDistance={Platform.OS === "web" ? 5 : 12}
       />
     </View>
   );
@@ -214,9 +336,10 @@ export default function TasksScreen() {
 
 const styles = StyleSheet.create({
   header: {
-    paddingHorizontal: 16,
     paddingBottom: 12,
     gap: 14,
+    marginHorizontal: -16,
+    paddingHorizontal: 16,
   },
   headerRow: {
     flexDirection: "row",
@@ -250,6 +373,21 @@ const styles = StyleSheet.create({
   },
   filterChip: {
     paddingHorizontal: 14,
+    paddingVertical: 7,
+  },
+  catRow: {
+    gap: 8,
+    paddingRight: 16,
+  },
+  allCatChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+  },
+  catChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
     paddingVertical: 7,
   },
 });
