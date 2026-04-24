@@ -69,8 +69,8 @@ export function TaskCard({
           shadowRadius: isDragging ? 14 : 0,
           shadowOffset: { width: 0, height: 6 },
           elevation: isDragging ? 6 : 0,
-          transform: isDragging ? [{ scale: 1.02 }] : undefined,
         },
+        isDragging ? { transform: [{ scale: 1.02 }] } : null,
       ]}
     >
       <Pressable
