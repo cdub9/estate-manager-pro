@@ -48,7 +48,7 @@ function ClassicTabLayout() {
         headerShown: false,
         tabBarLabelStyle: {
           fontFamily: "Inter_500Medium",
-          fontSize: 11,
+          fontSize: 16,
         },
         tabBarStyle: {
           position: "absolute",
