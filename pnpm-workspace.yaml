@@ -157,3 +157,21 @@ overrides:
   # drizzle-kit uses esbuild internally on an older version that's vulnerable, this overrides it
   "@esbuild-kit/esm-loader": "npm:tsx@^4.21.0"
   esbuild: "0.27.3"
+  # Security fixes for vulnerable transitive dependencies (audit advisories).
+  # brace-expansion <2.0.3 — GHSA-f886-m6hf-6m8v (ReDoS / hang)
+  "brace-expansion@>=2.0.0 <2.0.3": "^2.0.3"
+  # picomatch <2.3.2 / <4.0.4 — GHSA-c2c7-rcm5-vvqj, GHSA-3v7f-55p6-f55p (ReDoS)
+  "picomatch@<2.3.2": "^2.3.2"
+  "picomatch@>=4.0.0 <4.0.4": "^4.0.4"
+  # yaml <2.8.3 — GHSA-48c2-rrv3-qjmp
+  "yaml@>=2.0.0 <2.8.3": "^2.8.3"
+  # path-to-regexp 8.x <8.4.0 — GHSA-j3q9-mxjg-w52f, GHSA-27v5-c462-wpq7 (ReDoS)
+  "path-to-regexp@>=8.0.0 <8.4.0": "^8.4.2"
+  # lodash <=4.17.23 — GHSA-r5fr-rjxr-66jc, GHSA-f23m-r3pf-42rh
+  "lodash@<=4.17.23": "^4.18.1"
+  # postcss <8.5.10 — GHSA-qx2v-qp2m-jg93
+  "postcss@<8.5.10": "^8.5.10"
+  # uuid <14 — GHSA-w5hq-g745-h8pq (insufficient cryptography in v3 random generation).
+  # Only consumed by dev-time tooling (xcode for iOS builds, @expo/ngrok for tunnels);
+  # the v14 default-export removal does not impact this project's normal dev/runtime path.
+  "uuid@<14.0.0": "^14.0.0"
