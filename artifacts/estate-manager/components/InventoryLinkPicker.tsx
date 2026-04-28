@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
   FlatList,
@@ -22,8 +23,14 @@ interface Props {
 
 export function InventoryLinkPicker({ items, value, onChange }: Props) {
   const colors = useColors();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+
+  function openItem(id: string) {
+    setOpen(false);
+    router.push(`/inventory/${id}`);
+  }
 
   const selected = items.filter((it) => value.includes(it.id));
 
@@ -194,14 +201,31 @@ export function InventoryLinkPicker({ items, value, onChange }: Props) {
                 renderItem={({ item }) => {
                   const checked = value.includes(item.id);
                   return (
-                    <Pressable
-                      onPress={() => toggle(item.id)}
-                      style={({ pressed }) => [
-                        styles.row,
-                        { opacity: pressed ? 0.7 : 1 },
-                      ]}
-                    >
-                      <View style={{ flex: 1 }}>
+                    <View style={styles.row}>
+                      <Pressable
+                        onPress={() => toggle(item.id)}
+                        hitSlop={6}
+                        style={({ pressed }) => [
+                          styles.checkbox,
+                          {
+                            borderColor: checked ? colors.primary : colors.border,
+                            backgroundColor: checked
+                              ? colors.primary
+                              : "transparent",
+                            opacity: pressed ? 0.7 : 1,
+                          },
+                        ]}
+                      >
+                        {checked ? (
+                          <Feather name="check" size={14} color="#fff" />
+                        ) : null}
+                      </Pressable>
+                      <Pressable
+                        onPress={() => toggle(item.id)}
+                        style={({ pressed }) => [
+                          { flex: 1, opacity: pressed ? 0.7 : 1 },
+                        ]}
+                      >
                         <Text
                           style={{
                             color: colors.foreground,
@@ -226,23 +250,34 @@ export function InventoryLinkPicker({ items, value, onChange }: Props) {
                               .join(" · ")}
                           </Text>
                         ) : null}
-                      </View>
-                      <View
-                        style={[
-                          styles.checkbox,
+                      </Pressable>
+                      <Pressable
+                        onPress={() => openItem(item.id)}
+                        hitSlop={8}
+                        style={({ pressed }) => [
+                          styles.openBtn,
                           {
-                            borderColor: checked ? colors.primary : colors.border,
-                            backgroundColor: checked
-                              ? colors.primary
-                              : "transparent",
+                            backgroundColor: colors.secondary,
+                            opacity: pressed ? 0.7 : 1,
                           },
                         ]}
                       >
-                        {checked ? (
-                          <Feather name="check" size={14} color="#fff" />
-                        ) : null}
-                      </View>
-                    </Pressable>
+                        <Feather
+                          name="external-link"
+                          size={14}
+                          color={colors.secondaryForeground}
+                        />
+                        <Text
+                          style={{
+                            color: colors.secondaryForeground,
+                            fontFamily: "Inter_600SemiBold",
+                            fontSize: 12,
+                          }}
+                        >
+                          View
+                        </Text>
+                      </Pressable>
+                    </View>
                   );
                 }}
               />
@@ -324,5 +359,13 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     alignItems: "center",
     justifyContent: "center",
+  },
+  openBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
   },
 });
