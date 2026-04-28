@@ -1,12 +1,9 @@
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { Image } from "expo-image";
 import React from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
-import { CategoryBadge } from "@/components/CategoryBadge";
-import { StatusPill } from "@/components/StatusPill";
 import { useColors } from "@/hooks/useColors";
 import { Category, Task, User } from "@/types";
 
@@ -22,19 +19,29 @@ interface Props {
   draggable?: boolean;
 }
 
-function formatDue(due: number | null): string | null {
+type DueTone = "today" | "soon" | "later" | "overdue";
+
+function formatDue(due: number | null): { label: string; tone: DueTone } | null {
   if (!due) return null;
   const d = new Date(due);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const dayMs = 86400000;
   const diff = Math.round((d.getTime() - today.getTime()) / dayMs);
-  if (diff === 0) return "Due today";
-  if (diff === 1) return "Due tomorrow";
-  if (diff === -1) return "1 day overdue";
-  if (diff < 0) return `${Math.abs(diff)} days overdue`;
-  if (diff < 7) return `Due in ${diff} days`;
-  return `Due ${d.toLocaleDateString(undefined, { month: "short", day: "numeric" })}`;
+  if (diff < 0) {
+    const n = Math.abs(diff);
+    return {
+      label: n === 1 ? "1d overdue" : `${n}d overdue`,
+      tone: "overdue",
+    };
+  }
+  if (diff === 0) return { label: "Today", tone: "today" };
+  if (diff === 1) return { label: "Tomorrow", tone: "soon" };
+  if (diff < 7) return { label: `In ${diff}d`, tone: "soon" };
+  return {
+    label: d.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+    tone: "later",
+  };
 }
 
 export function TaskCard({
@@ -50,8 +57,15 @@ export function TaskCard({
 }: Props) {
   const colors = useColors();
   const isDone = task.status === "done";
-  const dueLabel = formatDue(task.dueDate);
-  const overdue = task.dueDate ? task.dueDate < Date.now() && !isDone : false;
+  const due = formatDue(task.dueDate);
+
+  function dueColor(tone: DueTone): string {
+    if (tone === "today" || tone === "overdue") return colors.destructive;
+    if (tone === "soon") return colors.accent;
+    return colors.mutedForeground;
+  }
+
+  const accentColor = category?.color ?? "transparent";
 
   return (
     <Pressable
@@ -64,7 +78,7 @@ export function TaskCard({
           backgroundColor: colors.card,
           borderRadius: colors.radius,
           borderColor: isDragging ? colors.primary : colors.border,
-          opacity: pressed && !isDragging ? 0.92 : 1,
+          opacity: pressed && !isDragging ? 0.92 : isDone ? 0.62 : 1,
           shadowOpacity: isDragging ? 0.18 : 0,
           shadowRadius: isDragging ? 14 : 0,
           shadowOffset: { width: 0, height: 6 },
@@ -73,173 +87,243 @@ export function TaskCard({
         isDragging ? { transform: [{ scale: 1.02 }] } : null,
       ]}
     >
-      <Pressable
-        onPress={() => {
-          if (Platform.OS !== "web") {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-          }
-          onToggleComplete();
-        }}
-        hitSlop={10}
+      <View
         style={[
-          styles.checkbox,
+          styles.accent,
           {
-            borderColor: isDone ? colors.primary : colors.border,
-            backgroundColor: isDone ? colors.primary : "transparent",
+            backgroundColor: accentColor,
+            borderTopLeftRadius: colors.radius,
+            borderBottomLeftRadius: colors.radius,
           },
         ]}
-      >
-        {isDone ? <Feather name="check" size={14} color="#fff" /> : null}
-      </Pressable>
+      />
 
-      <View style={{ flex: 1, gap: 8 }}>
-        <View style={styles.titleRow}>
+      <View style={styles.body}>
+        <Pressable
+          onPress={() => {
+            if (Platform.OS !== "web") {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+            }
+            onToggleComplete();
+          }}
+          hitSlop={10}
+          style={styles.statusBtn}
+        >
+          <StatusIndicator status={task.status} colors={colors} />
+        </Pressable>
+
+        <View style={{ flex: 1, minWidth: 0 }}>
           <Text
-            style={[
-              styles.title,
-              {
-                color: isDone ? colors.mutedForeground : colors.foreground,
-                fontFamily: "Inter_600SemiBold",
-                textDecorationLine: isDone ? "line-through" : "none",
-                flex: 1,
-              },
-            ]}
-            numberOfLines={2}
+            style={{
+              fontSize: 15.5,
+              lineHeight: 19,
+              color: colors.foreground,
+              fontFamily: "Inter_600SemiBold",
+              textDecorationLine: isDone ? "line-through" : "none",
+            }}
+            numberOfLines={1}
           >
             {task.title}
           </Text>
-          {task.recurrence !== "none" ? (
-            <Feather name="repeat" size={13} color={colors.mutedForeground} />
+
+          <View style={styles.metaRow}>
+            {due ? (
+              <MetaItem>
+                <Feather name="calendar" size={11} color={dueColor(due.tone)} />
+                <Text
+                  style={{
+                    color: dueColor(due.tone),
+                    fontFamily: "Inter_600SemiBold",
+                    fontSize: 12,
+                    marginLeft: 4,
+                  }}
+                >
+                  {due.label}
+                </Text>
+              </MetaItem>
+            ) : null}
+
+            {category ? (
+              <>
+                {due ? <Bullet /> : null}
+                <Text
+                  style={{
+                    color: category.color,
+                    fontFamily: "Inter_600SemiBold",
+                    fontSize: 12,
+                  }}
+                  numberOfLines={1}
+                >
+                  {category.name}
+                </Text>
+              </>
+            ) : null}
+
+            {inventoryCount > 0 ? (
+              <>
+                {due || category ? <Bullet /> : null}
+                <MetaItem>
+                  <Feather name="tool" size={11} color={colors.mutedForeground} />
+                  <Text
+                    style={{
+                      color: colors.mutedForeground,
+                      fontFamily: "Inter_500Medium",
+                      fontSize: 12,
+                      marginLeft: 4,
+                    }}
+                  >
+                    {inventoryCount}
+                  </Text>
+                </MetaItem>
+              </>
+            ) : null}
+
+            {task.photos.length > 0 ? (
+              <>
+                {due || category || inventoryCount > 0 ? <Bullet /> : null}
+                <MetaItem>
+                  <Feather name="image" size={11} color={colors.mutedForeground} />
+                  <Text
+                    style={{
+                      color: colors.mutedForeground,
+                      fontFamily: "Inter_500Medium",
+                      fontSize: 12,
+                      marginLeft: 4,
+                    }}
+                  >
+                    {task.photos.length}
+                  </Text>
+                </MetaItem>
+              </>
+            ) : null}
+
+            {task.recurrence !== "none" ? (
+              <>
+                {due || category || inventoryCount > 0 || task.photos.length > 0 ? (
+                  <Bullet />
+                ) : null}
+                <Feather
+                  name="repeat"
+                  size={11}
+                  color={colors.mutedForeground}
+                />
+              </>
+            ) : null}
+          </View>
+        </View>
+
+        <View style={styles.right}>
+          <Avatar user={assignee} size={28} fallbackLabel="—" />
+          {draggable ? (
+            <Feather
+              name="menu"
+              size={14}
+              color={colors.mutedForeground}
+              style={{ opacity: 0.5 }}
+            />
           ) : null}
         </View>
-        {task.description ? (
-          <Text
-            numberOfLines={2}
-            style={{
-              color: colors.mutedForeground,
-              fontFamily: "Inter_400Regular",
-              fontSize: 13,
-              lineHeight: 18,
-            }}
-          >
-            {task.description}
-          </Text>
-        ) : null}
-
-        <View style={styles.metaRow}>
-          {category ? <CategoryBadge category={category} /> : null}
-          <StatusPill status={task.status} />
-          {dueLabel ? (
-            <View style={styles.metaItem}>
-              <Feather
-                name="calendar"
-                size={12}
-                color={overdue ? colors.destructive : colors.mutedForeground}
-              />
-              <Text
-                style={{
-                  color: overdue ? colors.destructive : colors.mutedForeground,
-                  fontFamily: "Inter_500Medium",
-                  fontSize: 12,
-                }}
-              >
-                {dueLabel}
-              </Text>
-            </View>
-          ) : null}
-          {inventoryCount > 0 ? (
-            <View style={styles.metaItem}>
-              <Feather name="package" size={12} color={colors.mutedForeground} />
-              <Text
-                style={{
-                  color: colors.mutedForeground,
-                  fontFamily: "Inter_500Medium",
-                  fontSize: 12,
-                }}
-              >
-                {inventoryCount}
-              </Text>
-            </View>
-          ) : null}
-          {task.photos.length > 0 ? (
-            <View style={styles.metaItem}>
-              <Feather name="image" size={12} color={colors.mutedForeground} />
-              <Text
-                style={{
-                  color: colors.mutedForeground,
-                  fontFamily: "Inter_500Medium",
-                  fontSize: 12,
-                }}
-              >
-                {task.photos.length}
-              </Text>
-            </View>
-          ) : null}
-        </View>
-      </View>
-
-      <View style={{ alignItems: "flex-end", gap: 8 }}>
-        {task.photos[0] ? (
-          <Image
-            source={{ uri: task.photos[0] }}
-            style={[styles.thumb, { borderRadius: colors.radius - 4 }]}
-            contentFit="cover"
-          />
-        ) : null}
-        <Avatar user={assignee} size={28} fallbackLabel="—" />
-        {draggable ? (
-          <Feather
-            name="menu"
-            size={14}
-            color={colors.mutedForeground}
-            style={{ opacity: 0.6 }}
-          />
-        ) : null}
       </View>
     </Pressable>
   );
 }
 
+function StatusIndicator({
+  status,
+  colors,
+}: {
+  status: Task["status"];
+  colors: ReturnType<typeof useColors>;
+}) {
+  if (status === "done") {
+    return (
+      <View
+        style={[
+          styles.dot,
+          { backgroundColor: colors.primary, borderColor: colors.primary },
+        ]}
+      >
+        <Feather name="check" size={13} color="#fff" />
+      </View>
+    );
+  }
+  if (status === "in_progress") {
+    return (
+      <View style={[styles.dot, { borderColor: colors.primary }]}>
+        <View
+          style={{
+            width: 10,
+            height: 10,
+            borderRadius: 5,
+            backgroundColor: colors.primary,
+          }}
+        />
+      </View>
+    );
+  }
+  return <View style={[styles.dot, { borderColor: colors.mutedForeground }]} />;
+}
+
+function MetaItem({ children }: { children: React.ReactNode }) {
+  return <View style={styles.metaItem}>{children}</View>;
+}
+
+function Bullet() {
+  return <View style={styles.bullet} />;
+}
+
 const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    padding: 14,
-    gap: 12,
+    alignItems: "stretch",
     borderWidth: 1,
     shadowColor: "#000",
+    overflow: "hidden",
   },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 2,
+  accent: {
+    width: 4,
+    alignSelf: "stretch",
   },
-  titleRow: {
+  body: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    paddingVertical: 12,
+    paddingLeft: 12,
+    paddingRight: 12,
+    gap: 12,
   },
-  title: {
-    fontSize: 16,
-    lineHeight: 21,
+  statusBtn: {
+    paddingTop: 1,
+  },
+  dot: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
   },
   metaRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    marginTop: 6,
     flexWrap: "wrap",
+    rowGap: 4,
   },
   metaItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
   },
-  thumb: {
-    width: 56,
-    height: 56,
+  bullet: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: "#cfc8b6",
+    marginHorizontal: 8,
+  },
+  right: {
+    alignItems: "center",
+    gap: 8,
   },
 });

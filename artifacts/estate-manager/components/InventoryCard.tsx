@@ -14,6 +14,9 @@ interface Props {
 
 export function InventoryCard({ item, taskCount, onPress }: Props) {
   const colors = useColors();
+
+  const subtitle = [item.vendor, item.partNumber].filter(Boolean).join(" · ");
+
   return (
     <Pressable
       onPress={onPress}
@@ -27,50 +30,54 @@ export function InventoryCard({ item, taskCount, onPress }: Props) {
         },
       ]}
     >
-      {item.photo ? (
-        <Image
-          source={{ uri: item.photo }}
-          style={[styles.image, { borderRadius: colors.radius - 4 }]}
-          contentFit="cover"
-        />
-      ) : (
-        <View
-          style={[
-            styles.image,
-            styles.imagePlaceholder,
-            { backgroundColor: colors.secondary, borderRadius: colors.radius - 4 },
-          ]}
-        >
-          <Feather name="package" size={24} color={colors.primary} />
-        </View>
-      )}
-      <View style={{ flex: 1, gap: 4 }}>
-        <Text
-          style={{
-            color: colors.foreground,
-            fontFamily: "Inter_600SemiBold",
-            fontSize: 16,
-          }}
-          numberOfLines={1}
-        >
-          {item.name}
-        </Text>
-        {item.vendor || item.partNumber ? (
+      <View
+        style={[
+          styles.accent,
+          {
+            backgroundColor: colors.primary,
+            borderTopLeftRadius: colors.radius,
+            borderBottomLeftRadius: colors.radius,
+          },
+        ]}
+      />
+
+      <View style={styles.body}>
+        {item.photo ? (
+          <Image
+            source={{ uri: item.photo }}
+            style={[styles.image, { borderRadius: colors.radius - 4 }]}
+            contentFit="cover"
+          />
+        ) : (
+          <View
+            style={[
+              styles.image,
+              styles.imagePlaceholder,
+              {
+                backgroundColor: colors.secondary,
+                borderRadius: colors.radius - 4,
+              },
+            ]}
+          >
+            <Feather name="package" size={22} color={colors.primary} />
+          </View>
+        )}
+
+        <View style={{ flex: 1, minWidth: 0 }}>
           <Text
             style={{
-              color: colors.mutedForeground,
-              fontFamily: "Inter_400Regular",
-              fontSize: 13,
+              color: colors.foreground,
+              fontFamily: "Inter_600SemiBold",
+              fontSize: 15.5,
+              lineHeight: 19,
             }}
             numberOfLines={1}
           >
-            {[item.vendor, item.partNumber].filter(Boolean).join(" · ")}
+            {item.name}
           </Text>
-        ) : null}
-        <View style={styles.metaRow}>
-          {item.location ? (
-            <View style={styles.metaItem}>
-              <Feather name="map-pin" size={11} color={colors.mutedForeground} />
+
+          <View style={styles.metaRow}>
+            {subtitle ? (
               <Text
                 style={{
                   color: colors.mutedForeground,
@@ -79,42 +86,90 @@ export function InventoryCard({ item, taskCount, onPress }: Props) {
                 }}
                 numberOfLines={1}
               >
-                {item.location}
+                {subtitle}
               </Text>
-            </View>
-          ) : null}
-          {taskCount > 0 ? (
-            <View style={styles.metaItem}>
-              <Feather name="check-square" size={11} color={colors.mutedForeground} />
-              <Text
-                style={{
-                  color: colors.mutedForeground,
-                  fontFamily: "Inter_500Medium",
-                  fontSize: 12,
-                }}
-              >
-                {taskCount} {taskCount === 1 ? "task" : "tasks"}
-              </Text>
-            </View>
-          ) : null}
+            ) : null}
+
+            {item.location ? (
+              <>
+                {subtitle ? <Bullet /> : null}
+                <View style={styles.metaItem}>
+                  <Feather
+                    name="map-pin"
+                    size={11}
+                    color={colors.mutedForeground}
+                  />
+                  <Text
+                    style={{
+                      color: colors.mutedForeground,
+                      fontFamily: "Inter_500Medium",
+                      fontSize: 12,
+                      marginLeft: 4,
+                    }}
+                    numberOfLines={1}
+                  >
+                    {item.location}
+                  </Text>
+                </View>
+              </>
+            ) : null}
+
+            {taskCount > 0 ? (
+              <>
+                {subtitle || item.location ? <Bullet /> : null}
+                <View style={styles.metaItem}>
+                  <Feather
+                    name="check-square"
+                    size={11}
+                    color={colors.mutedForeground}
+                  />
+                  <Text
+                    style={{
+                      color: colors.mutedForeground,
+                      fontFamily: "Inter_500Medium",
+                      fontSize: 12,
+                      marginLeft: 4,
+                    }}
+                  >
+                    {taskCount}
+                  </Text>
+                </View>
+              </>
+            ) : null}
+          </View>
         </View>
       </View>
-      <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
     </Pressable>
   );
+}
+
+function Bullet() {
+  return <View style={styles.bullet} />;
 }
 
 const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
+    alignItems: "stretch",
+    borderWidth: 1,
+    overflow: "hidden",
+  },
+  accent: {
+    width: 4,
+    alignSelf: "stretch",
+  },
+  body: {
+    flex: 1,
+    flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    padding: 12,
-    borderWidth: 1,
+    paddingVertical: 12,
+    paddingLeft: 12,
+    paddingRight: 12,
   },
   image: {
-    width: 64,
-    height: 64,
+    width: 52,
+    height: 52,
   },
   imagePlaceholder: {
     alignItems: "center",
@@ -123,14 +178,21 @@ const styles = StyleSheet.create({
   metaRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    marginTop: 2,
+    marginTop: 6,
     flexWrap: "wrap",
+    rowGap: 4,
   },
   metaItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    maxWidth: "100%",
+    minWidth: 0,
+    flexShrink: 1,
+  },
+  bullet: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: "#cfc8b6",
+    marginHorizontal: 8,
   },
 });

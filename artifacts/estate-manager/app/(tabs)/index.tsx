@@ -16,7 +16,6 @@ import DraggableFlatList, {
 } from "react-native-draggable-flatlist";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { CategoryBadge } from "@/components/CategoryBadge";
 import { EmptyState } from "@/components/EmptyState";
 import { TaskCard } from "@/components/TaskCard";
 import { useAuth } from "@/contexts/AuthContext";
@@ -42,7 +41,7 @@ export default function TasksScreen() {
   const { users, currentUser } = useAuth();
   const { categories, getCategory } = useCategories();
 
-  const [filter, setFilter] = useState<Filter>("all");
+  const [filter, setFilter] = useState<Filter>("mine");
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
@@ -55,7 +54,7 @@ export default function TasksScreen() {
   }, [tasks, currentUser]);
 
   const filtersActive =
-    filter !== "all" || categoryFilter !== null || search.trim() !== "";
+    filter !== "mine" || categoryFilter !== null || search.trim() !== "";
 
   const visible = useMemo(() => {
     let list = tasks;
@@ -140,8 +139,10 @@ export default function TasksScreen() {
           <Text
             style={{
               color: colors.mutedForeground,
-              fontFamily: "Inter_500Medium",
-              fontSize: 13,
+              fontFamily: "Inter_700Bold",
+              fontSize: 11,
+              letterSpacing: 1.4,
+              textTransform: "uppercase",
             }}
           >
             {counts.open} open · {counts.mine} for you

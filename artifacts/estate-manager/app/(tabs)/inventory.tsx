@@ -67,8 +67,10 @@ export default function InventoryScreen() {
             <Text
               style={{
                 color: colors.mutedForeground,
-                fontFamily: "Inter_500Medium",
-                fontSize: 13,
+                fontFamily: "Inter_700Bold",
+                fontSize: 11,
+                letterSpacing: 1.4,
+                textTransform: "uppercase",
               }}
             >
               {items.length} {items.length === 1 ? "item" : "items"} cataloged
