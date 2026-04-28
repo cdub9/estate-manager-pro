@@ -1,4 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, {
   createContext,
   useCallback,
@@ -8,10 +7,9 @@ import React, {
   useState,
 } from "react";
 
+import { useAuth } from "@/contexts/AuthContext";
+import { categoriesApi } from "@/lib/api";
 import { Category } from "@/types";
-import { uuid } from "@/utils/uuid";
-
-const CATEGORIES_KEY = "estate.categories";
 
 export const CATEGORY_COLORS = [
   "#2f6b3a",
@@ -34,85 +32,65 @@ interface CategoriesContextValue {
   ) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   getCategory: (id: string | null) => Category | undefined;
+  refresh: () => Promise<void>;
 }
 
 const CategoriesContext = createContext<CategoriesContextValue | null>(null);
 
 export function CategoriesProvider({ children }: { children: React.ReactNode }) {
+  const { currentUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<Category[]>([]);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const raw = await AsyncStorage.getItem(CATEGORIES_KEY);
-        if (raw) setCategories(JSON.parse(raw));
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+  const refresh = useCallback(async () => {
+    if (!currentUser) {
+      setCategories([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    try {
+      const { categories: list } = await categoriesApi.list();
+      setCategories(list);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentUser]);
 
-  const persist = useCallback(async (next: Category[]) => {
-    setCategories(next);
-    await AsyncStorage.setItem(CATEGORIES_KEY, JSON.stringify(next));
-  }, []);
+  useEffect(() => {
+    refresh().catch(() => setLoading(false));
+  }, [refresh]);
 
   const createCategory = useCallback<CategoriesContextValue["createCategory"]>(
     async (name, color) => {
       const trimmed = name.trim();
       if (!trimmed) throw new Error("Category name is required");
-      if (
-        categories.some(
-          (c) => c.name.toLowerCase() === trimmed.toLowerCase(),
-        )
-      ) {
-        throw new Error("That category already exists");
-      }
-      const cat: Category = {
-        id: uuid(),
-        name: trimmed,
-        color,
-        createdAt: Date.now(),
-      };
-      await persist([...categories, cat]);
-      return cat;
+      const { category } = await categoriesApi.create(trimmed, color);
+      setCategories((prev) => [...prev, category]);
+      return category;
     },
-    [categories, persist],
+    [],
   );
 
   const updateCategory = useCallback<CategoriesContextValue["updateCategory"]>(
     async (id, updates) => {
+      const payload: { name?: string; color?: string } = {};
       const trimmedName = updates.name?.trim();
-      if (
-        trimmedName &&
-        categories.some(
-          (c) =>
-            c.id !== id &&
-            c.name.toLowerCase() === trimmedName.toLowerCase(),
-        )
-      ) {
-        throw new Error("That category name is already used");
-      }
-      const next = categories.map((c) =>
-        c.id === id
-          ? {
-              ...c,
-              ...(trimmedName ? { name: trimmedName } : {}),
-              ...(updates.color ? { color: updates.color } : {}),
-            }
-          : c,
-      );
-      await persist(next);
+      if (trimmedName) payload.name = trimmedName;
+      if (updates.color) payload.color = updates.color;
+      if (Object.keys(payload).length === 0) return;
+      const { category } = await categoriesApi.update(id, payload);
+      setCategories((prev) => prev.map((c) => (c.id === id ? category : c)));
     },
-    [categories, persist],
+    [],
   );
 
   const deleteCategory = useCallback<CategoriesContextValue["deleteCategory"]>(
     async (id) => {
-      await persist(categories.filter((c) => c.id !== id));
+      await categoriesApi.remove(id);
+      setCategories((prev) => prev.filter((c) => c.id !== id));
     },
-    [categories, persist],
+    [],
   );
 
   const getCategory = useCallback(
@@ -131,8 +109,17 @@ export function CategoriesProvider({ children }: { children: React.ReactNode }) 
       updateCategory,
       deleteCategory,
       getCategory,
+      refresh,
     }),
-    [loading, categories, createCategory, updateCategory, deleteCategory, getCategory],
+    [
+      loading,
+      categories,
+      createCategory,
+      updateCategory,
+      deleteCategory,
+      getCategory,
+      refresh,
+    ],
   );
 
   return (

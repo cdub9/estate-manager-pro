@@ -1,4 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, {
   createContext,
   useCallback,
@@ -8,10 +7,9 @@ import React, {
   useState,
 } from "react";
 
+import { useAuth } from "@/contexts/AuthContext";
+import { inventoryApi } from "@/lib/api";
 import { InventoryItem } from "@/types";
-import { uuid } from "@/utils/uuid";
-
-const INVENTORY_KEY = "estate.inventory";
 
 export interface NewInventoryInput {
   name: string;
@@ -29,65 +27,74 @@ interface InventoryContextValue {
   updateItem: (id: string, updates: Partial<InventoryItem>) => Promise<void>;
   deleteItem: (id: string) => Promise<void>;
   getItem: (id: string) => InventoryItem | undefined;
+  refresh: () => Promise<void>;
 }
 
 const InventoryContext = createContext<InventoryContextValue | null>(null);
 
 export function InventoryProvider({ children }: { children: React.ReactNode }) {
+  const { currentUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<InventoryItem[]>([]);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const raw = await AsyncStorage.getItem(INVENTORY_KEY);
-        if (raw) setItems(JSON.parse(raw));
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+  const refresh = useCallback(async () => {
+    if (!currentUser) {
+      setItems([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    try {
+      const { items: list } = await inventoryApi.list();
+      setItems(list);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentUser]);
 
-  const persist = useCallback(async (next: InventoryItem[]) => {
-    setItems(next);
-    await AsyncStorage.setItem(INVENTORY_KEY, JSON.stringify(next));
-  }, []);
+  useEffect(() => {
+    refresh().catch(() => setLoading(false));
+  }, [refresh]);
 
   const createItem = useCallback<InventoryContextValue["createItem"]>(
     async (input) => {
-      const now = Date.now();
-      const item: InventoryItem = {
-        id: uuid(),
+      const { item } = await inventoryApi.create({
         name: input.name.trim(),
         vendor: input.vendor?.trim() ?? "",
         partNumber: input.partNumber?.trim() ?? "",
         location: input.location?.trim() ?? "",
         description: input.description?.trim() ?? "",
         photo: input.photo ?? null,
-        createdAt: now,
-        updatedAt: now,
-      };
-      await persist([item, ...items]);
+      });
+      setItems((prev) => [item, ...prev]);
       return item;
     },
-    [items, persist],
+    [],
   );
 
   const updateItem = useCallback<InventoryContextValue["updateItem"]>(
     async (id, updates) => {
-      const next = items.map((it) =>
-        it.id === id ? { ...it, ...updates, updatedAt: Date.now() } : it,
-      );
-      await persist(next);
+      const payload: Partial<InventoryItem> = {};
+      if (updates.name !== undefined) payload.name = updates.name;
+      if (updates.vendor !== undefined) payload.vendor = updates.vendor;
+      if (updates.partNumber !== undefined)
+        payload.partNumber = updates.partNumber;
+      if (updates.location !== undefined) payload.location = updates.location;
+      if (updates.description !== undefined)
+        payload.description = updates.description;
+      if (updates.photo !== undefined) payload.photo = updates.photo;
+      const { item } = await inventoryApi.update(id, payload);
+      setItems((prev) => prev.map((it) => (it.id === id ? item : it)));
     },
-    [items, persist],
+    [],
   );
 
   const deleteItem = useCallback<InventoryContextValue["deleteItem"]>(
     async (id) => {
-      await persist(items.filter((it) => it.id !== id));
+      await inventoryApi.remove(id);
+      setItems((prev) => prev.filter((it) => it.id !== id));
     },
-    [items, persist],
+    [],
   );
 
   const getItem = useCallback(
@@ -96,8 +103,16 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   );
 
   const value = useMemo<InventoryContextValue>(
-    () => ({ loading, items, createItem, updateItem, deleteItem, getItem }),
-    [loading, items, createItem, updateItem, deleteItem, getItem],
+    () => ({
+      loading,
+      items,
+      createItem,
+      updateItem,
+      deleteItem,
+      getItem,
+      refresh,
+    }),
+    [loading, items, createItem, updateItem, deleteItem, getItem, refresh],
   );
 
   return (

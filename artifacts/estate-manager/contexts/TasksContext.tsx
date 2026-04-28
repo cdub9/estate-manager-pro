@@ -1,4 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, {
   createContext,
   useCallback,
@@ -8,17 +7,17 @@ import React, {
   useState,
 } from "react";
 
+import { useAuth } from "@/contexts/AuthContext";
+import { tasksApi, type TaskInput } from "@/lib/api";
 import { Recurrence, Task, TaskStatus } from "@/types";
-import { uuid } from "@/utils/uuid";
-
-const TASKS_KEY = "estate.tasks";
 
 export interface NewTaskInput {
   title: string;
   description?: string;
   status?: TaskStatus;
   assigneeId?: string | null;
-  createdById: string;
+  // Kept for source-compat with existing screens; the server uses the auth token.
+  createdById?: string;
   dueDate?: number | null;
   photos?: string[];
   inventoryIds?: string[];
@@ -36,173 +35,114 @@ interface TasksContextValue {
   reorderTasks: (orderedIds: string[]) => Promise<void>;
   removeInventoryFromAll: (inventoryId: string) => Promise<void>;
   removeCategoryFromAll: (categoryId: string) => Promise<void>;
+  refresh: () => Promise<void>;
 }
 
 const TasksContext = createContext<TasksContextValue | null>(null);
 
-function addInterval(base: number, recurrence: Recurrence): number {
-  const d = new Date(base);
-  switch (recurrence) {
-    case "daily":
-      d.setDate(d.getDate() + 1);
-      break;
-    case "weekly":
-      d.setDate(d.getDate() + 7);
-      break;
-    case "monthly":
-      d.setMonth(d.getMonth() + 1);
-      break;
-    case "yearly":
-      d.setFullYear(d.getFullYear() + 1);
-      break;
-    default:
-      break;
-  }
-  return d.getTime();
-}
-
-function nextRecurringDue(task: Task): number {
-  const base = task.dueDate ?? Date.now();
-  let next = addInterval(base, task.recurrence);
-  // If the existing due date is far in the past, advance until it's in the future.
-  const now = Date.now();
-  const guard = 1000;
-  let iterations = 0;
-  while (next <= now && iterations < guard) {
-    next = addInterval(next, task.recurrence);
-    iterations += 1;
-  }
-  return next;
-}
-
-function maybeCloneRecurring(task: Task): Task | null {
-  if (task.recurrence === "none") return null;
-  const now = Date.now();
-  const clone: Task = {
-    ...task,
-    id: uuid(),
-    status: "open",
-    photos: [],
-    completedAt: null,
-    dueDate: nextRecurringDue(task),
-    createdAt: now,
-    updatedAt: now,
-  };
-  return clone;
-}
-
 export function TasksProvider({ children }: { children: React.ReactNode }) {
+  const { currentUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [tasks, setTasks] = useState<Task[]>([]);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const raw = await AsyncStorage.getItem(TASKS_KEY);
-        if (raw) {
-          const parsed: Task[] = JSON.parse(raw);
-          // backfill new fields for older saved tasks
-          const migrated = parsed.map((t) => ({
-            categoryId: null,
-            recurrence: "none" as Recurrence,
-            ...t,
-          }));
-          setTasks(migrated);
-        }
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+  const refresh = useCallback(async () => {
+    if (!currentUser) {
+      setTasks([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    try {
+      const { tasks: list } = await tasksApi.list();
+      setTasks(list);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentUser]);
 
-  const persist = useCallback(async (next: Task[]) => {
-    setTasks(next);
-    await AsyncStorage.setItem(TASKS_KEY, JSON.stringify(next));
-  }, []);
+  useEffect(() => {
+    refresh().catch(() => setLoading(false));
+  }, [refresh]);
 
   const createTask = useCallback<TasksContextValue["createTask"]>(
     async (input) => {
-      const now = Date.now();
-      const task: Task = {
-        id: uuid(),
+      const payload: TaskInput & { title: string } = {
         title: input.title.trim(),
         description: input.description?.trim() ?? "",
         status: input.status ?? "open",
         assigneeId: input.assigneeId ?? null,
-        createdById: input.createdById,
         dueDate: input.dueDate ?? null,
         photos: input.photos ?? [],
         inventoryIds: input.inventoryIds ?? [],
         categoryId: input.categoryId ?? null,
         recurrence: input.recurrence ?? "none",
-        createdAt: now,
-        updatedAt: now,
-        completedAt: input.status === "done" ? now : null,
       };
-      await persist([task, ...tasks]);
+      const { task } = await tasksApi.create(payload);
+      setTasks((prev) => [task, ...prev]);
       return task;
     },
-    [tasks, persist],
+    [],
   );
 
   const updateTask = useCallback<TasksContextValue["updateTask"]>(
     async (id, updates) => {
-      let cloneToInsert: Task | null = null;
-      const next = tasks.map((t) => {
-        if (t.id !== id) return t;
-        const merged: Task = { ...t, ...updates, updatedAt: Date.now() };
-        if (updates.status !== undefined) {
-          const wasDone = t.status === "done";
-          const nowDone = updates.status === "done";
-          merged.completedAt = nowDone
-            ? t.completedAt ?? Date.now()
-            : null;
-          if (!wasDone && nowDone) {
-            cloneToInsert = maybeCloneRecurring(merged);
-          }
-        }
-        return merged;
+      const payload: TaskInput = {};
+      if (updates.title !== undefined) payload.title = updates.title;
+      if (updates.description !== undefined)
+        payload.description = updates.description;
+      if (updates.status !== undefined) payload.status = updates.status;
+      if (updates.assigneeId !== undefined)
+        payload.assigneeId = updates.assigneeId;
+      if (updates.dueDate !== undefined) payload.dueDate = updates.dueDate;
+      if (updates.categoryId !== undefined)
+        payload.categoryId = updates.categoryId;
+      if (updates.recurrence !== undefined)
+        payload.recurrence = updates.recurrence;
+      if (updates.photos !== undefined) payload.photos = updates.photos;
+      if (updates.inventoryIds !== undefined)
+        payload.inventoryIds = updates.inventoryIds;
+      const { task } = await tasksApi.update(id, payload);
+      setTasks((prev) => {
+        const replaced = prev.map((t) => (t.id === id ? task : t));
+        // If the server cloned a recurring follow-up, refetch to pick it up.
+        return replaced;
       });
-      const finalList = cloneToInsert ? [cloneToInsert, ...next] : next;
-      await persist(finalList);
+      // A status flip on a recurring task may have created a clone server-side.
+      if (
+        updates.status === "done" &&
+        task.recurrence !== "none"
+      ) {
+        await refresh();
+      }
     },
-    [tasks, persist],
+    [refresh],
   );
 
   const deleteTask = useCallback<TasksContextValue["deleteTask"]>(
     async (id) => {
-      await persist(tasks.filter((t) => t.id !== id));
+      await tasksApi.remove(id);
+      setTasks((prev) => prev.filter((t) => t.id !== id));
     },
-    [tasks, persist],
+    [],
   );
 
   const toggleComplete = useCallback<TasksContextValue["toggleComplete"]>(
     async (id) => {
       const target = tasks.find((t) => t.id === id);
-      if (!target) return;
-      const isDone = target.status === "done";
-      let cloneToInsert: Task | null = null;
-      const next = tasks.map((t) => {
-        if (t.id !== id) return t;
-        const updated: Task = {
-          ...t,
-          status: (isDone ? "open" : "done") as TaskStatus,
-          completedAt: isDone ? null : Date.now(),
-          updatedAt: Date.now(),
-        };
-        if (!isDone) {
-          cloneToInsert = maybeCloneRecurring(updated);
-        }
-        return updated;
-      });
-      const finalList = cloneToInsert ? [cloneToInsert, ...next] : next;
-      await persist(finalList);
+      const wasOpen = target ? target.status !== "done" : false;
+      const recurrence = target?.recurrence ?? "none";
+      const { task } = await tasksApi.toggleComplete(id);
+      setTasks((prev) => prev.map((t) => (t.id === id ? task : t)));
+      if (wasOpen && recurrence !== "none") {
+        await refresh();
+      }
     },
-    [tasks, persist],
+    [tasks, refresh],
   );
 
   const reorderTasks = useCallback<TasksContextValue["reorderTasks"]>(
     async (orderedIds) => {
+      // Optimistic local reorder for snappy UI.
       const byId = new Map(tasks.map((t) => [t.id, t]));
       const reordered: Task[] = [];
       for (const id of orderedIds) {
@@ -212,45 +152,34 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
           byId.delete(id);
         }
       }
-      // Append any tasks that weren't part of the reorder (e.g. filtered out)
-      for (const remaining of byId.values()) {
-        reordered.push(remaining);
+      for (const remaining of byId.values()) reordered.push(remaining);
+      setTasks(reordered);
+      try {
+        await tasksApi.reorder(orderedIds);
+      } catch (err) {
+        await refresh();
+        throw err;
       }
-      await persist(reordered);
     },
-    [tasks, persist],
+    [tasks, refresh],
   );
 
-  const removeInventoryFromAll = useCallback<
-    TasksContextValue["removeInventoryFromAll"]
-  >(
-    async (inventoryId) => {
-      const next = tasks.map((t) =>
-        t.inventoryIds.includes(inventoryId)
-          ? {
-              ...t,
-              inventoryIds: t.inventoryIds.filter((i) => i !== inventoryId),
-              updatedAt: Date.now(),
-            }
-          : t,
-      );
-      await persist(next);
+  // The server's FK constraints take care of clean-up; we just refetch so the
+  // local state matches.
+  const removeInventoryFromAll = useCallback(
+    async (_inventoryId: string) => {
+      void _inventoryId;
+      await refresh();
     },
-    [tasks, persist],
+    [refresh],
   );
 
-  const removeCategoryFromAll = useCallback<
-    TasksContextValue["removeCategoryFromAll"]
-  >(
-    async (categoryId) => {
-      const next = tasks.map((t) =>
-        t.categoryId === categoryId
-          ? { ...t, categoryId: null, updatedAt: Date.now() }
-          : t,
-      );
-      await persist(next);
+  const removeCategoryFromAll = useCallback(
+    async (_categoryId: string) => {
+      void _categoryId;
+      await refresh();
     },
-    [tasks, persist],
+    [refresh],
   );
 
   const value = useMemo<TasksContextValue>(
@@ -264,6 +193,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
       reorderTasks,
       removeInventoryFromAll,
       removeCategoryFromAll,
+      refresh,
     }),
     [
       loading,
@@ -275,6 +205,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
       reorderTasks,
       removeInventoryFromAll,
       removeCategoryFromAll,
+      refresh,
     ],
   );
 

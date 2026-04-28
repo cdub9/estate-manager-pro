@@ -5,7 +5,8 @@ export type Recurrence = "none" | "daily" | "weekly" | "monthly" | "yearly";
 export interface User {
   id: string;
   name: string;
-  password: string;
+  // Only present client-side when typing updateProfile inputs; the server never returns it.
+  password?: string;
   colorIndex: number;
   createdAt: number;
 }
