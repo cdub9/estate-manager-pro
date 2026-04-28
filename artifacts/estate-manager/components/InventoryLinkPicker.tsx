@@ -53,37 +53,44 @@ export function InventoryLinkPicker({ items, value, onChange }: Props) {
 
   return (
     <>
-      <Pressable
-        onPress={() => setOpen(true)}
-        style={({ pressed }) => [
+      <View
+        style={[
           styles.field,
           {
             backgroundColor: colors.card,
             borderColor: colors.border,
             borderRadius: colors.radius,
-            opacity: pressed ? 0.85 : 1,
           },
         ]}
       >
         <View style={{ flex: 1 }}>
           {selected.length === 0 ? (
-            <Text
-              style={{
-                color: colors.mutedForeground,
-                fontFamily: "Inter_400Regular",
-                fontSize: 15,
-              }}
+            <Pressable
+              onPress={() => setOpen(true)}
+              style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
             >
-              No equipment linked
-            </Text>
+              <Text
+                style={{
+                  color: colors.mutedForeground,
+                  fontFamily: "Inter_400Regular",
+                  fontSize: 15,
+                }}
+              >
+                No equipment linked
+              </Text>
+            </Pressable>
           ) : (
             <View style={styles.chips}>
               {selected.map((it) => (
-                <View
+                <Pressable
                   key={it.id}
-                  style={[
+                  onPress={() => router.push(`/inventory/${it.id}`)}
+                  style={({ pressed }) => [
                     styles.chip,
-                    { backgroundColor: colors.secondary },
+                    {
+                      backgroundColor: colors.secondary,
+                      opacity: pressed ? 0.7 : 1,
+                    },
                   ]}
                 >
                   <Feather
@@ -100,13 +107,39 @@ export function InventoryLinkPicker({ items, value, onChange }: Props) {
                   >
                     {it.name}
                   </Text>
-                </View>
+                  <Feather
+                    name="external-link"
+                    size={11}
+                    color={colors.secondaryForeground}
+                  />
+                </Pressable>
               ))}
             </View>
           )}
         </View>
-        <Feather name="chevron-down" size={18} color={colors.mutedForeground} />
-      </Pressable>
+        <Pressable
+          onPress={() => setOpen(true)}
+          hitSlop={10}
+          style={({ pressed }) => [
+            styles.editLinks,
+            {
+              backgroundColor: colors.secondary,
+              opacity: pressed ? 0.7 : 1,
+            },
+          ]}
+        >
+          <Feather name="edit-2" size={12} color={colors.secondaryForeground} />
+          <Text
+            style={{
+              color: colors.secondaryForeground,
+              fontFamily: "Inter_600SemiBold",
+              fontSize: 12,
+            }}
+          >
+            Edit
+          </Text>
+        </Pressable>
+      </View>
 
       <Modal
         visible={open}
@@ -367,5 +400,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 999,
+  },
+  editLinks: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    alignSelf: "center",
   },
 });
