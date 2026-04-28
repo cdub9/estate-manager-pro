@@ -14,6 +14,7 @@ import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollV
 import { AssigneePicker } from "@/components/AssigneePicker";
 import { Button } from "@/components/Button";
 import { CategoryPicker } from "@/components/CategoryPicker";
+import { DatePickerModal } from "@/components/DatePickerModal";
 import { InventoryLinkPicker } from "@/components/InventoryLinkPicker";
 import { PhotoGrid } from "@/components/PhotoGrid";
 import { RecurrencePicker } from "@/components/RecurrencePicker";
@@ -41,6 +42,31 @@ function dueDateAtDays(days: number | null): number | null {
   return d.getTime();
 }
 
+function startOfDay(ts: number): number {
+  const d = new Date(ts);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}
+
+function matchesQuickOption(
+  due: number | null,
+  daysFromNow: number | null,
+): boolean {
+  if (due === null && daysFromNow === null) return true;
+  if (due === null || daysFromNow === null) return false;
+  const expected = dueDateAtDays(daysFromNow);
+  if (expected === null) return false;
+  return startOfDay(due) === startOfDay(expected);
+}
+
+function formatCustomDate(ts: number): string {
+  return new Date(ts).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 export default function NewTaskScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -60,7 +86,8 @@ export default function NewTaskScreen() {
   const [inventoryIds, setInventoryIds] = useState<string[]>([]);
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [recurrence, setRecurrence] = useState<Recurrence>("none");
-  const [dueDays, setDueDays] = useState<number | null>(null);
+  const [dueDate, setDueDate] = useState<number | null>(null);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -78,7 +105,7 @@ export default function NewTaskScreen() {
         status,
         assigneeId,
         createdById: currentUser.id,
-        dueDate: dueDateAtDays(dueDays),
+        dueDate,
         photos,
         inventoryIds,
         categoryId,
@@ -157,11 +184,11 @@ export default function NewTaskScreen() {
         </Text>
         <View style={styles.chipRow}>
           {QUICK_DUE.map((opt) => {
-            const active = dueDays === opt.daysFromNow;
+            const active = matchesQuickOption(dueDate, opt.daysFromNow);
             return (
               <Pressable
                 key={opt.label}
-                onPress={() => setDueDays(opt.daysFromNow)}
+                onPress={() => setDueDate(dueDateAtDays(opt.daysFromNow))}
                 style={({ pressed }) => [
                   styles.chip,
                   {
@@ -183,6 +210,42 @@ export default function NewTaskScreen() {
               </Pressable>
             );
           })}
+          {(() => {
+            const isCustom =
+              dueDate !== null &&
+              !QUICK_DUE.some((o) => matchesQuickOption(dueDate, o.daysFromNow));
+            return (
+              <Pressable
+                onPress={() => setDatePickerOpen(true)}
+                style={({ pressed }) => [
+                  styles.chip,
+                  styles.calendarChip,
+                  {
+                    backgroundColor: isCustom ? colors.primary : colors.secondary,
+                    borderRadius: 999,
+                    opacity: pressed ? 0.85 : 1,
+                  },
+                ]}
+              >
+                <Feather
+                  name="calendar"
+                  size={13}
+                  color={isCustom ? "#fff" : colors.secondaryForeground}
+                />
+                <Text
+                  style={{
+                    color: isCustom ? "#fff" : colors.secondaryForeground,
+                    fontFamily: "Inter_600SemiBold",
+                    fontSize: 12,
+                  }}
+                >
+                  {isCustom && dueDate !== null
+                    ? formatCustomDate(dueDate)
+                    : "Pick date"}
+                </Text>
+              </Pressable>
+            );
+          })()}
         </View>
       </View>
 
@@ -237,6 +300,14 @@ export default function NewTaskScreen() {
           style={{ flex: 1 }}
         />
       </View>
+
+      <DatePickerModal
+        visible={datePickerOpen}
+        value={dueDate}
+        onClose={() => setDatePickerOpen(false)}
+        onSelect={(ts) => setDueDate(ts)}
+        onClear={() => setDueDate(null)}
+      />
     </KeyboardAwareScrollViewCompat>
   );
 }
@@ -246,5 +317,6 @@ const styles = StyleSheet.create({
   label: { fontSize: 13 },
   chipRow: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
   chip: { paddingHorizontal: 14, paddingVertical: 8 },
+  calendarChip: { flexDirection: "row", alignItems: "center", gap: 6 },
   actions: { flexDirection: "row", gap: 10, marginTop: 8 },
 });

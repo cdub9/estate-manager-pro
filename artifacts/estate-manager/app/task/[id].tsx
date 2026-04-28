@@ -16,6 +16,7 @@ import { AssigneePicker } from "@/components/AssigneePicker";
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
 import { CategoryPicker } from "@/components/CategoryPicker";
+import { DatePickerModal } from "@/components/DatePickerModal";
 import { InventoryLinkPicker } from "@/components/InventoryLinkPicker";
 import { PhotoGrid } from "@/components/PhotoGrid";
 import { RecurrencePicker } from "@/components/RecurrencePicker";
@@ -43,11 +44,21 @@ function dueDateAtDays(days: number | null): number | null {
   return d.getTime();
 }
 
-function daysFromDue(due: number | null): number | null {
-  if (!due) return null;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return Math.round((due - today.getTime()) / 86400000);
+function startOfDay(ts: number): number {
+  const d = new Date(ts);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}
+
+function matchesQuickOption(
+  due: number | null,
+  daysFromNow: number | null,
+): boolean {
+  if (due === null && daysFromNow === null) return true;
+  if (due === null || daysFromNow === null) return false;
+  const expected = dueDateAtDays(daysFromNow);
+  if (expected === null) return false;
+  return startOfDay(due) === startOfDay(expected);
 }
 
 function formatDate(ts: number): string {
@@ -78,7 +89,8 @@ export default function TaskDetailScreen() {
   const [inventoryIds, setInventoryIds] = useState<string[]>(task?.inventoryIds ?? []);
   const [categoryId, setCategoryId] = useState<string | null>(task?.categoryId ?? null);
   const [recurrence, setRecurrence] = useState<Recurrence>(task?.recurrence ?? "none");
-  const [dueDays, setDueDays] = useState<number | null>(daysFromDue(task?.dueDate ?? null));
+  const [dueDate, setDueDate] = useState<number | null>(task?.dueDate ?? null);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
 
   useEffect(() => {
     if (!task) return;
@@ -90,7 +102,7 @@ export default function TaskDetailScreen() {
     setInventoryIds(task.inventoryIds);
     setCategoryId(task.categoryId);
     setRecurrence(task.recurrence);
-    setDueDays(daysFromDue(task.dueDate));
+    setDueDate(task.dueDate);
   }, [task?.id]);
 
   const dirty = useMemo(() => {
@@ -104,7 +116,7 @@ export default function TaskDetailScreen() {
       task.recurrence !== recurrence ||
       JSON.stringify(task.photos) !== JSON.stringify(photos) ||
       JSON.stringify(task.inventoryIds) !== JSON.stringify(inventoryIds) ||
-      daysFromDue(task.dueDate) !== dueDays
+      (task.dueDate ?? null) !== (dueDate ?? null)
     );
   }, [
     task,
@@ -116,7 +128,7 @@ export default function TaskDetailScreen() {
     recurrence,
     photos,
     inventoryIds,
-    dueDays,
+    dueDate,
   ]);
 
   if (!task) {
@@ -160,7 +172,7 @@ export default function TaskDetailScreen() {
       inventoryIds,
       categoryId,
       recurrence,
-      dueDate: dueDateAtDays(dueDays),
+      dueDate,
     });
     router.back();
   }
@@ -241,11 +253,11 @@ export default function TaskDetailScreen() {
           </Text>
           <View style={styles.chipRow}>
             {QUICK_DUE.map((opt) => {
-              const active = dueDays === opt.daysFromNow;
+              const active = matchesQuickOption(dueDate, opt.daysFromNow);
               return (
                 <Pressable
                   key={opt.label}
-                  onPress={() => setDueDays(opt.daysFromNow)}
+                  onPress={() => setDueDate(dueDateAtDays(opt.daysFromNow))}
                   style={({ pressed }) => [
                     styles.chip,
                     {
@@ -267,6 +279,42 @@ export default function TaskDetailScreen() {
                 </Pressable>
               );
             })}
+            {(() => {
+              const isCustom =
+                dueDate !== null &&
+                !QUICK_DUE.some((o) => matchesQuickOption(dueDate, o.daysFromNow));
+              return (
+                <Pressable
+                  onPress={() => setDatePickerOpen(true)}
+                  style={({ pressed }) => [
+                    styles.chip,
+                    styles.calendarChip,
+                    {
+                      backgroundColor: isCustom ? colors.primary : colors.secondary,
+                      borderRadius: 999,
+                      opacity: pressed ? 0.85 : 1,
+                    },
+                  ]}
+                >
+                  <Feather
+                    name="calendar"
+                    size={13}
+                    color={isCustom ? "#fff" : colors.secondaryForeground}
+                  />
+                  <Text
+                    style={{
+                      color: isCustom ? "#fff" : colors.secondaryForeground,
+                      fontFamily: "Inter_600SemiBold",
+                      fontSize: 12,
+                    }}
+                  >
+                    {isCustom && dueDate !== null
+                      ? formatDate(dueDate)
+                      : "Pick date"}
+                  </Text>
+                </Pressable>
+              );
+            })()}
           </View>
         </View>
 
@@ -416,6 +464,14 @@ export default function TaskDetailScreen() {
             style={{ flex: 1 }}
           />
         </View>
+
+        <DatePickerModal
+          visible={datePickerOpen}
+          value={dueDate}
+          onClose={() => setDatePickerOpen(false)}
+          onSelect={(ts) => setDueDate(ts)}
+          onClear={() => setDueDate(null)}
+        />
       </KeyboardAwareScrollViewCompat>
     </>
   );
@@ -426,6 +482,7 @@ const styles = StyleSheet.create({
   label: { fontSize: 13 },
   chipRow: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
   chip: { paddingHorizontal: 14, paddingVertical: 8 },
+  calendarChip: { flexDirection: "row", alignItems: "center", gap: 6 },
   actions: { flexDirection: "row", gap: 10, marginTop: 8 },
   metaCard: {
     padding: 14,
