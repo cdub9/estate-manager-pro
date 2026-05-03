@@ -150,9 +150,7 @@ export default function InventoryDetailScreen() {
             item.archivedAt ? (
               <Button title="Unarchive" onPress={confirmArchive} />
             ) : (
-              <Pressable onPress={confirmArchive} hitSlop={10}>
-                <Feather name="archive" size={20} color={colors.foreground} />
-              </Pressable>
+              <Button title="Archive" onPress={confirmArchive} variant="secondary" />
             ),
         }}
       />
