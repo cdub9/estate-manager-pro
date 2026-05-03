@@ -24,12 +24,11 @@ import { useTasks } from "@/contexts/TasksContext";
 import { useColors } from "@/hooks/useColors";
 import { Task, TaskStatus } from "@/types";
 
-type Filter = "all" | "mine" | "hideCompleted";
+type Filter = "all" | "mine";
 
 const FILTERS: { value: Filter; label: string }[] = [
   { value: "all", label: "All" },
   { value: "mine", label: "Mine" },
-  { value: "hideCompleted", label: "Hide Completed Tasks" },
 ];
 
 export default function TasksScreen() {
@@ -41,6 +40,7 @@ export default function TasksScreen() {
   const { categories, getCategory } = useCategories();
 
   const [filter, setFilter] = useState<Filter>("mine");
+  const [hideCompleted, setHideCompleted] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
@@ -53,13 +53,13 @@ export default function TasksScreen() {
   }, [tasks, currentUser]);
 
   const filtersActive =
-    filter !== "mine" || categoryFilter !== null || search.trim() !== "";
+    filter !== "mine" || hideCompleted || categoryFilter !== null || search.trim() !== "";
 
   const visible = useMemo(() => {
     let list = tasks;
     if (filter === "mine")
       list = list.filter((t) => t.assigneeId === currentUser?.id);
-    if (filter === "hideCompleted") list = list.filter((t) => t.status !== "done");
+    if (hideCompleted) list = list.filter((t) => t.status !== "done");
     if (categoryFilter)
       list = list.filter((t) => t.categoryId === categoryFilter);
     const q = search.trim().toLowerCase();
@@ -91,7 +91,7 @@ export default function TasksScreen() {
       (t.status === "done" ? done : open).push(t);
     }
     return [...open, ...done];
-  }, [tasks, filter, categoryFilter, search, currentUser, filtersActive]);
+  }, [tasks, filter, hideCompleted, categoryFilter, search, currentUser, filtersActive]);
 
   const dragEnabled = !filtersActive;
 
@@ -225,6 +225,28 @@ export default function TasksScreen() {
             </Pressable>
           );
         })}
+        <Pressable
+          onPress={() => setHideCompleted((value) => !value)}
+          style={({ pressed }) => [
+            styles.filterChip,
+            {
+              backgroundColor: hideCompleted ? colors.primary : colors.secondary,
+              borderRadius: 999,
+              opacity: pressed ? 0.85 : 1,
+            },
+          ]}
+        >
+          <Text
+            style={{
+              color: hideCompleted ? "#fff" : colors.secondaryForeground,
+              fontFamily: "Inter_600SemiBold",
+              fontSize: 12,
+              letterSpacing: 0.3,
+            }}
+          >
+            Hide Completed Tasks
+          </Text>
+        </Pressable>
       </View>
 
       {categories.length > 0 ? (
