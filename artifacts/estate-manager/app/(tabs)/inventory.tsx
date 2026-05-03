@@ -61,6 +61,8 @@ export default function InventoryScreen() {
     );
   }, [archivedItems, archivedMode, items, search]);
 
+  const sourceCount = archivedMode ? archivedItems.length : items.length;
+
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad =
     Platform.OS === "web" ? 84 + 16 : insets.bottom + 60 + 24;
@@ -79,7 +81,7 @@ export default function InventoryScreen() {
                 textTransform: "uppercase",
               }}
             >
-              {items.length} {items.length === 1 ? "item" : "items"}{" "}
+              {sourceCount} {sourceCount === 1 ? "item" : "items"}{" "}
               {archivedMode ? "archived" : "cataloged"}
             </Text>
             <Text
@@ -202,14 +204,14 @@ export default function InventoryScreen() {
           <EmptyState
             icon="package"
             title={
-              items.length === 0
+              sourceCount === 0
                 ? archivedMode
                   ? "No archived equipment"
                   : "No equipment yet"
                 : "No items match your search"
             }
             description={
-              items.length === 0
+              sourceCount === 0
                 ? archivedMode
                   ? "Archived equipment will appear here."
                   : "Catalog your first piece of machinery or tooling. You can link items to tasks later."
