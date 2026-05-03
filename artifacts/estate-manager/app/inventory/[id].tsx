@@ -148,13 +148,13 @@ export default function InventoryDetailScreen() {
           title: "Equipment",
           headerRight: () => (
             <View style={{ flexDirection: "row", gap: 16 }}>
-              <Pressable onPress={confirmArchive} hitSlop={10}>
-                <Feather
-                name={item.archivedAt ? "rotate-ccw" : "archive"}
-                  size={20}
-                  color={colors.foreground}
-                />
-              </Pressable>
+              {item.archivedAt ? (
+                <Button title="Unarchive" onPress={confirmArchive} />
+              ) : (
+                <Pressable onPress={confirmArchive} hitSlop={10}>
+                  <Feather name="archive" size={20} color={colors.foreground} />
+                </Pressable>
+              )}
               <Pressable onPress={confirmDelete} hitSlop={10}>
                 <Feather name="trash-2" size={20} color={colors.destructive} />
               </Pressable>
