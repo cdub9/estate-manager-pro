@@ -162,7 +162,6 @@ export interface InventoryInput {
   location?: string;
   description?: string;
   photo?: string | null;
-  archivedAt?: number | null;
 }
 
 export const inventoryApi = {
@@ -182,6 +181,12 @@ export const inventoryApi = {
     return request<{ item: InventoryItem }>(`/inventory/${id}`, {
       method: "PATCH",
       body: updates,
+    });
+  },
+  archive(id: string, archivedAt: number | null): Promise<{ item: InventoryItem }> {
+    return request<{ item: InventoryItem }>(`/inventory/${id}/archive`, {
+      method: "PATCH",
+      body: { archivedAt },
     });
   },
   remove(id: string): Promise<{ ok: true }> {

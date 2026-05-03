@@ -100,12 +100,12 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   );
 
   const archiveItem = useCallback(async (id: string) => {
-    const { item } = await inventoryApi.update(id, { archivedAt: Date.now() });
+    const { item } = await inventoryApi.archive(id, Date.now());
     setItems((prev) => prev.map((it) => (it.id === id ? item : it)));
   }, []);
 
   const unarchiveItem = useCallback(async (id: string) => {
-    const { item } = await inventoryApi.update(id, { archivedAt: null });
+    const { item } = await inventoryApi.archive(id, null);
     setItems((prev) => prev.map((it) => (it.id === id ? item : it)));
   }, []);
 

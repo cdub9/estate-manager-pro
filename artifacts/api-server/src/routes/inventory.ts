@@ -49,6 +49,10 @@ router.post("/inventory", async (req, res) => {
 
 const updateSchema = createSchema.partial();
 
+const archiveSchema = z.object({
+  archivedAt: z.number().nullable(),
+});
+
 router.patch("/inventory/:id", async (req, res) => {
   const parsed = updateSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -68,6 +72,20 @@ router.patch("/inventory/:id", async (req, res) => {
   const [row] = await db
     .update(inventoryTable)
     .set(updates)
+    .where(eq(inventoryTable.id, req.params.id!))
+    .returning();
+  res.json({ item: row ? toApiInventory(row) : null });
+});
+
+router.patch("/inventory/:id/archive", async (req, res) => {
+  const parsed = archiveSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Invalid input" });
+    return;
+  }
+  const [row] = await db
+    .update(inventoryTable)
+    .set({ archivedAt: parsed.data.archivedAt ? new Date(parsed.data.archivedAt) : null })
     .where(eq(inventoryTable.id, req.params.id!))
     .returning();
   res.json({ item: row ? toApiInventory(row) : null });
