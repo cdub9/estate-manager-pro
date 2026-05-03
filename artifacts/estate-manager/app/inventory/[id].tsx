@@ -155,9 +155,12 @@ export default function InventoryDetailScreen() {
                   <Feather name="archive" size={20} color={colors.foreground} />
                 </Pressable>
               )}
-              <Pressable onPress={confirmDelete} hitSlop={10}>
-                <Feather name="trash-2" size={20} color={colors.destructive} />
-              </Pressable>
+              <Button
+                title="Delete"
+                variant="destructive"
+                size="sm"
+                onPress={confirmDelete}
+              />
             </View>
           ),
         }}
