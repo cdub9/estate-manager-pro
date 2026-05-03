@@ -71,7 +71,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     try {
       const { items: list } = await inventoryApi.list(true);
-      setArchivedItems(list);
+      setArchivedItems(list.filter((item) => Boolean(item.archivedAt)));
     } finally {
       setLoading(false);
     }
