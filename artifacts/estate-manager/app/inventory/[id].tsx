@@ -127,21 +127,14 @@ export default function InventoryDetailScreen() {
 
   function confirmArchive() {
     Alert.alert(
-      item.archivedAt ? "Unarchive equipment?" : "Archive equipment?",
-      item.archivedAt
-        ? "This will make the equipment active again."
-        : "This will hide the equipment from the active inventory list.",
+      "Are you sure you'd like to archive this piece of equipment?",
       [
         { text: "Cancel", style: "cancel" },
         {
-          text: item.archivedAt ? "Unarchive" : "Archive",
-          style: item.archivedAt ? "default" : "destructive",
+          text: "Archive",
+          style: "destructive",
           onPress: async () => {
-            if (item.archivedAt) {
-              await unarchiveItem(item.id);
-            } else {
-              await archiveItem(item.id);
-            }
+            await archiveItem(item.id);
             router.back();
           },
         },
