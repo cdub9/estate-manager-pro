@@ -40,6 +40,7 @@ interface InventoryContextValue {
   showArchived: () => Promise<void>;
   showActive: () => Promise<void>;
   setArchivedMode: (value: boolean) => void;
+  getItemById: (id: string) => InventoryItem | undefined;
 }
 
 const InventoryContext = createContext<InventoryContextValue | null>(null);
@@ -166,6 +167,13 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     [items],
   );
 
+  const getItemById = useCallback(
+    (id: string) =>
+      items.find((it) => it.id === id) ??
+      archivedItems.find((it) => it.id === id),
+    [archivedItems, items],
+  );
+
   const value = useMemo<InventoryContextValue>(
     () => ({
       loading,
@@ -183,6 +191,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       showArchived,
       showActive,
       setArchivedMode,
+      getItemById,
     }),
     [
       loading,
@@ -199,6 +208,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       refreshArchived,
       showArchived,
       showActive,
+      getItemById,
     ],
   );
 

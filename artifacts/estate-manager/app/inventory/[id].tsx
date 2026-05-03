@@ -25,10 +25,10 @@ export default function InventoryDetailScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { items, updateItem, deleteItem, archiveItem } = useInventory();
+  const { getItemById, updateItem, deleteItem, archiveItem } = useInventory();
   const { tasks, removeInventoryFromAll } = useTasks();
 
-  const item = items.find((it) => it.id === id);
+  const item = getItemById(id);
 
   const [name, setName] = useState(item?.name ?? "");
   const [vendor, setVendor] = useState(item?.vendor ?? "");
