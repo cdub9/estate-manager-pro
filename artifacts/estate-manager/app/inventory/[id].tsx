@@ -149,7 +149,7 @@ export default function InventoryDetailScreen() {
           headerRight: () => (
             <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
               {item.archivedAt ? (
-                <Button title="Unarchive" onPress={confirmArchive} />
+                <Button title="Archive" onPress={confirmArchive} />
               ) : (
                 <Button title="Archive" onPress={confirmArchive} variant="secondary" />
               )}
