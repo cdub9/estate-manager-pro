@@ -157,9 +157,7 @@ export default function InventoryDetailScreen() {
                 title="Delete"
                 variant="destructive"
                 size="sm"
-                onPress={() => {
-                  confirmDelete();
-                }}
+                onPress={confirmDelete}
               />
             </View>
           ),
