@@ -23,6 +23,7 @@ export interface ApiInventory {
   location: string;
   description: string;
   photo: string | null;
+  state: "active" | "archived";
   archivedAt: number | null;
   createdAt: number;
   updatedAt: number;
@@ -74,6 +75,7 @@ export function toApiInventory(i: DbInventory): ApiInventory {
     location: i.location,
     description: i.description,
     photo: i.photo,
+    state: i.state,
     archivedAt: i.archivedAt ? i.archivedAt.getTime() : null,
     createdAt: i.createdAt.getTime(),
     updatedAt: i.updatedAt.getTime(),

@@ -1,6 +1,11 @@
-import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+
+export const inventoryStateEnum = pgEnum("inventory_state", [
+  "active",
+  "archived",
+]);
 
 export const inventoryTable = pgTable("inventory", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -10,6 +15,7 @@ export const inventoryTable = pgTable("inventory", {
   location: text("location").notNull().default(""),
   description: text("description").notNull().default(""),
   photo: text("photo"),
+  state: inventoryStateEnum("state").notNull().default("active"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

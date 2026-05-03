@@ -46,6 +46,7 @@ router.post("/inventory", async (req, res) => {
       location: parsed.data.location?.trim() ?? "",
       description: parsed.data.description?.trim() ?? "",
       photo: parsed.data.photo ?? null,
+      state: "active",
     })
     .returning();
   res.json({ item: row ? toApiInventory(row) : null });
@@ -89,7 +90,7 @@ router.patch("/inventory/:id/archive", async (req, res) => {
   }
   const [row] = await db
     .update(inventoryTable)
-    .set({ updatedAt: new Date() })
+    .set({ state: parsed.data.archivedAt ? "archived" : "active" })
     .where(eq(inventoryTable.id, req.params.id!))
     .returning();
   res.json({ item: row ? toApiInventory(row) : null });
