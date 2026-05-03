@@ -36,6 +36,7 @@ export default function InventoryDetailScreen() {
   const [location, setLocation] = useState(item?.location ?? "");
   const [description, setDescription] = useState(item?.description ?? "");
   const [photo, setPhoto] = useState<string | null>(item?.photo ?? null);
+  const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
 
   useEffect(() => {
     if (!item) return;
@@ -126,20 +127,7 @@ export default function InventoryDetailScreen() {
   }
 
   function confirmArchive() {
-    Alert.alert(
-      "Are you sure you'd like to archive this piece of equipment?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Archive",
-          style: "destructive",
-          onPress: async () => {
-            await archiveItem(item.id);
-            router.back();
-          },
-        },
-      ],
-    );
+    setArchiveConfirmOpen(true);
   }
 
   return (
@@ -261,6 +249,48 @@ export default function InventoryDetailScreen() {
           />
         </View>
       </KeyboardAwareScrollViewCompat>
+      {archiveConfirmOpen ? (
+        <View style={styles.confirmOverlay}>
+          <View
+            style={[
+              styles.confirmCard,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+                borderRadius: colors.radius,
+              },
+            ]}
+          >
+            <Text
+              style={{
+                color: colors.foreground,
+                fontFamily: "Inter_600SemiBold",
+                fontSize: 16,
+              }}
+            >
+              Are you sure you'd like to archive this piece of equipment?
+            </Text>
+            <View style={styles.confirmActions}>
+              <Button
+                title="Cancel"
+                variant="secondary"
+                onPress={() => setArchiveConfirmOpen(false)}
+                style={{ flex: 1 }}
+              />
+              <Button
+                title="Archive"
+                variant="destructive"
+                onPress={async () => {
+                  setArchiveConfirmOpen(false);
+                  await archiveItem(item.id);
+                  router.back();
+                }}
+                style={{ flex: 1 }}
+              />
+            </View>
+          </View>
+        </View>
+      ) : null}
     </>
   );
 }
@@ -290,4 +320,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   actions: { flexDirection: "row", gap: 10, marginTop: 8 },
+  confirmOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+    backgroundColor: "rgba(0,0,0,0.35)",
+  },
+  confirmCard: {
+    width: "100%",
+    maxWidth: 420,
+    padding: 20,
+    borderWidth: 1,
+    gap: 16,
+  },
+  confirmActions: {
+    flexDirection: "row",
+    gap: 10,
+  },
 });
