@@ -98,23 +98,24 @@ export default function InventoryScreen() {
                 await refreshArchived();
               }}
               style={({ pressed }) => [
-                styles.viewArchivedBtn,
+                styles.chip,
                 {
-                  borderColor: colors.border,
-                  backgroundColor: colors.card,
-                  borderRadius: colors.radius,
+                  backgroundColor: archivedMode
+                    ? colors.primary
+                    : colors.secondary,
+                  borderRadius: 999,
                   opacity: pressed ? 0.85 : 1,
                 },
               ]}
             >
               <Text
                 style={{
-                  color: colors.foreground,
+                  color: archivedMode ? "#fff" : colors.secondaryForeground,
                   fontFamily: "Inter_600SemiBold",
-                  fontSize: 14,
+                  fontSize: 12,
                 }}
               >
-                View Archived
+                Archived
               </Text>
             </Pressable>
             <Pressable
@@ -123,23 +124,24 @@ export default function InventoryScreen() {
                 await refresh();
               }}
               style={({ pressed }) => [
-                styles.viewArchivedBtn,
+                styles.chip,
                 {
-                  borderColor: colors.border,
-                  backgroundColor: colors.card,
-                  borderRadius: colors.radius,
+                  backgroundColor: archivedMode
+                    ? colors.secondary
+                    : colors.primary,
+                  borderRadius: 999,
                   opacity: pressed ? 0.85 : 1,
                 },
               ]}
             >
               <Text
                 style={{
-                  color: colors.foreground,
+                  color: archivedMode ? colors.secondaryForeground : "#fff",
                   fontFamily: "Inter_600SemiBold",
-                  fontSize: 14,
+                  fontSize: 12,
                 }}
               >
-                View Active
+                Active
               </Text>
             </Pressable>
             <Pressable
@@ -254,13 +256,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  viewArchivedBtn: {
-    height: 44,
-    paddingHorizontal: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-  },
+  chip: { paddingHorizontal: 14, paddingVertical: 8 },
   searchBox: {
     flexDirection: "row",
     alignItems: "center",
