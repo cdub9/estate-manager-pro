@@ -153,7 +153,12 @@ export default function InventoryDetailScreen() {
               ) : (
                 <Button title="Archive" onPress={confirmArchive} variant="secondary" />
               )}
-              <Button title="Delete" variant="destructive" onPress={confirmDelete} />
+              <Button
+                title="Delete"
+                variant="destructive"
+                size="sm"
+                onPress={confirmDelete}
+              />
             </View>
           ),
         }}
