@@ -245,13 +245,8 @@ export default function InventoryDetailScreen() {
             icon={<Feather name="check" size={16} color="#fff" />}
             style={{ flex: 1 }}
           />
-          <Button
-            title="Delete"
-            variant="destructive"
-            onPress={confirmDelete}
-            style={{ flex: 1 }}
-          />
         </View>
+        <Button title="Delete" variant="destructive" onPress={confirmDelete} />
       </KeyboardAwareScrollViewCompat>
       {archiveConfirmOpen ? (
         <View style={styles.confirmOverlay}>
