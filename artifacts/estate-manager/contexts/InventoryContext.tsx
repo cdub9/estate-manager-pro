@@ -20,6 +20,10 @@ export interface NewInventoryInput {
   photo?: string | null;
 }
 
+export function isArchivedInventoryItem(item: InventoryItem) {
+  return Boolean(item.archivedAt);
+}
+
 interface InventoryContextValue {
   loading: boolean;
   items: InventoryItem[];
@@ -33,7 +37,8 @@ interface InventoryContextValue {
   getItem: (id: string) => InventoryItem | undefined;
   refresh: () => Promise<void>;
   refreshArchived: () => Promise<void>;
-  loadInventory: () => Promise<void>;
+  showArchived: () => Promise<void>;
+  showActive: () => Promise<void>;
   setArchivedMode: (value: boolean) => void;
 }
 
@@ -72,19 +77,26 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     try {
       const { items: list } = await inventoryApi.list(true);
-      setArchivedItems(list.filter((item) => Boolean(item.archivedAt)));
+      setArchivedItems(list.filter(isArchivedInventoryItem));
     } finally {
       setLoading(false);
     }
   }, [currentUser]);
 
-  const loadInventory = useCallback(async () => {
-    await Promise.all([refresh(), refreshArchived()]);
-  }, [refresh, refreshArchived]);
+  const showArchived = useCallback(async () => {
+    setArchivedMode(true);
+    await refreshArchived();
+  }, [refreshArchived]);
+
+  const showActive = useCallback(async () => {
+    setArchivedMode(false);
+    await refresh();
+  }, [refresh]);
 
   useEffect(() => {
-    loadInventory().catch(() => setLoading(false));
-  }, [loadInventory]);
+    refresh().catch(() => setLoading(false));
+    refreshArchived().catch(() => setLoading(false));
+  }, [refresh, refreshArchived]);
 
   const createItem = useCallback<InventoryContextValue["createItem"]>(
     async (input) => {
@@ -158,7 +170,8 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       getItem,
       refresh,
       refreshArchived,
-      loadInventory,
+      showArchived,
+      showActive,
       setArchivedMode,
     }),
     [
@@ -174,7 +187,8 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       getItem,
       refresh,
       refreshArchived,
-      loadInventory,
+      showArchived,
+      showActive,
     ],
   );
 
