@@ -22,7 +22,13 @@ export default function InventoryScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { items } = useInventory();
+  const {
+    items,
+    archivedMode,
+    refresh,
+    refreshArchived,
+    setArchivedMode,
+  } = useInventory();
   const { tasks } = useTasks();
 
   const [search, setSearch] = useState("");
@@ -73,7 +79,8 @@ export default function InventoryScreen() {
                 textTransform: "uppercase",
               }}
             >
-              {items.length} {items.length === 1 ? "item" : "items"} cataloged
+              {items.length} {items.length === 1 ? "item" : "items"}{" "}
+              {archivedMode ? "archived" : "cataloged"}
             </Text>
             <Text
               style={[
@@ -84,20 +91,72 @@ export default function InventoryScreen() {
               Equipment
             </Text>
           </View>
-          <Pressable
-            onPress={() => router.push("/inventory/new")}
-            style={({ pressed }) => [
-              styles.addBtn,
-              {
-                backgroundColor: colors.primary,
-                borderRadius: colors.radius,
-                opacity: pressed ? 0.85 : 1,
-              },
-            ]}
-            hitSlop={6}
-          >
-            <Feather name="plus" size={20} color="#fff" />
-          </Pressable>
+          <View style={styles.headerActions}>
+            <Pressable
+              onPress={async () => {
+                setArchivedMode(true);
+                await refreshArchived();
+              }}
+              style={({ pressed }) => [
+                styles.viewArchivedBtn,
+                {
+                  borderColor: colors.border,
+                  backgroundColor: colors.card,
+                  borderRadius: colors.radius,
+                  opacity: pressed ? 0.85 : 1,
+                },
+              ]}
+            >
+              <Text
+                style={{
+                  color: colors.foreground,
+                  fontFamily: "Inter_600SemiBold",
+                  fontSize: 14,
+                }}
+              >
+                View Archived
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={async () => {
+                setArchivedMode(false);
+                await refresh();
+              }}
+              style={({ pressed }) => [
+                styles.viewArchivedBtn,
+                {
+                  borderColor: colors.border,
+                  backgroundColor: colors.card,
+                  borderRadius: colors.radius,
+                  opacity: pressed ? 0.85 : 1,
+                },
+              ]}
+            >
+              <Text
+                style={{
+                  color: colors.foreground,
+                  fontFamily: "Inter_600SemiBold",
+                  fontSize: 14,
+                }}
+              >
+                View Active
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => router.push("/inventory/new")}
+              style={({ pressed }) => [
+                styles.addBtn,
+                {
+                  backgroundColor: colors.primary,
+                  borderRadius: colors.radius,
+                  opacity: pressed ? 0.85 : 1,
+                },
+              ]}
+              hitSlop={6}
+            >
+              <Feather name="plus" size={20} color="#fff" />
+            </Pressable>
+          </View>
         </View>
 
         <View
@@ -148,12 +207,16 @@ export default function InventoryScreen() {
             icon="package"
             title={
               items.length === 0
-                ? "No equipment yet"
+                ? archivedMode
+                  ? "No archived equipment"
+                  : "No equipment yet"
                 : "No items match your search"
             }
             description={
               items.length === 0
-                ? "Catalog your first piece of machinery or tooling. You can link items to tasks later."
+                ? archivedMode
+                  ? "Archived equipment will appear here."
+                  : "Catalog your first piece of machinery or tooling. You can link items to tasks later."
                 : "Try a different keyword."
             }
           />
@@ -175,6 +238,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 12,
   },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
   h1: {
     fontSize: 32,
     marginTop: 2,
@@ -185,6 +253,13 @@ const styles = StyleSheet.create({
     height: 44,
     alignItems: "center",
     justifyContent: "center",
+  },
+  viewArchivedBtn: {
+    height: 44,
+    paddingHorizontal: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
   },
   searchBox: {
     flexDirection: "row",

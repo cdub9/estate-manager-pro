@@ -10,12 +10,16 @@ const router: IRouter = Router();
 
 router.use(requireAuth);
 
-router.get("/inventory", async (_req, res) => {
+router.get("/inventory", async (req, res) => {
+  const archived = req.query.archived === "true";
   const rows = await db
     .select()
     .from(inventoryTable)
     .orderBy(inventoryTable.createdAt);
-  res.json({ items: rows.map(toApiInventory).filter((item) => !item.archivedAt) });
+  const items = rows.map(toApiInventory).filter((item) =>
+    archived ? Boolean(item.archivedAt) : !item.archivedAt,
+  );
+  res.json({ items });
 });
 
 const createSchema = z.object({

@@ -165,8 +165,10 @@ export interface InventoryInput {
 }
 
 export const inventoryApi = {
-  list(): Promise<{ items: InventoryItem[] }> {
-    return request<{ items: InventoryItem[] }>("/inventory");
+  list(archived = false): Promise<{ items: InventoryItem[] }> {
+    return request<{ items: InventoryItem[] }>(
+      `/inventory${archived ? "?archived=true" : ""}`,
+    );
   },
   create(input: InventoryInput & { name: string }): Promise<{ item: InventoryItem }> {
     return request<{ item: InventoryItem }>("/inventory", {

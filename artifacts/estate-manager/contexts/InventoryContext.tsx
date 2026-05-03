@@ -23,6 +23,7 @@ export interface NewInventoryInput {
 interface InventoryContextValue {
   loading: boolean;
   items: InventoryItem[];
+  archivedMode: boolean;
   createItem: (input: NewInventoryInput) => Promise<InventoryItem>;
   updateItem: (id: string, updates: Partial<InventoryItem>) => Promise<void>;
   archiveItem: (id: string) => Promise<void>;
@@ -30,6 +31,8 @@ interface InventoryContextValue {
   deleteItem: (id: string) => Promise<void>;
   getItem: (id: string) => InventoryItem | undefined;
   refresh: () => Promise<void>;
+  refreshArchived: () => Promise<void>;
+  setArchivedMode: (value: boolean) => void;
 }
 
 const InventoryContext = createContext<InventoryContextValue | null>(null);
@@ -38,8 +41,10 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   const { currentUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<InventoryItem[]>([]);
+  const [archivedMode, setArchivedMode] = useState(false);
 
   const refresh = useCallback(async () => {
+    setArchivedMode(false);
     if (!currentUser) {
       setItems([]);
       setLoading(false);
@@ -47,7 +52,22 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     }
     setLoading(true);
     try {
-      const { items: list } = await inventoryApi.list();
+      const { items: list } = await inventoryApi.list(false);
+      setItems(list);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentUser]);
+
+  const refreshArchived = useCallback(async () => {
+    if (!currentUser) {
+      setItems([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    try {
+      const { items: list } = await inventoryApi.list(true);
       setItems(list);
     } finally {
       setLoading(false);
@@ -118,6 +138,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     () => ({
       loading,
       items,
+      archivedMode,
       createItem,
       updateItem,
       archiveItem,
@@ -125,10 +146,13 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       deleteItem,
       getItem,
       refresh,
+      refreshArchived,
+      setArchivedMode,
     }),
     [
       loading,
       items,
+      archivedMode,
       createItem,
       updateItem,
       archiveItem,
@@ -136,6 +160,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       deleteItem,
       getItem,
       refresh,
+      refreshArchived,
     ],
   );
 
