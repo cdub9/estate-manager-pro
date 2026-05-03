@@ -25,7 +25,13 @@ export default function InventoryDetailScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { getItemById, updateItem, deleteItem, archiveItem } = useInventory();
+  const {
+    getItemById,
+    updateItem,
+    deleteItem,
+    archiveItem,
+    unarchiveItem,
+  } = useInventory();
   const { tasks, removeInventoryFromAll } = useTasks();
 
   const item = getItemById(id);
@@ -37,6 +43,7 @@ export default function InventoryDetailScreen() {
   const [description, setDescription] = useState(item?.description ?? "");
   const [photo, setPhoto] = useState<string | null>(item?.photo ?? null);
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
+  const [unarchiveConfirmOpen, setUnarchiveConfirmOpen] = useState(false);
 
   useEffect(() => {
     if (!item) return;
@@ -127,6 +134,10 @@ export default function InventoryDetailScreen() {
   }
 
   function confirmArchive() {
+    if (item.archivedAt) {
+      setUnarchiveConfirmOpen(true);
+      return;
+    }
     setArchiveConfirmOpen(true);
   }
 
@@ -138,7 +149,11 @@ export default function InventoryDetailScreen() {
           headerRight: () => (
             <View style={{ flexDirection: "row", gap: 16 }}>
               <Pressable onPress={confirmArchive} hitSlop={10}>
-                <Feather name="archive" size={20} color={colors.foreground} />
+                <Feather
+                name={item.archivedAt ? "rotate-ccw" : "archive"}
+                  size={20}
+                  color={colors.foreground}
+                />
               </Pressable>
               <Pressable onPress={confirmDelete} hitSlop={10}>
                 <Feather name="trash-2" size={20} color={colors.destructive} />
@@ -274,6 +289,47 @@ export default function InventoryDetailScreen() {
                 onPress={async () => {
                   setArchiveConfirmOpen(false);
                   await archiveItem(item.id);
+                  router.back();
+                }}
+                style={{ flex: 1 }}
+              />
+            </View>
+          </View>
+        </View>
+      ) : null}
+      {unarchiveConfirmOpen ? (
+        <View style={styles.confirmOverlay}>
+          <View
+            style={[
+              styles.confirmCard,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+                borderRadius: colors.radius,
+              },
+            ]}
+          >
+            <Text
+              style={{
+                color: colors.foreground,
+                fontFamily: "Inter_600SemiBold",
+                fontSize: 16,
+              }}
+            >
+              Are you sure you'd like to unarchive this piece of equipment?
+            </Text>
+            <View style={styles.confirmActions}>
+              <Button
+                title="Cancel"
+                variant="secondary"
+                onPress={() => setUnarchiveConfirmOpen(false)}
+                style={{ flex: 1 }}
+              />
+              <Button
+                title="Unarchive"
+                onPress={async () => {
+                  setUnarchiveConfirmOpen(false);
+                  await unarchiveItem(item.id);
                   router.back();
                 }}
                 style={{ flex: 1 }}
