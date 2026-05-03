@@ -25,6 +25,8 @@ interface InventoryContextValue {
   items: InventoryItem[];
   createItem: (input: NewInventoryInput) => Promise<InventoryItem>;
   updateItem: (id: string, updates: Partial<InventoryItem>) => Promise<void>;
+  archiveItem: (id: string) => Promise<void>;
+  unarchiveItem: (id: string) => Promise<void>;
   deleteItem: (id: string) => Promise<void>;
   getItem: (id: string) => InventoryItem | undefined;
   refresh: () => Promise<void>;
@@ -118,9 +120,9 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       items,
       createItem,
       updateItem,
-      deleteItem,
       archiveItem,
       unarchiveItem,
+      deleteItem,
       getItem,
       refresh,
     }),
@@ -129,9 +131,9 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       items,
       createItem,
       updateItem,
-      deleteItem,
       archiveItem,
       unarchiveItem,
+      deleteItem,
       getItem,
       refresh,
     ],

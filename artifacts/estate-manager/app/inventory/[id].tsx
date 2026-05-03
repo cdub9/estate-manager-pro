@@ -25,7 +25,7 @@ export default function InventoryDetailScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { items, updateItem, deleteItem } = useInventory();
+  const { items, updateItem, deleteItem, archiveItem, unarchiveItem } = useInventory();
   const { tasks, removeInventoryFromAll } = useTasks();
 
   const item = items.find((it) => it.id === id);
@@ -125,15 +125,48 @@ export default function InventoryDetailScreen() {
     );
   }
 
+  function confirmArchive() {
+    Alert.alert(
+      item.archivedAt ? "Unarchive equipment?" : "Archive equipment?",
+      item.archivedAt
+        ? "This will make the equipment active again."
+        : "This will hide the equipment from the active inventory list.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: item.archivedAt ? "Unarchive" : "Archive",
+          style: item.archivedAt ? "default" : "destructive",
+          onPress: async () => {
+            if (item.archivedAt) {
+              await unarchiveItem(item.id);
+            } else {
+              await archiveItem(item.id);
+            }
+            router.back();
+          },
+        },
+      ],
+    );
+  }
+
   return (
     <>
       <Stack.Screen
         options={{
           title: "Equipment",
           headerRight: () => (
-            <Pressable onPress={confirmDelete} hitSlop={10}>
-              <Feather name="trash-2" size={20} color={colors.destructive} />
-            </Pressable>
+            <View style={{ flexDirection: "row", gap: 16 }}>
+              <Pressable onPress={confirmArchive} hitSlop={10}>
+                <Feather
+                  name={item.archivedAt ? "refresh-cw" : "archive"}
+                  size={20}
+                  color={colors.foreground}
+                />
+              </Pressable>
+              <Pressable onPress={confirmDelete} hitSlop={10}>
+                <Feather name="trash-2" size={20} color={colors.destructive} />
+              </Pressable>
+            </View>
           ),
         }}
       />
