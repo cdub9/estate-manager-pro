@@ -34,7 +34,12 @@ router.post("/auth/register", async (req, res) => {
   const passwordHash = await hashPassword(parsed.data.password);
   const [user] = await db
     .insert(usersTable)
-    .values({ name, passwordHash, colorIndex: allUsers.length })
+    .values({
+      name,
+      passwordHash,
+      colorIndex: allUsers.length,
+      timezone: "America/Denver",
+    })
     .returning();
   if (!user) {
     res.status(500).json({ error: "Failed to create user" });
@@ -85,6 +90,7 @@ router.get("/auth/me", requireAuth, async (req, res) => {
 const updateProfileSchema = z.object({
   name: z.string().min(1).max(60).optional(),
   password: z.string().min(4).max(200).optional(),
+  timezone: z.string().min(1).max(80).optional(),
 });
 
 router.patch("/auth/me", requireAuth, async (req, res) => {
@@ -109,6 +115,9 @@ router.patch("/auth/me", requireAuth, async (req, res) => {
   }
   if (parsed.data.password) {
     updates.passwordHash = await hashPassword(parsed.data.password);
+  }
+  if (parsed.data.timezone) {
+    updates.timezone = parsed.data.timezone;
   }
   if (Object.keys(updates).length === 0) {
     const [user] = await db

@@ -15,11 +15,15 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
 import { TextField } from "@/components/TextField";
-import { useAuth } from "@/contexts/AuthContext";
+import { DEFAULT_TIMEZONE, useAuth } from "@/contexts/AuthContext";
 import { useCategories } from "@/contexts/CategoriesContext";
 import { useInventory } from "@/contexts/InventoryContext";
 import { useTasks } from "@/contexts/TasksContext";
 import { useColors } from "@/hooks/useColors";
+
+const TIMEZONE_OPTIONS = [
+  { label: "Mountain Time (UTC-6)", value: DEFAULT_TIMEZONE },
+];
 
 export default function ProfileScreen() {
   const colors = useColors();
@@ -32,6 +36,7 @@ export default function ProfileScreen() {
 
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(currentUser?.name ?? "");
+  const [timezone, setTimezone] = useState(currentUser?.timezone ?? DEFAULT_TIMEZONE);
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -73,6 +78,7 @@ export default function ProfileScreen() {
       await updateProfile({
         name: name !== currentUser?.name ? name : undefined,
         password: password ? password : undefined,
+        timezone: timezone !== currentUser?.timezone ? timezone : undefined,
       });
       setPassword("");
       setEditing(false);
@@ -141,6 +147,7 @@ export default function ProfileScreen() {
             setEditing((v) => !v);
             setError(null);
             setName(currentUser.name);
+            setTimezone(currentUser.timezone ?? DEFAULT_TIMEZONE);
             setPassword("");
           }}
           hitSlop={8}
@@ -174,6 +181,39 @@ export default function ProfileScreen() {
             onChangeText={setName}
             autoCapitalize="words"
           />
+          <View style={styles.timezoneBox}>
+            <Text style={[styles.timezoneLabel, { color: colors.foreground }]}>Timezone</Text>
+            <View style={styles.timezoneOptions}>
+              {TIMEZONE_OPTIONS.map((option) => {
+                const selected = timezone === option.value;
+                return (
+                  <Pressable
+                    key={option.value}
+                    onPress={() => setTimezone(option.value)}
+                    style={({ pressed }) => [
+                      styles.timezoneOption,
+                      {
+                        backgroundColor: selected ? colors.primary : colors.secondary,
+                        borderColor: selected ? colors.primary : colors.border,
+                        opacity: pressed ? 0.85 : 1,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={{
+                        color: selected ? colors.primaryForeground : colors.foreground,
+                        fontFamily: "Inter_600SemiBold",
+                        fontSize: 14,
+                      }}
+                    >
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <Text style={[styles.timezoneHint, { color: colors.mutedForeground }]}>Default is Mountain Time (UTC-6).</Text>
+          </View>
           <TextField
             label="New password"
             value={password}
@@ -440,6 +480,26 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
     gap: 12,
+  },
+  timezoneBox: {
+    gap: 8,
+  },
+  timezoneLabel: {
+    fontSize: 14,
+    fontFamily: "Inter_600SemiBold",
+  },
+  timezoneOptions: {
+    gap: 8,
+  },
+  timezoneOption: {
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderRadius: 14,
+  },
+  timezoneHint: {
+    fontSize: 12,
+    lineHeight: 16,
   },
   statsRow: {
     flexDirection: "row",

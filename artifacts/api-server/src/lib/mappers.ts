@@ -4,6 +4,7 @@ export interface ApiUser {
   id: string;
   name: string;
   colorIndex: number;
+  timezone: string;
   createdAt: number;
 }
 
@@ -49,6 +50,7 @@ export function toApiUser(u: DbUser): ApiUser {
     id: u.id,
     name: u.name,
     colorIndex: u.colorIndex,
+    timezone: u.timezone,
     createdAt: u.createdAt.getTime(),
   };
 }

@@ -16,7 +16,6 @@ export interface NewTaskInput {
   description?: string;
   status?: TaskStatus;
   assigneeId?: string | null;
-  // Kept for source-compat with existing screens; the server uses the auth token.
   createdById?: string;
   dueDate?: number | null;
   photos?: string[];
@@ -102,16 +101,8 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
       if (updates.inventoryIds !== undefined)
         payload.inventoryIds = updates.inventoryIds;
       const { task } = await tasksApi.update(id, payload);
-      setTasks((prev) => {
-        const replaced = prev.map((t) => (t.id === id ? task : t));
-        // If the server cloned a recurring follow-up, refetch to pick it up.
-        return replaced;
-      });
-      // A status flip on a recurring task may have created a clone server-side.
-      if (
-        updates.status === "done" &&
-        task.recurrence !== "none"
-      ) {
+      setTasks((prev) => prev.map((t) => (t.id === id ? task : t)));
+      if (updates.status === "done" && task.recurrence !== "none") {
         await refresh();
       }
     },
@@ -142,7 +133,6 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
 
   const reorderTasks = useCallback<TasksContextValue["reorderTasks"]>(
     async (orderedIds) => {
-      // Optimistic local reorder for snappy UI.
       const byId = new Map(tasks.map((t) => [t.id, t]));
       const reordered: Task[] = [];
       for (const id of orderedIds) {
@@ -164,8 +154,6 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
     [tasks, refresh],
   );
 
-  // The server's FK constraints take care of clean-up; we just refetch so the
-  // local state matches.
   const removeInventoryFromAll = useCallback(
     async (_inventoryId: string) => {
       void _inventoryId;
@@ -209,9 +197,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
     ],
   );
 
-  return (
-    <TasksContext.Provider value={value}>{children}</TasksContext.Provider>
-  );
+  return <TasksContext.Provider value={value}>{children}</TasksContext.Provider>;
 }
 
 export function useTasks() {

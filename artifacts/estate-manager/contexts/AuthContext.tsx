@@ -15,7 +15,7 @@ import {
   setAuthToken,
   setUnauthorizedHandler,
 } from "@/lib/api";
-import { User } from "@/types";
+import { Timezone, User } from "@/types";
 
 const TOKEN_KEY = "estate.token";
 
@@ -28,11 +28,13 @@ interface AuthContextValue {
   logout: () => Promise<void>;
   switchUser: (userId: string) => Promise<void>;
   updateProfile: (
-    updates: Partial<Pick<User, "name" | "password">>,
+    updates: Partial<Pick<User, "name" | "password" | "timezone">>,
   ) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+export const DEFAULT_TIMEZONE: Timezone = "America/Denver";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
@@ -55,7 +57,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { users: list } = await authApi.listUsers();
       setUsers(list);
     } catch {
-      // Non-fatal — leave existing list as-is.
     }
   }, []);
 
@@ -131,8 +132,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setCurrentUser(null);
   }, [persistToken]);
 
-  // In server-backed mode you cannot silently switch users — each login needs its
-  // own password. Treat switchUser as a logout so the auth gate prompts sign-in.
   const switchUser = useCallback(
     async (_userId: string) => {
       void _userId;
@@ -145,10 +144,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const updateProfile = useCallback<AuthContextValue["updateProfile"]>(
     async (updates) => {
       if (!currentUser) throw new Error("Not signed in");
-      const payload: { name?: string; password?: string } = {};
+      const payload: { name?: string; password?: string; timezone?: string } = {};
       const trimmedName = updates.name?.trim();
       if (trimmedName) payload.name = trimmedName;
       if (updates.password) payload.password = updates.password;
+      if (updates.timezone) payload.timezone = updates.timezone;
       if (Object.keys(payload).length === 0) return;
       const { user } = await authApi.updateProfile(payload);
       if (user) setCurrentUser(user);

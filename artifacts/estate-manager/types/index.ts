@@ -2,12 +2,14 @@ export type TaskStatus = "open" | "in_progress" | "done";
 
 export type Recurrence = "none" | "daily" | "weekly" | "monthly" | "yearly";
 
+export type Timezone = "America/Denver";
+
 export interface User {
   id: string;
   name: string;
-  // Only present client-side when typing updateProfile inputs; the server never returns it.
   password?: string;
   colorIndex: number;
+  timezone: Timezone;
   createdAt: number;
 }
 

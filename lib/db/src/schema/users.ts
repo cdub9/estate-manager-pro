@@ -7,6 +7,7 @@ export const usersTable = pgTable("users", {
   name: text("name").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   colorIndex: integer("color_index").notNull().default(0),
+  timezone: text("timezone").notNull().default("America/Denver"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
