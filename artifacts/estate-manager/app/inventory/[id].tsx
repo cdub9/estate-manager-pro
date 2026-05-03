@@ -142,6 +142,10 @@ export default function InventoryDetailScreen() {
     );
   }
 
+  function onArchivePress() {
+    confirmArchive();
+  }
+
   return (
     <>
       <Stack.Screen
@@ -149,7 +153,7 @@ export default function InventoryDetailScreen() {
           title: "Equipment",
           headerRight: () => (
             <View style={{ flexDirection: "row", gap: 16 }}>
-              <Pressable onPress={confirmArchive} hitSlop={10}>
+              <Pressable onPress={onArchivePress} hitSlop={10}>
                 <Feather
                   name={item.archivedAt ? "refresh-cw" : "archive"}
                   size={20}
