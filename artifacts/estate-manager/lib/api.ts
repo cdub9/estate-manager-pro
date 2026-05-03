@@ -162,6 +162,7 @@ export interface InventoryInput {
   location?: string;
   description?: string;
   photo?: string | null;
+  archivedAt?: number | null;
 }
 
 export const inventoryApi = {

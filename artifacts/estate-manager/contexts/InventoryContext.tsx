@@ -97,6 +97,16 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
+  const archiveItem = useCallback(async (id: string) => {
+    const { item } = await inventoryApi.update(id, { archivedAt: Date.now() });
+    setItems((prev) => prev.map((it) => (it.id === id ? item : it)));
+  }, []);
+
+  const unarchiveItem = useCallback(async (id: string) => {
+    const { item } = await inventoryApi.update(id, { archivedAt: null });
+    setItems((prev) => prev.map((it) => (it.id === id ? item : it)));
+  }, []);
+
   const getItem = useCallback(
     (id: string) => items.find((it) => it.id === id),
     [items],
@@ -109,10 +119,22 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       createItem,
       updateItem,
       deleteItem,
+      archiveItem,
+      unarchiveItem,
       getItem,
       refresh,
     }),
-    [loading, items, createItem, updateItem, deleteItem, getItem, refresh],
+    [
+      loading,
+      items,
+      createItem,
+      updateItem,
+      deleteItem,
+      archiveItem,
+      unarchiveItem,
+      getItem,
+      refresh,
+    ],
   );
 
   return (

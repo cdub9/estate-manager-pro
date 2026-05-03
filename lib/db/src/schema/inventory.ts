@@ -10,6 +10,7 @@ export const inventoryTable = pgTable("inventory", {
   location: text("location").notNull().default(""),
   description: text("description").notNull().default(""),
   photo: text("photo"),
+  archivedAt: timestamp("archived_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

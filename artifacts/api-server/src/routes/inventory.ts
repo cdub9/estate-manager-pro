@@ -25,6 +25,7 @@ const createSchema = z.object({
   location: z.string().max(200).optional(),
   description: z.string().max(2000).optional(),
   photo: z.string().nullable().optional(),
+  archivedAt: z.number().nullable().optional(),
 });
 
 router.post("/inventory", async (req, res) => {
@@ -42,6 +43,7 @@ router.post("/inventory", async (req, res) => {
       location: parsed.data.location?.trim() ?? "",
       description: parsed.data.description?.trim() ?? "",
       photo: parsed.data.photo ?? null,
+      archivedAt: parsed.data.archivedAt ? new Date(parsed.data.archivedAt) : null,
     })
     .returning();
   res.json({ item: row ? toApiInventory(row) : null });
@@ -65,6 +67,10 @@ router.patch("/inventory/:id", async (req, res) => {
   if (parsed.data.description !== undefined)
     updates.description = parsed.data.description.trim();
   if (parsed.data.photo !== undefined) updates.photo = parsed.data.photo;
+  if (parsed.data.archivedAt !== undefined) {
+    updates.archivedAt =
+      parsed.data.archivedAt === null ? null : new Date(parsed.data.archivedAt);
+  }
   const [row] = await db
     .update(inventoryTable)
     .set(updates)

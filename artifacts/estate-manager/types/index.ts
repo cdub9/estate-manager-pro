@@ -52,6 +52,7 @@ export interface InventoryItem {
   location: string;
   description: string;
   photo: string | null;
+  archivedAt: number | null;
   createdAt: number;
   updatedAt: number;
 }
