@@ -168,6 +168,7 @@ export interface InventoryInput {
   location?: string;
   description?: string;
   photo?: string | null;
+  state?: "active" | "archived";
 }
 
 export const inventoryApi = {

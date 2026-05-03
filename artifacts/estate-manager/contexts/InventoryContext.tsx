@@ -118,6 +118,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         location: input.location?.trim() ?? "",
         description: input.description?.trim() ?? "",
         photo: input.photo ?? null,
+        state: "active",
       });
       setItems((prev) => [item, ...prev]);
       return item;
