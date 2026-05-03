@@ -157,7 +157,26 @@ export default function InventoryDetailScreen() {
                 title="Delete"
                 variant="destructive"
                 size="sm"
-                onPress={confirmDelete}
+                onPress={() =>
+                  Alert.alert(
+                    "Delete equipment?",
+                    linkedTasks.length > 0
+                      ? `This item is linked to ${linkedTasks.length} task${linkedTasks.length === 1 ? "" : "s"}. Those links will be removed.`
+                      : "This cannot be undone.",
+                    [
+                      { text: "Cancel", style: "cancel" },
+                      {
+                        text: "Delete",
+                        style: "destructive",
+                        onPress: async () => {
+                          await removeInventoryFromAll(item!.id);
+                          await deleteItem(item!.id);
+                          router.back();
+                        },
+                      },
+                    ],
+                  )
+                }
               />
             </View>
           ),
