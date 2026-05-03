@@ -26,9 +26,8 @@ export default function InventoryScreen() {
     items,
     archivedItems,
     archivedMode,
-    refresh,
-    refreshArchived,
-    setArchivedMode,
+    showArchived,
+    showActive,
   } = useInventory();
   const { tasks } = useTasks();
 
@@ -94,10 +93,7 @@ export default function InventoryScreen() {
           </View>
           <View style={styles.headerActions}>
             <Pressable
-              onPress={async () => {
-                setArchivedMode(true);
-                await refreshArchived();
-              }}
+              onPress={showArchived}
               style={({ pressed }) => [
                 styles.chip,
                 {
@@ -120,10 +116,7 @@ export default function InventoryScreen() {
               </Text>
             </Pressable>
             <Pressable
-              onPress={async () => {
-                setArchivedMode(false);
-                await refresh();
-              }}
+              onPress={showActive}
               style={({ pressed }) => [
                 styles.chip,
                 {
