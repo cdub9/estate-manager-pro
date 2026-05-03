@@ -15,7 +15,7 @@ router.get("/inventory", async (_req, res) => {
     .select()
     .from(inventoryTable)
     .orderBy(inventoryTable.createdAt);
-  res.json({ items: rows.map(toApiInventory) });
+  res.json({ items: rows.map(toApiInventory).filter((item) => !item.archivedAt) });
 });
 
 const createSchema = z.object({
