@@ -114,7 +114,7 @@ export default function InventoryScreen() {
                   fontSize: 12,
                 }}
               >
-                Archived
+                {archivedMode ? "Unarchive" : "Archived"}
               </Text>
             </Pressable>
             <Pressable
