@@ -33,8 +33,7 @@ interface InventoryContextValue {
   getItem: (id: string) => InventoryItem | undefined;
   refresh: () => Promise<void>;
   refreshArchived: () => Promise<void>;
-  showArchived: () => Promise<void>;
-  showActive: () => Promise<void>;
+  loadInventory: () => Promise<void>;
   setArchivedMode: (value: boolean) => void;
 }
 
@@ -79,19 +78,13 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     }
   }, [currentUser]);
 
-  const showArchived = useCallback(async () => {
-    setArchivedMode(true);
-    await refreshArchived();
-  }, [refreshArchived]);
-
-  const showActive = useCallback(async () => {
-    setArchivedMode(false);
-    await refresh();
-  }, [refresh]);
+  const loadInventory = useCallback(async () => {
+    await Promise.all([refresh(), refreshArchived()]);
+  }, [refresh, refreshArchived]);
 
   useEffect(() => {
-    refresh().catch(() => setLoading(false));
-  }, [refresh]);
+    loadInventory().catch(() => setLoading(false));
+  }, [loadInventory]);
 
   const createItem = useCallback<InventoryContextValue["createItem"]>(
     async (input) => {
@@ -165,8 +158,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       getItem,
       refresh,
       refreshArchived,
-      showArchived,
-      showActive,
+      loadInventory,
       setArchivedMode,
     }),
     [
@@ -182,8 +174,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       getItem,
       refresh,
       refreshArchived,
-      showArchived,
-      showActive,
+      loadInventory,
     ],
   );
 
