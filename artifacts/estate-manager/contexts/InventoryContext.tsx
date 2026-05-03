@@ -37,8 +37,6 @@ interface InventoryContextValue {
   getItem: (id: string) => InventoryItem | undefined;
   refresh: () => Promise<void>;
   refreshArchived: () => Promise<void>;
-  showArchived: () => Promise<void>;
-  showActive: () => Promise<void>;
   setArchivedMode: (value: boolean) => void;
 }
 
@@ -82,16 +80,6 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     }
   }, [currentUser]);
-
-  const showArchived = useCallback(async () => {
-    setArchivedMode(true);
-    await refreshArchived();
-  }, [refreshArchived]);
-
-  const showActive = useCallback(async () => {
-    setArchivedMode(false);
-    await refresh();
-  }, [refresh]);
 
   useEffect(() => {
     refresh().catch(() => setLoading(false));
@@ -170,8 +158,6 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       getItem,
       refresh,
       refreshArchived,
-      showArchived,
-      showActive,
       setArchivedMode,
     }),
     [
@@ -187,8 +173,6 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       getItem,
       refresh,
       refreshArchived,
-      showArchived,
-      showActive,
     ],
   );
 
