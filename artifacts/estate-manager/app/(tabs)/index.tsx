@@ -24,13 +24,12 @@ import { useTasks } from "@/contexts/TasksContext";
 import { useColors } from "@/hooks/useColors";
 import { Task, TaskStatus } from "@/types";
 
-type Filter = "all" | "mine" | "open" | "done";
+type Filter = "all" | "mine" | "hideCompleted";
 
 const FILTERS: { value: Filter; label: string }[] = [
   { value: "all", label: "All" },
   { value: "mine", label: "Mine" },
-  { value: "open", label: "Open" },
-  { value: "done", label: "Done" },
+  { value: "hideCompleted", label: "Hide Completed Tasks" },
 ];
 
 export default function TasksScreen() {
@@ -60,8 +59,7 @@ export default function TasksScreen() {
     let list = tasks;
     if (filter === "mine")
       list = list.filter((t) => t.assigneeId === currentUser?.id);
-    if (filter === "open") list = list.filter((t) => t.status !== "done");
-    if (filter === "done") list = list.filter((t) => t.status === "done");
+    if (filter === "hideCompleted") list = list.filter((t) => t.status !== "done");
     if (categoryFilter)
       list = list.filter((t) => t.categoryId === categoryFilter);
     const q = search.trim().toLowerCase();
