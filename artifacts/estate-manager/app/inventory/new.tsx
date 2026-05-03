@@ -31,6 +31,7 @@ export default function NewInventoryScreen() {
   const [submitting, setSubmitting] = useState(false);
 
   async function handleCreate() {
+    if (submitting) return;
     if (!name.trim()) {
       setError("Give the item a name");
       return;
