@@ -39,7 +39,7 @@ export default function InventoryScreen() {
 
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase();
-    let list = items;
+    let list = items.filter((it) => !it.archivedAt);
     if (q) {
       list = list.filter(
         (it) =>
