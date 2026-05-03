@@ -2,7 +2,14 @@ export type TaskStatus = "open" | "in_progress" | "done";
 
 export type Recurrence = "none" | "daily" | "weekly" | "monthly" | "yearly";
 
-export type Timezone = "America/Denver";
+export type Timezone =
+  | "America/New_York"
+  | "America/Chicago"
+  | "America/Denver"
+  | "America/Phoenix"
+  | "America/Los_Angeles"
+  | "America/Anchorage"
+  | "Pacific/Honolulu";
 
 export interface User {
   id: string;

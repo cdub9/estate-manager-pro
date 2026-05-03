@@ -1,6 +1,6 @@
 import { db, usersTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
-import { Router, type IRouter } from "express";
+import { Router, type IRouter, type Request, type Response } from "express";
 import { z } from "zod";
 
 import { hashPassword, signToken, verifyPassword } from "../lib/auth";
@@ -13,6 +13,16 @@ const credsSchema = z.object({
   name: z.string().min(1).max(60),
   password: z.string().min(4).max(200),
 });
+
+const timezoneSchema = z.enum([
+  "America/New_York",
+  "America/Chicago",
+  "America/Denver",
+  "America/Phoenix",
+  "America/Los_Angeles",
+  "America/Anchorage",
+  "Pacific/Honolulu",
+]);
 
 router.post("/auth/register", async (req, res) => {
   const parsed = credsSchema.safeParse(req.body);
@@ -74,7 +84,7 @@ router.post("/auth/login", async (req, res) => {
   res.json({ token, user: toApiUser(user) });
 });
 
-router.get("/auth/me", requireAuth, async (req, res) => {
+router.get("/auth/me", requireAuth, async (req: Request, res: Response) => {
   const [user] = await db
     .select()
     .from(usersTable)
@@ -90,10 +100,10 @@ router.get("/auth/me", requireAuth, async (req, res) => {
 const updateProfileSchema = z.object({
   name: z.string().min(1).max(60).optional(),
   password: z.string().min(4).max(200).optional(),
-  timezone: z.string().min(1).max(80).optional(),
+  timezone: timezoneSchema.optional(),
 });
 
-router.patch("/auth/me", requireAuth, async (req, res) => {
+router.patch("/auth/me", requireAuth, async (req: Request, res: Response) => {
   const parsed = updateProfileSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Invalid input" });
@@ -136,7 +146,7 @@ router.patch("/auth/me", requireAuth, async (req, res) => {
   res.json({ user: user ? toApiUser(user) : null });
 });
 
-router.get("/users", requireAuth, async (_req, res) => {
+router.get("/users", requireAuth, async (_req: Request, res: Response) => {
   const users = await db
     .select()
     .from(usersTable)
