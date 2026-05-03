@@ -89,7 +89,7 @@ router.patch("/inventory/:id/archive", async (req, res) => {
   }
   const [row] = await db
     .update(inventoryTable)
-    .set({ archivedAt: parsed.data.archivedAt ? new Date(parsed.data.archivedAt) : null })
+    .set({ updatedAt: new Date() })
     .where(eq(inventoryTable.id, req.params.id!))
     .returning();
   res.json({ item: row ? toApiInventory(row) : null });

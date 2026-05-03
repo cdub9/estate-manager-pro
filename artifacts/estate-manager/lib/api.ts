@@ -39,6 +39,18 @@ export class ApiError extends Error {
   }
 }
 
+function parseErrorMessage(data: unknown, status: number): string {
+  if (
+    data &&
+    typeof data === "object" &&
+    "error" in data &&
+    typeof (data as { error: unknown }).error === "string"
+  ) {
+    return (data as { error: string }).error;
+  }
+  return `Request failed (${status})`;
+}
+
 async function request<T>(
   path: string,
   options: { method?: string; body?: unknown; auth?: boolean } = {},
@@ -76,13 +88,7 @@ async function request<T>(
     }
   }
   if (!res.ok) {
-    const message =
-      (data &&
-        typeof data === "object" &&
-        "error" in data &&
-        typeof (data as { error: unknown }).error === "string" &&
-        (data as { error: string }).error) ||
-      `Request failed (${res.status})`;
+    const message = parseErrorMessage(data, res.status);
     throw new ApiError(message, res.status);
   }
   return data as T;
@@ -166,9 +172,8 @@ export interface InventoryInput {
 
 export const inventoryApi = {
   list(archived = false): Promise<{ items: InventoryItem[] }> {
-    return request<{ items: InventoryItem[] }>(
-      `/inventory${archived ? "?archived=true" : ""}`,
-    );
+    const path = archived ? "/inventory?archived=true" : "/inventory";
+    return request<{ items: InventoryItem[] }>(path);
   },
   create(input: InventoryInput & { name: string }): Promise<{ item: InventoryItem }> {
     return request<{ item: InventoryItem }>("/inventory", {

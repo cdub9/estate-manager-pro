@@ -24,6 +24,7 @@ export default function InventoryScreen() {
   const router = useRouter();
   const {
     items,
+    archivedItems,
     archivedMode,
     refresh,
     refreshArchived,
@@ -45,7 +46,7 @@ export default function InventoryScreen() {
 
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase();
-    let list = items.filter((it) => !it.archivedAt);
+    let list = archivedMode ? archivedItems : items;
     if (q) {
       list = list.filter(
         (it) =>
@@ -59,7 +60,7 @@ export default function InventoryScreen() {
     return [...list].sort((a, b) =>
       a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
     );
-  }, [items, search]);
+  }, [archivedItems, archivedMode, items, search]);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad =

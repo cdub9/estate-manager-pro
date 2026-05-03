@@ -23,6 +23,7 @@ export interface NewInventoryInput {
 interface InventoryContextValue {
   loading: boolean;
   items: InventoryItem[];
+  archivedItems: InventoryItem[];
   archivedMode: boolean;
   createItem: (input: NewInventoryInput) => Promise<InventoryItem>;
   updateItem: (id: string, updates: Partial<InventoryItem>) => Promise<void>;
@@ -41,12 +42,14 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   const { currentUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<InventoryItem[]>([]);
+  const [archivedItems, setArchivedItems] = useState<InventoryItem[]>([]);
   const [archivedMode, setArchivedMode] = useState(false);
 
   const refresh = useCallback(async () => {
     setArchivedMode(false);
     if (!currentUser) {
       setItems([]);
+      setArchivedItems([]);
       setLoading(false);
       return;
     }
@@ -61,14 +64,14 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
   const refreshArchived = useCallback(async () => {
     if (!currentUser) {
-      setItems([]);
+      setArchivedItems([]);
       setLoading(false);
       return;
     }
     setLoading(true);
     try {
       const { items: list } = await inventoryApi.list(true);
-      setItems(list);
+      setArchivedItems(list);
     } finally {
       setLoading(false);
     }
@@ -122,11 +125,13 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   const archiveItem = useCallback(async (id: string) => {
     const { item } = await inventoryApi.archive(id, Date.now());
     setItems((prev) => prev.filter((it) => it.id !== id));
+      setArchivedItems((prev) => [item, ...prev]);
   }, []);
 
   const unarchiveItem = useCallback(async (id: string) => {
     const { item } = await inventoryApi.archive(id, null);
     setItems((prev) => prev.map((it) => (it.id === id ? item : it)));
+    setArchivedItems((prev) => prev.filter((it) => it.id !== id));
   }, []);
 
   const getItem = useCallback(
@@ -138,6 +143,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     () => ({
       loading,
       items,
+      archivedItems,
       archivedMode,
       createItem,
       updateItem,
@@ -152,6 +158,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     [
       loading,
       items,
+      archivedItems,
       archivedMode,
       createItem,
       updateItem,
