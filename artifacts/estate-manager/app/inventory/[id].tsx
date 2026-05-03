@@ -146,12 +146,16 @@ export default function InventoryDetailScreen() {
       <Stack.Screen
         options={{
           title: "Equipment",
-          headerRight: () =>
-            item.archivedAt ? (
-              <Button title="Unarchive" onPress={confirmArchive} />
-            ) : (
-              <Button title="Archive" onPress={confirmArchive} variant="secondary" />
-            ),
+          headerRight: () => (
+            <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+              {item.archivedAt ? (
+                <Button title="Unarchive" onPress={confirmArchive} />
+              ) : (
+                <Button title="Archive" onPress={confirmArchive} variant="secondary" />
+              )}
+              <Button title="Delete" variant="destructive" onPress={confirmDelete} />
+            </View>
+          ),
         }}
       />
       <KeyboardAwareScrollViewCompat
@@ -246,7 +250,6 @@ export default function InventoryDetailScreen() {
             style={{ flex: 1 }}
           />
         </View>
-        <Button title="Delete" variant="destructive" onPress={confirmDelete} />
       </KeyboardAwareScrollViewCompat>
       {archiveConfirmOpen ? (
         <View style={styles.confirmOverlay}>
