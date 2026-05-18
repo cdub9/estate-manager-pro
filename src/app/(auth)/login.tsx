@@ -37,12 +37,10 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      const ok = await login(name.trim(), password);
-      if (!ok) {
-        Alert.alert("Login failed", "Name or password is incorrect.");
-      }
-    } catch {
-      Alert.alert("Error", "Something went wrong. Please try again.");
+      await login(name.trim(), password);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Name or password is incorrect.";
+      Alert.alert("Login failed", msg);
     } finally {
       setLoading(false);
     }

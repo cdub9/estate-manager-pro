@@ -88,18 +88,17 @@ export default function ProfileScreen() {
 
     setSaving(true);
     try {
-      const result = await updateProfile({
+      await updateProfile({
         name: name.trim(),
         timezone,
         password: password || undefined,
       });
-      if (!result.ok) {
-        Alert.alert("Error", result.error ?? "Could not save profile.");
-      } else {
-        setEditing(false);
-        setPassword("");
-        setConfirmPassword("");
-      }
+      setEditing(false);
+      setPassword("");
+      setConfirmPassword("");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Could not save profile.";
+      Alert.alert("Error", msg);
     } finally {
       setSaving(false);
     }

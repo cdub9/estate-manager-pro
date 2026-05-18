@@ -42,12 +42,10 @@ export default function RegisterScreen() {
 
     setLoading(true);
     try {
-      const result = await register(name.trim(), password);
-      if (!result.ok) {
-        Alert.alert("Registration failed", result.error ?? "Please try again.");
-      }
-    } catch {
-      Alert.alert("Error", "Something went wrong. Please try again.");
+      await register(name.trim(), password);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Please try again.";
+      Alert.alert("Registration failed", msg);
     } finally {
       setLoading(false);
     }
