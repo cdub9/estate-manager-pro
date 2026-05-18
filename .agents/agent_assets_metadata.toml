@@ -1,8 +1,0 @@
-uploads = []
-outputs = []
-
-[[generated]]
-id = "8l0grG266yIQp_QEN0A-s"
-uri = "file://artifacts/estate-manager/assets/images/icon.png"
-type = "image"
-title = "estate manager app icon"
