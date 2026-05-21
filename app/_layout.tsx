@@ -8,8 +8,12 @@ import {
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useRef } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, LogBox, View } from "react-native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
+
+// react-native-draggable-flatlist uses InteractionManager internally;
+// suppress the deprecation warning until the library is updated.
+LogBox.ignoreLogs(["InteractionManager has been deprecated"]);
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
