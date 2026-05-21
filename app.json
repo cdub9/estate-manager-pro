@@ -50,7 +50,8 @@
         {
           "photosPermission": "Used to attach photos to tasks and equipment."
         }
-      ]
+      ],
+      "expo-image"
     ],
     "experiments": {
       "typedRoutes": false
