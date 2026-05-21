@@ -43,12 +43,7 @@
       "favicon": "./assets/images/icon.png"
     },
     "plugins": [
-      [
-        "expo-router",
-        {
-          "root": "src"
-        }
-      ],
+      "expo-router",
       "expo-secure-store",
       [
         "expo-image-picker",
