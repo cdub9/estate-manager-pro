@@ -232,7 +232,7 @@ export default function ProfileScreen() {
             />
           )}
 
-          <Button label="Save changes" onPress={handleSave} loading={saving} />
+          <Button title="Save changes" onPress={handleSave} loading={saving} />
         </View>
       )}
 

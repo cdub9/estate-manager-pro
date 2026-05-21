@@ -169,7 +169,7 @@ export default function TaskDetailScreen() {
           >
             <Feather name="trash-2" size={20} color={colors.destructive} />
           </Pressable>
-          <Button label="Save" onPress={handleSave} loading={saving} size="sm" disabled={!isDirty} />
+          <Button title="Save" onPress={handleSave} loading={saving} size="sm" disabled={!isDirty} />
         </View>
       </View>
 

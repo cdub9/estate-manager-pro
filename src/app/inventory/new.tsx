@@ -19,7 +19,7 @@ import { useColors } from "@/hooks/useColors";
 export default function NewInventoryScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { addItem } = useInventory();
+  const { createItem } = useInventory();
 
   const [name, setName] = useState("");
   const [vendor, setVendor] = useState("");
@@ -55,7 +55,7 @@ export default function NewInventoryScreen() {
     }
     setSaving(true);
     try {
-      await addItem({
+      await createItem({
         name: name.trim(),
         vendor: vendor.trim(),
         partNumber: partNumber.trim(),
@@ -84,7 +84,7 @@ export default function NewInventoryScreen() {
         <Text style={[styles.headerTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
           New Item
         </Text>
-        <Button label="Save" onPress={handleSave} loading={saving} size="sm" />
+        <Button title="Save" onPress={handleSave} loading={saving} size="sm" />
       </View>
 
       <KeyboardAwareScrollViewCompat

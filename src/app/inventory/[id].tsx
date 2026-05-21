@@ -51,7 +51,7 @@ export default function InventoryDetailScreen() {
     setPhoto(item.photo);
   }, [item]);
 
-  const isDirty = item !== null && (
+  const isDirty = item !== undefined && (
     name !== item.name ||
     vendor !== item.vendor ||
     partNumber !== item.partNumber ||
@@ -181,7 +181,7 @@ export default function InventoryDetailScreen() {
             <Feather name="trash-2" size={20} color={colors.destructive} />
           </Pressable>
           {!isArchived && (
-            <Button label="Save" onPress={handleSave} loading={saving} size="sm" disabled={!isDirty} />
+            <Button title="Save" onPress={handleSave} loading={saving} size="sm" disabled={!isDirty} />
           )}
         </View>
       </View>

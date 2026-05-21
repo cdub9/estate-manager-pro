@@ -23,7 +23,7 @@ import { Category } from "@/types";
 export default function CategoriesScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { categories, addCategory, updateCategory, deleteCategory } = useCategories();
+  const { categories, createCategory, updateCategory, deleteCategory } = useCategories();
   const { tasks } = useTasks();
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -76,19 +76,14 @@ export default function CategoriesScreen() {
     setSaving(true);
     try {
       if (editing) {
-        const result = await updateCategory(editing.id, { name: formName.trim(), color: formColor });
-        if (!result.ok) {
-          Alert.alert("Error", result.error ?? "Could not update category.");
-          return;
-        }
+        await updateCategory(editing.id, { name: formName.trim(), color: formColor });
       } else {
-        const result = await addCategory(formName.trim(), formColor);
-        if (!result.ok) {
-          Alert.alert("Error", result.error ?? "Could not create category.");
-          return;
-        }
+        await createCategory(formName.trim(), formColor);
       }
       setModalVisible(false);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Could not save category.";
+      Alert.alert("Error", msg);
     } finally {
       setSaving(false);
     }

@@ -85,7 +85,7 @@ export default function LoginScreen() {
           />
 
           <Button
-            label="Sign in"
+            title="Sign in"
             onPress={handleLogin}
             loading={loading}
             style={{ marginTop: 4 }}

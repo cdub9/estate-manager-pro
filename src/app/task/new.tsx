@@ -31,7 +31,7 @@ export default function NewTaskScreen() {
   const colors = useColors();
   const router = useRouter();
   const { currentUser, users } = useAuth();
-  const { addTask } = useTasks();
+  const { createTask } = useTasks();
   const { categories } = useCategories();
   const { items } = useInventory();
 
@@ -73,7 +73,7 @@ export default function NewTaskScreen() {
     }
     setSaving(true);
     try {
-      await addTask({
+      await createTask({
         title: title.trim(),
         description: description.trim(),
         status,
@@ -105,7 +105,7 @@ export default function NewTaskScreen() {
         <Text style={[styles.headerTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
           New Task
         </Text>
-        <Button label="Save" onPress={handleSave} loading={saving} size="sm" />
+        <Button title="Save" onPress={handleSave} loading={saving} size="sm" />
       </View>
 
       <KeyboardAwareScrollViewCompat

@@ -17,6 +17,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { EmptyState } from "@/components/EmptyState";
 import { TaskCard } from "@/components/TaskCard";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCategories } from "@/contexts/CategoriesContext";
 import { useTasks } from "@/contexts/TasksContext";
 import { useColors } from "@/hooks/useColors";
 import { Task } from "@/types";
@@ -28,6 +29,7 @@ export default function TasksScreen() {
   const router = useRouter();
   const { currentUser, users } = useAuth();
   const { tasks, updateTask, reorderTasks } = useTasks();
+  const { getCategory } = useCategories();
 
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<FilterMode>("all");
@@ -64,20 +66,27 @@ export default function TasksScreen() {
 
   const renderItem = useCallback(
     ({ item, drag, isActive }: RenderItemParams<Task>) => {
+      const assignee = users.find((u) => u.id === item.assigneeId) ?? null;
+      const category = getCategory(item.categoryId ?? null) ?? null;
       return (
         <ScaleDecorator>
           <TaskCard
             task={item}
-            users={users}
-            onStatusChange={(status) => updateTask(item.id, { status })}
+            assignee={assignee}
+            category={category}
+            inventoryCount={item.inventoryIds.length}
             onPress={() => router.push(`/task/${item.id}`)}
+            onToggleComplete={() =>
+              updateTask(item.id, { status: item.status === "done" ? "open" : "done" })
+            }
             onLongPress={filtersActive ? undefined : drag}
             isDragging={isActive}
+            draggable={!filtersActive}
           />
         </ScaleDecorator>
       );
     },
-    [users, updateTask, router, filtersActive]
+    [users, getCategory, updateTask, router, filtersActive]
   );
 
   const FILTERS: { value: FilterMode; label: string }[] = [
@@ -191,7 +200,7 @@ export default function TasksScreen() {
           <EmptyState
             icon="check-square"
             title={filtersActive ? "No matching tasks" : "No tasks yet"}
-            subtitle={filtersActive ? "Try adjusting your search or filters" : "Tap + to create your first task"}
+            description={filtersActive ? "Try adjusting your search or filters" : "Tap + to create your first task"}
           />
         }
       />

@@ -98,7 +98,7 @@ export default function RegisterScreen() {
           />
 
           <Button
-            label="Create account"
+            title="Create account"
             onPress={handleRegister}
             loading={loading}
             style={{ marginTop: 4 }}

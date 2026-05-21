@@ -13,12 +13,24 @@ import {
 import { EmptyState } from "@/components/EmptyState";
 import { InventoryCard } from "@/components/InventoryCard";
 import { useInventory } from "@/contexts/InventoryContext";
+import { useTasks } from "@/contexts/TasksContext";
 import { useColors } from "@/hooks/useColors";
 
 export default function InventoryScreen() {
   const colors = useColors();
   const router = useRouter();
   const { items, archivedItems, archivedMode, showArchived, showActive } = useInventory();
+  const { tasks } = useTasks();
+
+  const taskCountByItem = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const t of tasks) {
+      for (const id of t.inventoryIds) {
+        map[id] = (map[id] ?? 0) + 1;
+      }
+    }
+    return map;
+  }, [tasks]);
 
   const [query, setQuery] = useState("");
 
@@ -134,13 +146,17 @@ export default function InventoryScreen() {
         keyExtractor={(i) => i.id}
         contentContainerStyle={styles.list}
         renderItem={({ item }) => (
-          <InventoryCard item={item} onPress={() => router.push(`/inventory/${item.id}`)} />
+          <InventoryCard
+              item={item}
+              taskCount={taskCountByItem[item.id] ?? 0}
+              onPress={() => router.push(`/inventory/${item.id}`)}
+            />
         )}
         ListEmptyComponent={
           <EmptyState
             icon="package"
             title={query ? "No matching items" : archivedMode ? "No archived items" : "No inventory yet"}
-            subtitle={
+            description={
               query
                 ? "Try adjusting your search"
                 : archivedMode
