@@ -9,6 +9,7 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useRef } from "react";
 import { ActivityIndicator, View } from "react-native";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
@@ -94,9 +95,11 @@ export default function RootLayout() {
 
   return (
     <ErrorBoundary>
-      <AppProviders>
-        <RootNavigator />
-      </AppProviders>
+      <KeyboardProvider>
+        <AppProviders>
+          <RootNavigator />
+        </AppProviders>
+      </KeyboardProvider>
     </ErrorBoundary>
   );
 }
