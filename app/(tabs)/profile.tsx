@@ -5,6 +5,7 @@ import {
   Alert,
   Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   View,
@@ -37,7 +38,7 @@ const THEME_OPTIONS: { value: ThemePreference; label: string; icon: string }[] =
 export default function ProfileScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { currentUser, users, logout, switchUser, updateProfile } = useAuth();
+  const { currentUser, users, logout, updateProfile, estateJoinCode } = useAuth();
   const { themePreference, setThemePreference } = useTheme();
 
   const [editing, setEditing] = useState(false);
@@ -119,7 +120,12 @@ export default function ProfileScreen() {
     ]);
   }
 
-  const otherUsers = users.filter((u) => u.id !== currentUser?.id);
+  async function handleShareCode() {
+    if (!estateJoinCode) return;
+    await Share.share({
+      message: `Join my estate on Estate Manager Pro with code: ${estateJoinCode}`,
+    });
+  }
 
   if (!currentUser) return null;
 
@@ -163,12 +169,74 @@ export default function ProfileScreen() {
               {currentUser.name}
             </Text>
             <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_400Regular", fontSize: 13, marginTop: 2 }}>
+              {currentUser.email}
+            </Text>
+            <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_400Regular", fontSize: 12, marginTop: 1 }}>
               {TIMEZONE_OPTIONS.find((t) => t.value === (currentUser.timezone ?? DEFAULT_TIMEZONE))?.label ??
                 currentUser.timezone}
             </Text>
           </View>
         </View>
       </View>
+
+      {/* Estate / household */}
+      {estateJoinCode && (
+        <View style={[styles.card, { backgroundColor: colors.card, borderRadius: colors.radius }]}>
+          <Text style={[styles.sectionLabel, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
+            Household
+          </Text>
+          <View style={styles.joinCodeRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_400Regular", fontSize: 12, marginBottom: 2 }}>
+                Join code — share with household members
+              </Text>
+              <Text style={{ color: colors.foreground, fontFamily: "Inter_700Bold", fontSize: 22, letterSpacing: 4 }}>
+                {estateJoinCode}
+              </Text>
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Share join code"
+              onPress={handleShareCode}
+              style={({ pressed }) => [
+                styles.copyBtn,
+                { backgroundColor: colors.secondary, borderRadius: colors.radius - 4, opacity: pressed ? 0.7 : 1 },
+              ]}
+            >
+              <Feather name="share-2" size={16} color={colors.primary} />
+              <Text style={{ color: colors.primary, fontFamily: "Inter_600SemiBold", fontSize: 12 }}>Share</Text>
+            </Pressable>
+          </View>
+
+          {users.length > 0 && (
+            <>
+              <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_600SemiBold", fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                Members
+              </Text>
+              {users.map((u, idx) => (
+                <View
+                  key={u.id}
+                  style={[
+                    styles.memberRow,
+                    { borderBottomColor: colors.border },
+                    idx === users.length - 1 && { borderBottomWidth: 0 },
+                  ]}
+                >
+                  <Avatar user={u} size={32} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: colors.foreground, fontFamily: "Inter_500Medium", fontSize: 14 }}>
+                      {u.name}{u.id === currentUser.id ? " (you)" : ""}
+                    </Text>
+                    <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_400Regular", fontSize: 12 }}>
+                      {u.email}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </>
+          )}
+        </View>
+      )}
 
       {/* Edit form */}
       {editing && (
@@ -241,33 +309,6 @@ export default function ProfileScreen() {
           )}
 
           <Button title="Save changes" onPress={handleSave} loading={saving} />
-        </View>
-      )}
-
-      {/* Switch user */}
-      {otherUsers.length > 0 && (
-        <View style={[styles.card, { backgroundColor: colors.card, borderRadius: colors.radius }]}>
-          <Text style={[styles.sectionLabel, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
-            Switch user
-          </Text>
-          {otherUsers.map((u) => (
-            <Pressable
-              key={u.id}
-              accessibilityRole="button"
-              accessibilityLabel={`Switch to ${u.name}`}
-              onPress={() => switchUser(u.id)}
-              style={({ pressed }) => [
-                styles.userRow,
-                { borderBottomColor: colors.border, opacity: pressed ? 0.7 : 1 },
-              ]}
-            >
-              <Avatar user={u} size={36} />
-              <Text style={{ color: colors.foreground, fontFamily: "Inter_500Medium", fontSize: 15, flex: 1 }}>
-                {u.name}
-              </Text>
-              <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
-            </Pressable>
-          ))}
         </View>
       )}
 
@@ -407,11 +448,23 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 10,
   },
-  userRow: {
+  joinCodeRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    paddingVertical: 10,
+  },
+  copyBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  memberRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 8,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   linkRow: {

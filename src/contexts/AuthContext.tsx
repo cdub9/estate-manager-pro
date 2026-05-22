@@ -1,34 +1,55 @@
-import * as Crypto from "expo-crypto";
 import React, {
   createContext,
   useCallback,
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
-import { asyncStorage } from "@/storage/asyncStorage";
+import { supabase } from "@/lib/supabase";
 import { Timezone, User } from "@/types";
-import { uuid } from "@/utils/uuid";
 
 export const DEFAULT_TIMEZONE: Timezone = "America/Denver";
 
-async function hashPassword(password: string): Promise<string> {
-  return Crypto.digestStringAsync(
-    Crypto.CryptoDigestAlgorithm.SHA256,
-    password,
-  );
+// ── DB row shape ───────────────────────────────────────────────────────────────
+interface ProfileRow {
+  id: string;
+  estate_id: string;
+  email: string;
+  name: string;
+  color_index: number;
+  timezone: string;
+  created_at: number;
 }
 
+function rowToUser(row: ProfileRow): User {
+  return {
+    id: row.id,
+    email: row.email,
+    name: row.name,
+    colorIndex: row.color_index,
+    timezone: (row.timezone as Timezone) ?? DEFAULT_TIMEZONE,
+    createdAt: row.created_at,
+  };
+}
+
+// ── Context shape ──────────────────────────────────────────────────────────────
 interface AuthContextValue {
   loading: boolean;
   users: User[];
   currentUser: User | null;
-  register: (name: string, password: string) => Promise<User>;
-  login: (name: string, password: string) => Promise<User>;
+  estateId: string | null;
+  estateJoinCode: string | null;
+  register: (
+    email: string,
+    name: string,
+    password: string,
+    estateCode?: string,
+  ) => Promise<User>;
+  login: (email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
-  switchUser: (userId: string) => Promise<void>;
   updateProfile: (
     updates: Partial<Pick<User, "name" | "timezone">> & { password?: string },
   ) => Promise<void>;
@@ -36,124 +57,183 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+// ── Provider ───────────────────────────────────────────────────────────────────
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
-  const [users, setUsers] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
+  const [estateId, setEstateId] = useState<string | null>(null);
+  const [estateJoinCode, setEstateJoinCode] = useState<string | null>(null);
 
+  // Prevent double-loads during registration (signUp fires SIGNED_IN immediately)
+  const loadingProfile = useRef(false);
+
+  // ── Load all estate data for a given auth user ID ──────────────────────────
+  const loadUserData = useCallback(async (userId: string): Promise<User | null> => {
+    if (loadingProfile.current) return null;
+    loadingProfile.current = true;
+    try {
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
+
+      if (error || !profile) return null; // Profile not yet created (mid-registration)
+
+      const [{ data: estate }, { data: members }] = await Promise.all([
+        supabase.from("estates").select("id, join_code").eq("id", profile.estate_id).single(),
+        supabase.from("profiles").select("*").eq("estate_id", profile.estate_id),
+      ]);
+
+      const user = rowToUser(profile as ProfileRow);
+      setCurrentUser(user);
+      setUsers((members ?? []).map((p) => rowToUser(p as ProfileRow)));
+      setEstateId(profile.estate_id);
+      setEstateJoinCode(estate?.join_code ?? null);
+      return user;
+    } finally {
+      loadingProfile.current = false;
+    }
+  }, []);
+
+  // ── Initialise from persisted session ─────────────────────────────────────
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const [allUsers, sessionId] = await Promise.all([
-          asyncStorage.getUsers(),
-          asyncStorage.getSession(),
-        ]);
-        if (cancelled) return;
-        setUsers(allUsers);
-        if (sessionId) {
-          const found = allUsers.find((u) => u.id === sessionId) ?? null;
-          setCurrentUser(found);
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        await loadUserData(session.user.id);
+      }
+      setLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === "SIGNED_OUT") {
+          setCurrentUser(null);
+          setUsers([]);
+          setEstateId(null);
+          setEstateJoinCode(null);
         }
-      } catch (err) {
-        console.error("AuthProvider init failed:", err);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+        // SIGNED_IN is handled manually in login() / register() to avoid
+        // a race where the profile row doesn't exist yet.
+      },
+    );
 
+    return () => subscription.unsubscribe();
+  }, [loadUserData]);
+
+  // ── register ───────────────────────────────────────────────────────────────
   const register = useCallback<AuthContextValue["register"]>(
-    async (name, password) => {
-      const trimmed = name.trim();
-      if (!trimmed) throw new Error("Name is required");
-      if (password.length < 8)
-        throw new Error("Password must be at least 8 characters");
-      const allUsers = await asyncStorage.getUsers();
-      if (allUsers.some((u) => u.name.toLowerCase() === trimmed.toLowerCase())) {
-        throw new Error("A user with that name already exists");
+    async (email, name, password, estateCode) => {
+      const trimmedName = name.trim();
+      if (!trimmedName) throw new Error("Name is required");
+      if (password.length < 8) throw new Error("Password must be at least 8 characters");
+
+      // Create the Supabase auth user
+      const { data: signUpData, error: signUpError } =
+        await supabase.auth.signUp({ email: email.trim(), password });
+      if (signUpError) throw signUpError;
+      if (!signUpData.user) throw new Error("Sign-up did not return a user");
+
+      // Pick a color index based on how many estate members already exist
+      const colorIndex = 0; // Will be set by the RPC based on estate member count; start at 0
+
+      // Create estate + profile in one atomic RPC call
+      const rpcName = estateCode ? "join_existing_estate" : "register_new_estate";
+      const rpcParams = estateCode
+        ? {
+            p_join_code: estateCode.trim().toUpperCase(),
+            p_email: email.trim(),
+            p_name: trimmedName,
+            p_color_index: colorIndex,
+            p_timezone: DEFAULT_TIMEZONE,
+          }
+        : {
+            p_email: email.trim(),
+            p_name: trimmedName,
+            p_color_index: colorIndex,
+            p_timezone: DEFAULT_TIMEZONE,
+          };
+
+      const { data: rpcData, error: rpcError } = await supabase.rpc(rpcName, rpcParams);
+      if (rpcError) throw rpcError;
+
+      // Now load the profile (it exists)
+      const user = await loadUserData(signUpData.user.id);
+      if (!user) throw new Error("Profile creation succeeded but could not be loaded");
+
+      // Fix the colorIndex to reflect actual estate member count
+      const memberCount = users.length; // users was just set by loadUserData
+      if (memberCount > 0) {
+        await supabase
+          .from("profiles")
+          .update({ color_index: memberCount % 8 })
+          .eq("id", signUpData.user.id);
+        setCurrentUser((u) => u ? { ...u, colorIndex: memberCount % 8 } : u);
       }
-      const id = uuid();
-      const user: User = {
-        id,
-        name: trimmed,
-        colorIndex: allUsers.length % 8,
-        timezone: DEFAULT_TIMEZONE,
-        createdAt: Date.now(),
-      };
-      const hash = await hashPassword(password);
-      const updated = [...allUsers, user];
-      await asyncStorage.savePasswordHash(id, hash);
-      await asyncStorage.saveUsers(updated);
-      await asyncStorage.saveSession(id);
-      setUsers(updated);
-      setCurrentUser(user);
+
       return user;
     },
-    [],
+    [loadUserData, users.length],
   );
 
+  // ── login ──────────────────────────────────────────────────────────────────
   const login = useCallback<AuthContextValue["login"]>(
-    async (name, password) => {
-      const allUsers = await asyncStorage.getUsers();
-      const user = allUsers.find(
-        (u) => u.name.toLowerCase() === name.trim().toLowerCase(),
-      );
-      if (!user) throw new Error("No account found with that name");
-      const hash = await asyncStorage.getPasswordHash(user.id);
-      if (!hash) throw new Error("Account has no password set");
-      const inputHash = await hashPassword(password);
-      if (inputHash !== hash) throw new Error("Incorrect password");
-      await asyncStorage.saveSession(user.id);
-      setCurrentUser(user);
-      setUsers(allUsers);
+    async (email, password) => {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      if (error) throw error;
+      const user = await loadUserData(data.user.id);
+      if (!user) throw new Error("Account exists but no profile was found");
       return user;
     },
-    [],
+    [loadUserData],
   );
 
+  // ── logout ─────────────────────────────────────────────────────────────────
   const logout = useCallback(async () => {
-    await asyncStorage.saveSession(null);
-    setCurrentUser(null);
+    await supabase.auth.signOut();
+    // onAuthStateChange SIGNED_OUT handles clearing state
   }, []);
 
-  const switchUser = useCallback(
-    async (userId: string) => {
-      const allUsers = await asyncStorage.getUsers();
-      const user = allUsers.find((u) => u.id === userId);
-      if (!user) throw new Error("User not found");
-      await asyncStorage.saveSession(userId);
-      setCurrentUser(user);
-    },
-    [],
-  );
-
+  // ── updateProfile ──────────────────────────────────────────────────────────
   const updateProfile = useCallback<AuthContextValue["updateProfile"]>(
     async (updates) => {
       if (!currentUser) throw new Error("Not signed in");
-      let updated: User = { ...currentUser };
+
       const trimmedName = updates.name?.trim();
-      if (trimmedName) {
-        if (!trimmedName) throw new Error("Name cannot be empty");
-        updated = { ...updated, name: trimmedName };
-      }
-      if (updates.timezone) {
-        updated = { ...updated, timezone: updates.timezone };
+      if (trimmedName !== undefined && !trimmedName) {
+        throw new Error("Name cannot be empty");
       }
       if (updates.password) {
-        if (updates.password.length < 8)
+        if (updates.password.length < 8) {
           throw new Error("Password must be at least 8 characters");
-        const hash = await hashPassword(updates.password);
-        await asyncStorage.savePasswordHash(updated.id, hash);
+        }
+        const { error } = await supabase.auth.updateUser({ password: updates.password });
+        if (error) throw error;
       }
-      const allUsers = await asyncStorage.getUsers();
-      const newUsers = allUsers.map((u) => (u.id === updated.id ? updated : u));
-      await asyncStorage.saveUsers(newUsers);
-      setUsers(newUsers);
+
+      const profileUpdates: Partial<ProfileRow> = {};
+      if (trimmedName) profileUpdates.name = trimmedName;
+      if (updates.timezone) profileUpdates.timezone = updates.timezone;
+
+      if (Object.keys(profileUpdates).length > 0) {
+        const { error } = await supabase
+          .from("profiles")
+          .update(profileUpdates)
+          .eq("id", currentUser.id);
+        if (error) throw error;
+      }
+
+      const updated: User = {
+        ...currentUser,
+        ...(trimmedName ? { name: trimmedName } : {}),
+        ...(updates.timezone ? { timezone: updates.timezone } : {}),
+      };
       setCurrentUser(updated);
+      setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
     },
     [currentUser],
   );
@@ -163,13 +243,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       loading,
       users,
       currentUser,
+      estateId,
+      estateJoinCode,
       register,
       login,
       logout,
-      switchUser,
       updateProfile,
     }),
-    [loading, users, currentUser, register, login, logout, switchUser, updateProfile],
+    [loading, users, currentUser, estateId, estateJoinCode, register, login, logout, updateProfile],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

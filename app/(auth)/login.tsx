@@ -19,15 +19,15 @@ import { useColors } from "@/hooks/useColors";
 export default function LoginScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { users, login } = useAuth();
+  const { login } = useAuth();
 
-  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleLogin() {
-    if (!name.trim()) {
-      Alert.alert("Required", "Please enter your name.");
+    if (!email.trim()) {
+      Alert.alert("Required", "Please enter your email address.");
       return;
     }
     if (!password) {
@@ -37,10 +37,10 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      await login(name.trim(), password);
+      await login(email.trim(), password);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Name or password is incorrect.";
-      Alert.alert("Login failed", msg);
+      const msg = err instanceof Error ? err.message : "Email or password is incorrect.";
+      Alert.alert("Sign in failed", msg);
     } finally {
       setLoading(false);
     }
@@ -66,11 +66,12 @@ export default function LoginScreen() {
 
         <View style={[styles.card, { backgroundColor: colors.card, borderRadius: colors.radius }]}>
           <TextField
-            label="Name"
-            value={name}
-            onChangeText={setName}
-            placeholder="Your name"
-            autoCapitalize="words"
+            label="Email"
+            value={email}
+            onChangeText={setEmail}
+            placeholder="you@example.com"
+            autoCapitalize="none"
+            keyboardType="email-address"
             autoCorrect={false}
             returnKeyType="next"
           />
@@ -91,30 +92,6 @@ export default function LoginScreen() {
             style={{ marginTop: 4 }}
           />
         </View>
-
-        {users.length > 0 && (
-          <View style={[styles.card, { backgroundColor: colors.card, borderRadius: colors.radius }]}>
-            <Text style={[styles.sectionLabel, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
-              Other users on this device
-            </Text>
-            {users.map((u) => (
-              <Pressable
-                key={u.id}
-                accessibilityRole="button"
-                accessibilityLabel={`Sign in as ${u.name}`}
-                onPress={() => setName(u.name)}
-                style={({ pressed }) => [
-                  styles.userRow,
-                  { borderBottomColor: colors.border, opacity: pressed ? 0.7 : 1 },
-                ]}
-              >
-                <Text style={{ color: colors.foreground, fontFamily: "Inter_500Medium", fontSize: 15 }}>
-                  {u.name}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        )}
 
         <Pressable
           accessibilityRole="button"
@@ -152,15 +129,5 @@ const styles = StyleSheet.create({
   card: {
     padding: 16,
     gap: 12,
-  },
-  sectionLabel: {
-    fontSize: 12,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: 4,
-  },
-  userRow: {
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
   },
 });

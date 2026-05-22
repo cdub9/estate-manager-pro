@@ -13,6 +13,7 @@ export type Timezone =
 
 export interface User {
   id: string;
+  email: string;
   name: string;
   colorIndex: number;
   timezone: Timezone;

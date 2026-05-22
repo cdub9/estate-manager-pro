@@ -21,14 +21,21 @@ export default function RegisterScreen() {
   const router = useRouter();
   const { register } = useAuth();
 
+  const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [joinMode, setJoinMode] = useState(false);
+  const [estateCode, setEstateCode] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleRegister() {
+    if (!email.trim()) {
+      Alert.alert("Required", "Please enter your email address.");
+      return;
+    }
     if (!name.trim()) {
-      Alert.alert("Required", "Please enter a name.");
+      Alert.alert("Required", "Please enter your name.");
       return;
     }
     if (password.length < 8) {
@@ -39,10 +46,19 @@ export default function RegisterScreen() {
       Alert.alert("Mismatch", "Passwords do not match.");
       return;
     }
+    if (joinMode && !estateCode.trim()) {
+      Alert.alert("Required", "Please enter the estate join code.");
+      return;
+    }
 
     setLoading(true);
     try {
-      await register(name.trim(), password);
+      await register(
+        email.trim(),
+        name.trim(),
+        password,
+        joinMode ? estateCode.trim().toUpperCase() : undefined,
+      );
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Please try again.";
       Alert.alert("Registration failed", msg);
@@ -69,7 +85,63 @@ export default function RegisterScreen() {
           </Text>
         </View>
 
+        {/* Estate mode toggle */}
+        <View style={[styles.toggleRow, { backgroundColor: colors.secondary, borderRadius: colors.radius }]}>
+          <Pressable
+            accessibilityRole="radio"
+            accessibilityLabel="Create a new estate"
+            accessibilityState={{ checked: !joinMode }}
+            onPress={() => setJoinMode(false)}
+            style={({ pressed }) => [
+              styles.toggleBtn,
+              !joinMode && { backgroundColor: colors.primary, borderRadius: colors.radius - 2 },
+              { opacity: pressed ? 0.85 : 1 },
+            ]}
+          >
+            <Text
+              style={{
+                color: !joinMode ? "#fff" : colors.secondaryForeground,
+                fontFamily: "Inter_600SemiBold",
+                fontSize: 13,
+              }}
+            >
+              New estate
+            </Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="radio"
+            accessibilityLabel="Join an existing estate"
+            accessibilityState={{ checked: joinMode }}
+            onPress={() => setJoinMode(true)}
+            style={({ pressed }) => [
+              styles.toggleBtn,
+              joinMode && { backgroundColor: colors.primary, borderRadius: colors.radius - 2 },
+              { opacity: pressed ? 0.85 : 1 },
+            ]}
+          >
+            <Text
+              style={{
+                color: joinMode ? "#fff" : colors.secondaryForeground,
+                fontFamily: "Inter_600SemiBold",
+                fontSize: 13,
+              }}
+            >
+              Join existing
+            </Text>
+          </Pressable>
+        </View>
+
         <View style={[styles.card, { backgroundColor: colors.card, borderRadius: colors.radius }]}>
+          <TextField
+            label="Email"
+            value={email}
+            onChangeText={setEmail}
+            placeholder="you@example.com"
+            autoCapitalize="none"
+            keyboardType="email-address"
+            autoCorrect={false}
+            returnKeyType="next"
+          />
           <TextField
             label="Name"
             value={name}
@@ -93,12 +165,31 @@ export default function RegisterScreen() {
             onChangeText={setConfirm}
             placeholder="Repeat password"
             secureTextEntry
-            returnKeyType="done"
-            onSubmitEditing={handleRegister}
+            returnKeyType={joinMode ? "next" : "done"}
+            onSubmitEditing={joinMode ? undefined : handleRegister}
           />
 
+          {joinMode && (
+            <TextField
+              label="Estate join code"
+              value={estateCode}
+              onChangeText={(t) => setEstateCode(t.toUpperCase())}
+              placeholder="6-character code"
+              autoCapitalize="characters"
+              autoCorrect={false}
+              returnKeyType="done"
+              onSubmitEditing={handleRegister}
+            />
+          )}
+
+          {!joinMode && (
+            <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_400Regular", fontSize: 12, lineHeight: 18 }}>
+              A new estate will be created for your household. Share the join code from your profile to add other members.
+            </Text>
+          )}
+
           <Button
-            title="Create account"
+            title={joinMode ? "Join estate" : "Create account"}
             onPress={handleRegister}
             loading={loading}
             style={{ marginTop: 4 }}
@@ -137,6 +228,16 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 15,
+  },
+  toggleRow: {
+    flexDirection: "row",
+    padding: 4,
+    gap: 4,
+  },
+  toggleBtn: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 9,
   },
   card: {
     padding: 16,
