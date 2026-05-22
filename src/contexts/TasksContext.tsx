@@ -12,6 +12,32 @@ import { asyncStorage } from "@/storage/asyncStorage";
 import { Recurrence, Task, TaskComment, TaskStatus } from "@/types";
 import { uuid } from "@/utils/uuid";
 
+// Handles tasks written before assigneeIds or comments were added.
+type LegacyTask = Omit<Task, "assigneeIds" | "comments"> & {
+  assigneeId?: string | null;
+  assigneeIds?: string[];
+  comments?: TaskComment[];
+};
+
+function migrateTask(t: LegacyTask): Task {
+  return {
+    ...t,
+    assigneeIds: t.assigneeIds ?? (t.assigneeId ? [t.assigneeId] : []),
+    comments: t.comments ?? [],
+  } as Task;
+}
+
+async function getTasks(): Promise<Task[]> {
+  const raw = (await asyncStorage.getTasks()) as LegacyTask[];
+  const needsMigration = raw.some((t) => !t.assigneeIds || !t.comments);
+  const migrated = raw.map(migrateTask);
+  if (needsMigration) {
+    // Write back immediately so every subsequent read is already clean.
+    await asyncStorage.saveTasks(migrated);
+  }
+  return migrated;
+}
+
 export interface NewTaskInput {
   title: string;
   description?: string;
@@ -74,16 +100,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
     }
     setLoading(true);
     try {
-      const raw = await asyncStorage.getTasks();
-      // Migrate tasks that predate the comments or assigneeIds fields
-      const all = raw.map((t) => {
-        const withComments = t.comments ? t : { ...t, comments: [] };
-        if (withComments.assigneeIds) return withComments;
-        // Legacy: assigneeId (string | null) → assigneeIds (string[])
-        const legacy = withComments as typeof withComments & { assigneeId?: string | null };
-        return { ...withComments, assigneeIds: legacy.assigneeId ? [legacy.assigneeId] : [] };
-      });
-      // Sort by order field
+      const all = await getTasks();
       const sorted = [...all].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
       setTasks(sorted);
     } catch (err) {
@@ -101,7 +118,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
     async (input) => {
       if (!currentUser) throw new Error("Not signed in");
       const now = Date.now();
-      const all = await asyncStorage.getTasks();
+      const all = await getTasks();
       const maxOrder = all.reduce((m, t) => Math.max(m, t.order ?? 0), 0);
       const task: Task = {
         id: uuid(),
@@ -131,7 +148,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
 
   const updateTask = useCallback<TasksContextValue["updateTask"]>(
     async (id, updates) => {
-      const all = await asyncStorage.getTasks();
+      const all = await getTasks();
       const existing = all.find((t) => t.id === id);
       if (!existing) return;
       const now = Date.now();
@@ -179,7 +196,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
 
   const deleteTask = useCallback<TasksContextValue["deleteTask"]>(
     async (id) => {
-      const all = await asyncStorage.getTasks();
+      const all = await getTasks();
       const updated = all.filter((t) => t.id !== id);
       await asyncStorage.saveTasks(updated);
       setTasks((prev) => prev.filter((t) => t.id !== id));
@@ -199,7 +216,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
 
   const reorderTasks = useCallback<TasksContextValue["reorderTasks"]>(
     async (orderedIds) => {
-      const all = await asyncStorage.getTasks();
+      const all = await getTasks();
       const byId = new Map(all.map((t) => [t.id, t]));
       const updated = all.map((t) => {
         const idx = orderedIds.indexOf(t.id);
@@ -222,7 +239,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
 
   const removeInventoryFromAll = useCallback(
     async (inventoryId: string) => {
-      const all = await asyncStorage.getTasks();
+      const all = await getTasks();
       const updated = all.map((t) =>
         t.inventoryIds.includes(inventoryId)
           ? { ...t, inventoryIds: t.inventoryIds.filter((id) => id !== inventoryId), updatedAt: Date.now() }
@@ -237,7 +254,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
 
   const removeCategoryFromAll = useCallback(
     async (categoryId: string) => {
-      const all = await asyncStorage.getTasks();
+      const all = await getTasks();
       const updated = all.map((t) =>
         t.categoryId === categoryId
           ? { ...t, categoryId: null, updatedAt: Date.now() }
@@ -255,7 +272,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
       if (!currentUser) throw new Error("Not signed in");
       const trimmed = text.trim();
       if (!trimmed) return;
-      const all = await asyncStorage.getTasks();
+      const all = await getTasks();
       const now = Date.now();
       const comment: TaskComment = {
         id: uuid(),
