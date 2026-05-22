@@ -18,6 +18,7 @@ export interface User {
   colorIndex: number;
   timezone: Timezone;
   createdAt: number;
+  pushToken?: string | null;
 }
 
 export interface Category {

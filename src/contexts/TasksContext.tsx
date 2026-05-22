@@ -10,6 +10,7 @@ import React, {
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { Recurrence, Task, TaskComment, TaskStatus } from "@/types";
+import { sendAssignmentNotification } from "@/utils/notifications";
 import { uuid } from "@/utils/uuid";
 
 // ── DB ↔ App mappers ───────────────────────────────────────────────────────────
@@ -79,7 +80,7 @@ function nextDueDate(due: number | null, recurrence: Recurrence): number | null 
 
 // ── Provider ───────────────────────────────────────────────────────────────────
 export function TasksProvider({ children }: { children: React.ReactNode }) {
-  const { currentUser, estateId } = useAuth();
+  const { currentUser, estateId, users } = useAuth();
   const [loading, setLoading] = useState(true);
   const [tasks, setTasks] = useState<Task[]>([]);
 
@@ -140,9 +141,19 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       const task = rowToTask(data);
       setTasks((prev) => [task, ...prev]);
+
+      // Notify assignees (excluding the creator)
+      const tokens = task.assigneeIds
+        .filter((aid) => aid !== currentUser.id)
+        .map((aid) => users.find((u) => u.id === aid)?.pushToken)
+        .filter((t): t is string => Boolean(t));
+      if (tokens.length) {
+        sendAssignmentNotification(tokens, task.title, currentUser.name, task.id).catch(() => {});
+      }
+
       return task;
     },
-    [currentUser, estateId, tasks],
+    [currentUser, estateId, tasks, users],
   );
 
   // ── updateTask ───────────────────────────────────────────────────────────────
@@ -179,6 +190,20 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.from("tasks").update(dbUpdate).eq("id", id);
       if (error) throw error;
 
+      // Notify newly added assignees (not the person making the change)
+      if (updates.assigneeIds !== undefined && currentUser) {
+        const oldIds = new Set(existing.assigneeIds);
+        const newlyAdded = updated.assigneeIds.filter(
+          (aid) => !oldIds.has(aid) && aid !== currentUser.id,
+        );
+        const tokens = newlyAdded
+          .map((aid) => users.find((u) => u.id === aid)?.pushToken)
+          .filter((t): t is string => Boolean(t));
+        if (tokens.length) {
+          sendAssignmentNotification(tokens, updated.title, currentUser.name, id).catch(() => {});
+        }
+      }
+
       let newTasks = tasks.map((t) => (t.id === id ? updated : t));
 
       // Create recurring clone when newly completed
@@ -214,7 +239,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
 
       setTasks(newTasks.sort((a, b) => a.order - b.order));
     },
-    [tasks, estateId],
+    [tasks, estateId, currentUser, users],
   );
 
   // ── deleteTask ───────────────────────────────────────────────────────────────

@@ -51,7 +51,13 @@
           "photosPermission": "Used to attach photos to tasks and equipment."
         }
       ],
-      "expo-image"
+      "expo-image",
+      [
+        "expo-notifications",
+        {
+          "color": "#2f6b3a"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": false

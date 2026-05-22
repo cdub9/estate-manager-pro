@@ -5,11 +5,21 @@ import {
   Inter_700Bold,
   useFonts,
 } from "@expo-google-fonts/inter";
+import * as Notifications from "expo-notifications";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useRef } from "react";
 import { ActivityIndicator, LogBox, View } from "react-native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
+
+// Show notification banners even when the app is in the foreground
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 // react-native-draggable-flatlist uses InteractionManager internally;
 // suppress the deprecation warning until the library is updated.
@@ -47,6 +57,19 @@ function RootNavigator() {
   useEffect(() => {
     routerRef.current = router;
   });
+
+  // Navigate to the relevant task when a notification is tapped
+  useEffect(() => {
+    const subscription = Notifications.addNotificationResponseReceivedListener(
+      (response) => {
+        const taskId = response.notification.request.content.data?.taskId as string | undefined;
+        if (taskId) {
+          routerRef.current.push(`/task/${taskId}`);
+        }
+      },
+    );
+    return () => subscription.remove();
+  }, []);
 
   useEffect(() => {
     if (loading) return;

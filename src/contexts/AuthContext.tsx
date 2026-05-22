@@ -10,6 +10,7 @@ import React, {
 
 import { supabase } from "@/lib/supabase";
 import { Timezone, User } from "@/types";
+import { registerForPushNotifications } from "@/utils/notifications";
 
 export const DEFAULT_TIMEZONE: Timezone = "America/Denver";
 
@@ -22,6 +23,7 @@ interface ProfileRow {
   color_index: number;
   timezone: string;
   created_at: number;
+  push_token?: string | null;
 }
 
 function rowToUser(row: ProfileRow): User {
@@ -32,6 +34,7 @@ function rowToUser(row: ProfileRow): User {
     colorIndex: row.color_index,
     timezone: (row.timezone as Timezone) ?? DEFAULT_TIMEZONE,
     createdAt: row.created_at,
+    pushToken: row.push_token ?? null,
   };
 }
 
@@ -172,6 +175,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setCurrentUser((u) => u ? { ...u, colorIndex: memberCount % 8 } : u);
       }
 
+      // Register/refresh push token in the background — non-blocking
+      registerForPushNotifications(user.id).catch(() => {});
+
       return user;
     },
     [loadUserData, users.length],
@@ -187,6 +193,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       const user = await loadUserData(data.user.id);
       if (!user) throw new Error("Account exists but no profile was found");
+      // Register/refresh push token in the background — non-blocking
+      registerForPushNotifications(user.id).catch(() => {});
       return user;
     },
     [loadUserData],
