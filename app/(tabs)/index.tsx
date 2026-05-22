@@ -43,7 +43,7 @@ export default function TasksScreen() {
   const filtered = useMemo(() => {
     let result = sorted;
     if (filter === "all") result = result.filter((t) => t.status !== "done");
-    if (filter === "mine") result = result.filter((t) => t.assigneeId === currentUser?.id && t.status !== "done");
+    if (filter === "mine") result = result.filter((t) => currentUser !== null && t.assigneeIds.includes(currentUser.id) && t.status !== "done");
     if (filter === "done") result = result.filter((t) => t.status === "done");
     if (query.trim()) {
       const q = query.toLowerCase();
@@ -53,7 +53,7 @@ export default function TasksScreen() {
   }, [sorted, filter, query, currentUser]);
 
   const mineCount = useMemo(
-    () => tasks.filter((t) => t.assigneeId === currentUser?.id && t.status !== "done").length,
+    () => tasks.filter((t) => currentUser !== null && t.assigneeIds.includes(currentUser.id) && t.status !== "done").length,
     [tasks, currentUser]
   );
 
@@ -66,13 +66,13 @@ export default function TasksScreen() {
 
   const renderItem = useCallback(
     ({ item, drag, isActive }: RenderItemParams<Task>) => {
-      const assignee = users.find((u) => u.id === item.assigneeId) ?? null;
+      const assignees = users.filter((u) => item.assigneeIds.includes(u.id));
       const category = getCategory(item.categoryId ?? null) ?? null;
       return (
         <ScaleDecorator>
           <TaskCard
             task={item}
-            assignee={assignee}
+            assignees={assignees}
             category={category}
             inventoryCount={item.inventoryIds.length}
             onPress={() => router.push(`/task/${item.id}`)}

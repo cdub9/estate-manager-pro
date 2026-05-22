@@ -38,7 +38,7 @@ export default function NewTaskScreen() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<TaskStatus>("open");
-  const [assigneeId, setAssigneeId] = useState<string | null>(currentUser?.id ?? null);
+  const [assigneeIds, setAssigneeIds] = useState<string[]>(currentUser ? [currentUser.id] : []);
   const [dueDate, setDueDate] = useState<number | null>(null);
   const [photos, setPhotos] = useState<string[]>([]);
   const [inventoryIds, setInventoryIds] = useState<string[]>([]);
@@ -77,7 +77,7 @@ export default function NewTaskScreen() {
         title: title.trim(),
         description: description.trim(),
         status,
-        assigneeId,
+        assigneeIds,
         dueDate,
         photos,
         inventoryIds,
@@ -135,8 +135,8 @@ export default function NewTaskScreen() {
         </View>
 
         <View style={styles.fieldGroup}>
-          <Text style={[styles.label, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>Assignee</Text>
-          <AssigneePicker users={users} value={assigneeId} onChange={setAssigneeId} />
+          <Text style={[styles.label, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>Assignees</Text>
+          <AssigneePicker users={users} value={assigneeIds} onChange={setAssigneeIds} />
         </View>
 
         <View style={styles.fieldGroup}>

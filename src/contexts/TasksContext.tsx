@@ -16,7 +16,7 @@ export interface NewTaskInput {
   title: string;
   description?: string;
   status?: TaskStatus;
-  assigneeId?: string | null;
+  assigneeIds?: string[];
   createdById?: string;
   dueDate?: number | null;
   photos?: string[];
@@ -75,8 +75,14 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     try {
       const raw = await asyncStorage.getTasks();
-      // Migrate tasks that predate the comments field
-      const all = raw.map((t) => (t.comments ? t : { ...t, comments: [] }));
+      // Migrate tasks that predate the comments or assigneeIds fields
+      const all = raw.map((t) => {
+        const withComments = t.comments ? t : { ...t, comments: [] };
+        if (withComments.assigneeIds) return withComments;
+        // Legacy: assigneeId (string | null) → assigneeIds (string[])
+        const legacy = withComments as typeof withComments & { assigneeId?: string | null };
+        return { ...withComments, assigneeIds: legacy.assigneeId ? [legacy.assigneeId] : [] };
+      });
       // Sort by order field
       const sorted = [...all].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
       setTasks(sorted);
@@ -102,7 +108,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
         title: input.title.trim(),
         description: input.description?.trim() ?? "",
         status: input.status ?? "open",
-        assigneeId: input.assigneeId ?? null,
+        assigneeIds: input.assigneeIds ?? [],
         createdById: input.createdById ?? currentUser.id,
         dueDate: input.dueDate ?? null,
         photos: input.photos ?? [],

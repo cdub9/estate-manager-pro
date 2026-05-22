@@ -42,7 +42,7 @@ export default function TaskDetailScreen() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<TaskStatus>("open");
-  const [assigneeId, setAssigneeId] = useState<string | null>(null);
+  const [assigneeIds, setAssigneeIds] = useState<string[]>([]);
   const [dueDate, setDueDate] = useState<number | null>(null);
   const [photos, setPhotos] = useState<string[]>([]);
   const [inventoryIds, setInventoryIds] = useState<string[]>([]);
@@ -61,7 +61,7 @@ export default function TaskDetailScreen() {
     setTitle(task.title);
     setDescription(task.description);
     setStatus(task.status);
-    setAssigneeId(task.assigneeId);
+    setAssigneeIds(task.assigneeIds);
     setDueDate(task.dueDate);
     setPhotos(task.photos);
     setInventoryIds(task.inventoryIds);
@@ -73,7 +73,8 @@ export default function TaskDetailScreen() {
     title !== task.title ||
     description !== task.description ||
     status !== task.status ||
-    assigneeId !== task.assigneeId ||
+    assigneeIds.length !== task.assigneeIds.length ||
+    assigneeIds.some((id) => !task.assigneeIds.includes(id)) ||
     dueDate !== task.dueDate ||
     categoryId !== task.categoryId ||
     recurrence !== task.recurrence ||
@@ -106,7 +107,7 @@ export default function TaskDetailScreen() {
         title: title.trim(),
         description: description.trim(),
         status,
-        assigneeId,
+        assigneeIds,
         dueDate,
         photos,
         inventoryIds,
@@ -200,8 +201,8 @@ export default function TaskDetailScreen() {
         </View>
 
         <View style={styles.fieldGroup}>
-          <Text style={[styles.label, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>Assignee</Text>
-          <AssigneePicker users={users} value={assigneeId} onChange={setAssigneeId} />
+          <Text style={[styles.label, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>Assignees</Text>
+          <AssigneePicker users={users} value={assigneeIds} onChange={setAssigneeIds} />
         </View>
 
         <View style={styles.fieldGroup}>

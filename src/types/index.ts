@@ -38,7 +38,7 @@ export interface Task {
   title: string;
   description: string;
   status: TaskStatus;
-  assigneeId: string | null;
+  assigneeIds: string[];
   createdById: string;
   dueDate: number | null;
   photos: string[];

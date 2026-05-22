@@ -9,7 +9,7 @@ import { Category, Task, User } from "@/types";
 
 interface Props {
   task: Task;
-  assignee: User | null;
+  assignees: User[];
   category: Category | null;
   inventoryCount: number;
   onPress: () => void;
@@ -44,7 +44,7 @@ function formatDue(due: number | null): { label: string; tone: DueTone } | null 
 
 export function TaskCard({
   task,
-  assignee,
+  assignees,
   category,
   inventoryCount,
   onPress,
@@ -213,7 +213,7 @@ export function TaskCard({
         </View>
 
         <View style={styles.right}>
-          <Avatar user={assignee} size={28} fallbackLabel="—" />
+          <AssigneeStack assignees={assignees} />
           {draggable ? (
             <Feather
               name="menu"
@@ -225,6 +225,43 @@ export function TaskCard({
         </View>
       </View>
     </Pressable>
+  );
+}
+
+function AssigneeStack({ assignees }: { assignees: User[] }) {
+  const colors = useColors();
+  if (assignees.length === 0) {
+    return <Avatar user={null} size={28} fallbackLabel="—" />;
+  }
+  const visible = assignees.slice(0, 3);
+  const overflow = assignees.length - visible.length;
+  const totalWidth = 28 + (visible.length - 1) * 18 + (overflow > 0 ? 20 : 0);
+  return (
+    <View style={{ width: totalWidth, height: 28, position: "relative" }}>
+      {visible.map((u, i) => (
+        <View key={u.id} style={{ position: "absolute", left: i * 18 }}>
+          <Avatar user={u} size={28} />
+        </View>
+      ))}
+      {overflow > 0 && (
+        <View
+          style={{
+            position: "absolute",
+            left: visible.length * 18,
+            width: 28,
+            height: 28,
+            borderRadius: 14,
+            backgroundColor: colors.secondary,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text style={{ color: colors.secondaryForeground, fontFamily: "Inter_600SemiBold", fontSize: 10 }}>
+            +{overflow}
+          </Text>
+        </View>
+      )}
+    </View>
   );
 }
 

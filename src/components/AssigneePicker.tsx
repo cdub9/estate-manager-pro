@@ -16,21 +16,49 @@ import { User } from "@/types";
 
 interface Props {
   users: User[];
-  value: string | null;
-  onChange: (id: string | null) => void;
+  value: string[];
+  onChange: (ids: string[]) => void;
 }
 
 export function AssigneePicker({ users, value, onChange }: Props) {
   const colors = useColors();
   const [open, setOpen] = useState(false);
-  const selected = users.find((u) => u.id === value) ?? null;
+  const [draft, setDraft] = useState<string[]>(value);
+
+  function openModal() {
+    setDraft(value);
+    setOpen(true);
+  }
+
+  function toggleUser(id: string) {
+    setDraft((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }
+
+  function handleDone() {
+    onChange(draft);
+    setOpen(false);
+  }
+
+  function handleClearAll() {
+    setDraft([]);
+  }
+
+  const selectedUsers = users.filter((u) => value.includes(u.id));
 
   return (
     <>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={selected ? `Assigned to ${selected.name}` : "Unassigned"}
-        onPress={() => setOpen(true)}
+        accessibilityLabel={
+          selectedUsers.length === 0
+            ? "Unassigned"
+            : selectedUsers.length === 1
+            ? `Assigned to ${selectedUsers[0].name}`
+            : `Assigned to ${selectedUsers.length} people`
+        }
+        onPress={openModal}
         style={({ pressed }) => [
           styles.field,
           {
@@ -42,32 +70,27 @@ export function AssigneePicker({ users, value, onChange }: Props) {
         ]}
       >
         <View style={styles.fieldInner}>
-          {selected ? (
-            <>
-              <Avatar user={selected} size={28} />
-              <Text
-                style={{
-                  color: colors.foreground,
-                  fontFamily: "Inter_500Medium",
-                  fontSize: 15,
-                }}
-              >
-                {selected.name}
-              </Text>
-            </>
-          ) : (
+          {selectedUsers.length === 0 ? (
             <>
               <View style={[styles.unassigned, { borderColor: colors.border }]}>
                 <Feather name="user" size={14} color={colors.mutedForeground} />
               </View>
-              <Text
-                style={{
-                  color: colors.mutedForeground,
-                  fontFamily: "Inter_400Regular",
-                  fontSize: 15,
-                }}
-              >
+              <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_400Regular", fontSize: 15 }}>
                 Unassigned
+              </Text>
+            </>
+          ) : selectedUsers.length === 1 ? (
+            <>
+              <Avatar user={selectedUsers[0]} size={28} />
+              <Text style={{ color: colors.foreground, fontFamily: "Inter_500Medium", fontSize: 15 }}>
+                {selectedUsers[0].name}
+              </Text>
+            </>
+          ) : (
+            <>
+              <AvatarStack users={selectedUsers} />
+              <Text style={{ color: colors.foreground, fontFamily: "Inter_500Medium", fontSize: 15 }}>
+                {selectedUsers.length} people
               </Text>
             </>
           )}
@@ -75,99 +98,94 @@ export function AssigneePicker({ users, value, onChange }: Props) {
         <Feather name="chevron-down" size={18} color={colors.mutedForeground} />
       </Pressable>
 
-      <Modal
-        visible={open}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setOpen(false)}
-      >
-        <Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
+      <Modal visible={open} animationType="fade" transparent onRequestClose={handleDone}>
+        <Pressable style={styles.backdrop} onPress={handleDone}>
           <Pressable
             style={[
               styles.sheet,
-              {
-                backgroundColor: colors.card,
-                borderRadius: colors.radius,
-                ...(Platform.OS === "web" ? { maxWidth: 420 } : {}),
-              },
+              { backgroundColor: colors.card, borderRadius: colors.radius },
+              Platform.OS === "web" ? { maxWidth: 420 } : {},
             ]}
             onPress={(e) => e.stopPropagation()}
           >
-            <Text
-              style={[
-                styles.sheetTitle,
-                { color: colors.foreground, fontFamily: "Inter_600SemiBold" },
-              ]}
-            >
-              Assign to
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Unassigned"
-              onPress={() => {
-                onChange(null);
-                setOpen(false);
-              }}
-              style={({ pressed }) => [
-                styles.row,
-                { opacity: pressed ? 0.7 : 1, borderBottomColor: colors.border },
-              ]}
-            >
-              <View style={[styles.unassigned, { borderColor: colors.border }]}>
-                <Feather name="user-x" size={14} color={colors.mutedForeground} />
-              </View>
-              <Text
-                style={{
-                  color: colors.foreground,
-                  fontFamily: "Inter_500Medium",
-                  fontSize: 15,
-                  flex: 1,
-                }}
-              >
-                Unassigned
+            <View style={styles.sheetHeader}>
+              <Text style={[styles.sheetTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
+                Assign to
               </Text>
-              {value === null ? (
-                <Feather name="check" size={18} color={colors.primary} />
-              ) : null}
-            </Pressable>
+              {draft.length > 0 && (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Clear all assignees"
+                  onPress={handleClearAll}
+                  hitSlop={8}
+                >
+                  <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_500Medium", fontSize: 13 }}>
+                    Clear all
+                  </Text>
+                </Pressable>
+              )}
+            </View>
+
             <FlatList
               data={users}
               keyExtractor={(u) => u.id}
-              renderItem={({ item: u }) => (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={u.name}
-                  accessibilityState={{ selected: value === u.id }}
-                  onPress={() => {
-                    onChange(u.id);
-                    setOpen(false);
-                  }}
-                  style={({ pressed }) => [
-                    styles.row,
-                    { opacity: pressed ? 0.7 : 1, borderBottomColor: colors.border },
-                  ]}
-                >
-                  <Avatar user={u} size={32} />
-                  <Text
-                    style={{
-                      color: colors.foreground,
-                      fontFamily: "Inter_500Medium",
-                      fontSize: 15,
-                      flex: 1,
-                    }}
+              renderItem={({ item: u }) => {
+                const selected = draft.includes(u.id);
+                return (
+                  <Pressable
+                    accessibilityRole="checkbox"
+                    accessibilityLabel={u.name}
+                    accessibilityState={{ checked: selected }}
+                    onPress={() => toggleUser(u.id)}
+                    style={({ pressed }) => [
+                      styles.row,
+                      { opacity: pressed ? 0.7 : 1, borderBottomColor: colors.border },
+                    ]}
                   >
-                    {u.name}
-                  </Text>
-                  {value === u.id ? (
-                    <Feather name="check" size={18} color={colors.primary} />
-                  ) : null}
-                </Pressable>
-              )}
+                    <Avatar user={u} size={32} />
+                    <Text style={{ color: colors.foreground, fontFamily: "Inter_500Medium", fontSize: 15, flex: 1 }}>
+                      {u.name}
+                    </Text>
+                    {selected ? (
+                      <Feather name="check" size={18} color={colors.primary} />
+                    ) : (
+                      <View style={[styles.emptyCheck, { borderColor: colors.border }]} />
+                    )}
+                  </Pressable>
+                );
+              }}
             />
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Done"
+              onPress={handleDone}
+              style={({ pressed }) => [
+                styles.doneBtn,
+                { backgroundColor: colors.primary, borderRadius: colors.radius, opacity: pressed ? 0.85 : 1 },
+              ]}
+            >
+              <Text style={{ color: "#fff", fontFamily: "Inter_600SemiBold", fontSize: 15 }}>
+                Done
+              </Text>
+            </Pressable>
           </Pressable>
         </Pressable>
       </Modal>
     </>
+  );
+}
+
+function AvatarStack({ users }: { users: User[] }) {
+  const visible = users.slice(0, 3);
+  return (
+    <View style={styles.stack}>
+      {visible.map((u, i) => (
+        <View key={u.id} style={[styles.stackItem, { left: i * 18 }]}>
+          <Avatar user={u} size={28} />
+        </View>
+      ))}
+    </View>
   );
 }
 
@@ -186,6 +204,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
   },
+  stack: {
+    flexDirection: "row",
+    position: "relative",
+    height: 28,
+    width: 28 + 18 * 2,
+  },
+  stackItem: {
+    position: "absolute",
+  },
   unassigned: {
     width: 28,
     height: 28,
@@ -194,6 +221,12 @@ const styles = StyleSheet.create({
     borderStyle: "dashed",
     alignItems: "center",
     justifyContent: "center",
+  },
+  emptyCheck: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 1.5,
   },
   backdrop: {
     flex: 1,
@@ -205,11 +238,17 @@ const styles = StyleSheet.create({
   sheet: {
     width: "100%",
     padding: 16,
+    gap: 4,
+  },
+  sheetHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+    paddingHorizontal: 4,
   },
   sheetTitle: {
     fontSize: 15,
-    marginBottom: 12,
-    paddingHorizontal: 4,
   },
   row: {
     flexDirection: "row",
@@ -218,5 +257,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 4,
     borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  doneBtn: {
+    marginTop: 12,
+    paddingVertical: 12,
+    alignItems: "center",
   },
 });
