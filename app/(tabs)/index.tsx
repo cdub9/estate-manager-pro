@@ -22,7 +22,7 @@ import { useTasks } from "@/contexts/TasksContext";
 import { useColors } from "@/hooks/useColors";
 import { Task } from "@/types";
 
-type FilterMode = "all" | "mine" | "open" | "done";
+type FilterMode = "all" | "mine" | "done";
 
 export default function TasksScreen() {
   const colors = useColors();
@@ -42,8 +42,8 @@ export default function TasksScreen() {
 
   const filtered = useMemo(() => {
     let result = sorted;
-    if (filter === "mine") result = result.filter((t) => t.assigneeId === currentUser?.id);
-    if (filter === "open") result = result.filter((t) => t.status !== "done");
+    if (filter === "all") result = result.filter((t) => t.status !== "done");
+    if (filter === "mine") result = result.filter((t) => t.assigneeId === currentUser?.id && t.status !== "done");
     if (filter === "done") result = result.filter((t) => t.status === "done");
     if (query.trim()) {
       const q = query.toLowerCase();
@@ -92,8 +92,7 @@ export default function TasksScreen() {
   const FILTERS: { value: FilterMode; label: string }[] = [
     { value: "all", label: "All" },
     { value: "mine", label: filter === "mine" && mineCount > 0 ? `Mine (${mineCount})` : "Mine" },
-    { value: "open", label: "Open" },
-    { value: "done", label: "Done" },
+    { value: "done", label: "Completed" },
   ];
 
   return (
