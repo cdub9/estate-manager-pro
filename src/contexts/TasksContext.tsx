@@ -9,7 +9,7 @@ import React, {
 
 import { useAuth } from "@/contexts/AuthContext";
 import { asyncStorage } from "@/storage/asyncStorage";
-import { Recurrence, Task, TaskStatus } from "@/types";
+import { Recurrence, Task, TaskComment, TaskStatus } from "@/types";
 import { uuid } from "@/utils/uuid";
 
 export interface NewTaskInput {
@@ -35,6 +35,7 @@ interface TasksContextValue {
   reorderTasks: (orderedIds: string[]) => Promise<void>;
   removeInventoryFromAll: (inventoryId: string) => Promise<void>;
   removeCategoryFromAll: (categoryId: string) => Promise<void>;
+  addComment: (taskId: string, text: string) => Promise<void>;
   refresh: () => Promise<void>;
 }
 
@@ -73,7 +74,9 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
     }
     setLoading(true);
     try {
-      const all = await asyncStorage.getTasks();
+      const raw = await asyncStorage.getTasks();
+      // Migrate tasks that predate the comments field
+      const all = raw.map((t) => (t.comments ? t : { ...t, comments: [] }));
       // Sort by order field
       const sorted = [...all].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
       setTasks(sorted);
@@ -110,6 +113,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
         createdAt: now,
         updatedAt: now,
         completedAt: null,
+        comments: [],
       };
       const updated = [task, ...all];
       await asyncStorage.saveTasks(updated);
@@ -155,6 +159,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
           order: maxOrder + 1,
           createdAt: now,
           updatedAt: now,
+          comments: [],
         };
         newAll.unshift(clone);
       }
@@ -239,6 +244,31 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
+  const addComment = useCallback(
+    async (taskId: string, text: string) => {
+      if (!currentUser) throw new Error("Not signed in");
+      const trimmed = text.trim();
+      if (!trimmed) return;
+      const all = await asyncStorage.getTasks();
+      const now = Date.now();
+      const comment: TaskComment = {
+        id: uuid(),
+        authorId: currentUser.id,
+        text: trimmed,
+        createdAt: now,
+      };
+      const updated = all.map((t) =>
+        t.id === taskId
+          ? { ...t, comments: [...(t.comments ?? []), comment], updatedAt: now }
+          : t,
+      );
+      await asyncStorage.saveTasks(updated);
+      const sorted = [...updated].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      setTasks(sorted);
+    },
+    [currentUser],
+  );
+
   const value = useMemo<TasksContextValue>(
     () => ({
       loading,
@@ -250,6 +280,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
       reorderTasks,
       removeInventoryFromAll,
       removeCategoryFromAll,
+      addComment,
       refresh,
     }),
     [
@@ -262,6 +293,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
       reorderTasks,
       removeInventoryFromAll,
       removeCategoryFromAll,
+      addComment,
       refresh,
     ],
   );

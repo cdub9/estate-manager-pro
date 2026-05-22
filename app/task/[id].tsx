@@ -12,6 +12,7 @@ import {
 import { AssigneePicker } from "@/components/AssigneePicker";
 import { Button } from "@/components/Button";
 import { CategoryPicker } from "@/components/CategoryPicker";
+import { CommentSection } from "@/components/CommentSection";
 import { DatePickerModal } from "@/components/DatePickerModal";
 import { InventoryLinkPicker } from "@/components/InventoryLinkPicker";
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
@@ -272,6 +273,10 @@ export default function TaskDetailScreen() {
             Completed {formatDate(task.completedAt)}
           </Text>
         )}
+
+        <View style={[styles.fieldGroup, styles.commentsDivider, { borderTopColor: colors.border }]}>
+          <CommentSection taskId={task.id} comments={task.comments ?? []} />
+        </View>
       </KeyboardAwareScrollViewCompat>
 
       <DatePickerModal
@@ -311,6 +316,10 @@ const styles = StyleSheet.create({
   },
   fieldGroup: {
     gap: 8,
+  },
+  commentsDivider: {
+    paddingTop: 16,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
   label: {
     fontSize: 13,

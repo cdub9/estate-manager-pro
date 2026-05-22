@@ -26,6 +26,13 @@ export interface Category {
   createdAt: number;
 }
 
+export interface TaskComment {
+  id: string;
+  authorId: string;
+  text: string;
+  createdAt: number;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -42,6 +49,7 @@ export interface Task {
   createdAt: number;
   updatedAt: number;
   completedAt: number | null;
+  comments: TaskComment[];
 }
 
 export interface InventoryItem {
