@@ -24,6 +24,7 @@ type DueTone = "today" | "soon" | "later" | "overdue";
 function formatDue(due: number | null): { label: string; tone: DueTone } | null {
   if (!due) return null;
   const d = new Date(due);
+  d.setHours(0, 0, 0, 0);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const dayMs = 86400000;
