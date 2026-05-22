@@ -20,6 +20,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { CategoriesProvider } from "@/contexts/CategoriesContext";
 import { InventoryProvider } from "@/contexts/InventoryContext";
 import { TasksProvider } from "@/contexts/TasksContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { useColors } from "@/hooks/useColors";
 
 SplashScreen.preventAutoHideAsync();
@@ -99,11 +100,13 @@ export default function RootLayout() {
 
   return (
     <ErrorBoundary>
-      <KeyboardProvider>
-        <AppProviders>
-          <RootNavigator />
-        </AppProviders>
-      </KeyboardProvider>
+      <ThemeProvider>
+        <KeyboardProvider>
+          <AppProviders>
+            <RootNavigator />
+          </AppProviders>
+        </KeyboardProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }

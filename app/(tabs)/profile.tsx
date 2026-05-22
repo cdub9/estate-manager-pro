@@ -14,6 +14,7 @@ import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
 import { TextField } from "@/components/TextField";
 import { DEFAULT_TIMEZONE, useAuth } from "@/contexts/AuthContext";
+import { ThemePreference, useTheme } from "@/contexts/ThemeContext";
 import { useColors } from "@/hooks/useColors";
 import { Timezone } from "@/types";
 
@@ -27,10 +28,17 @@ const TIMEZONE_OPTIONS: { value: Timezone; label: string }[] = [
   { value: "Pacific/Honolulu", label: "Hawaii (HT)" },
 ];
 
+const THEME_OPTIONS: { value: ThemePreference; label: string; icon: string }[] = [
+  { value: "light", label: "Light", icon: "sun" },
+  { value: "dark", label: "Dark", icon: "moon" },
+  { value: "system", label: "System", icon: "smartphone" },
+];
+
 export default function ProfileScreen() {
   const colors = useColors();
   const router = useRouter();
   const { currentUser, users, logout, switchUser, updateProfile } = useAuth();
+  const { themePreference, setThemePreference } = useTheme();
 
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(currentUser?.name ?? "");
@@ -279,6 +287,50 @@ export default function ProfileScreen() {
         </Pressable>
       </View>
 
+      {/* Appearance */}
+      <View style={[styles.card, { backgroundColor: colors.card, borderRadius: colors.radius }]}>
+        <Text style={[styles.sectionLabel, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
+          Appearance
+        </Text>
+        <View style={styles.themeOptions} accessibilityRole="radiogroup" accessibilityLabel="Theme">
+          {THEME_OPTIONS.map((opt) => {
+            const active = themePreference === opt.value;
+            return (
+              <Pressable
+                key={opt.value}
+                accessibilityRole="radio"
+                accessibilityLabel={opt.label}
+                accessibilityState={{ checked: active }}
+                onPress={() => setThemePreference(opt.value)}
+                style={({ pressed }) => [
+                  styles.themeChip,
+                  {
+                    backgroundColor: active ? colors.primary : colors.secondary,
+                    borderRadius: colors.radius,
+                    opacity: pressed ? 0.85 : 1,
+                  },
+                ]}
+              >
+                <Feather
+                  name={opt.icon as any}
+                  size={14}
+                  color={active ? "#fff" : colors.secondaryForeground}
+                />
+                <Text
+                  style={{
+                    color: active ? "#fff" : colors.secondaryForeground,
+                    fontFamily: "Inter_600SemiBold",
+                    fontSize: 13,
+                  }}
+                >
+                  {opt.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+
       {/* Sign out */}
       <Pressable
         accessibilityRole="button"
@@ -342,6 +394,18 @@ const styles = StyleSheet.create({
   tzChip: {
     paddingHorizontal: 10,
     paddingVertical: 6,
+  },
+  themeOptions: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  themeChip: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 10,
   },
   userRow: {
     flexDirection: "row",
