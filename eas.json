@@ -8,14 +8,14 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk",
-        "image": "ubuntu-22.04-jdk-17-ndk-r25c"
+        "image": "ubuntu-24.04-jdk-17-ndk-r27b-sdk-55"
       }
     },
     "preview": {
       "distribution": "internal",
       "android": {
         "buildType": "apk",
-        "image": "ubuntu-22.04-jdk-17-ndk-r25c"
+        "image": "ubuntu-24.04-jdk-17-ndk-r27b-sdk-55"
       },
       "ios": {
         "simulator": false
