@@ -13,12 +13,17 @@ config.watchFolders = [
   path.resolve(__dirname, "node_modules"),
 ];
 
-// Supabase pulls in @opentelemetry packages that use dynamic import()
-// expressions incompatible with Hermes. Return empty modules for all of them.
+// @supabase/supabase-js@2.106+ ships an ESM build (index.mjs) that contains
+// `import(OTEL_PKG)` — a dynamic import with a variable — which Hermes cannot
+// compile. Force Metro to use the CJS build (index.cjs) which uses require()
+// instead and is safe for Hermes.
 const originalResolveRequest = config.resolver.resolveRequest;
 config.resolver.resolveRequest = (context, moduleName, platform) => {
-  if (moduleName.startsWith("@opentelemetry/")) {
-    return { type: "empty" };
+  if (moduleName === "@supabase/supabase-js") {
+    return {
+      type: "sourceFile",
+      filePath: path.resolve(__dirname, "node_modules/@supabase/supabase-js/dist/index.cjs"),
+    };
   }
   return originalResolveRequest
     ? originalResolveRequest(context, moduleName, platform)
