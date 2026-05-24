@@ -161,18 +161,16 @@ export default function TaskDetailScreen() {
         <Text style={[styles.headerTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]} numberOfLines={1}>
           Edit Task
         </Text>
-        <View style={styles.headerRight}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Delete task"
-            onPress={handleDelete}
-            hitSlop={8}
-            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, padding: 4 })}
-          >
-            <Feather name="trash-2" size={20} color={colors.destructive} />
-          </Pressable>
-          <Button title="Save" onPress={handleSave} loading={saving} size="sm" disabled={!isDirty} />
-        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Delete task"
+          onPress={handleDelete}
+          hitSlop={8}
+          style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, padding: 4, marginRight: 8 })}
+        >
+          <Feather name="trash-2" size={20} color={colors.destructive} />
+        </Pressable>
+        <Button title="Save" onPress={handleSave} loading={saving} size="sm" disabled={!isDirty} />
       </View>
 
       <KeyboardAwareScrollViewCompat
@@ -264,7 +262,7 @@ export default function TaskDetailScreen() {
           <Text style={[styles.label, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>Photos</Text>
           <PhotoGrid
             photos={photos}
-            onAdd={(uri) => setPhotos((p) => [...p, uri])}
+            onAdd={(uris) => setPhotos((p) => [...p, ...uris])}
             onRemove={(uri) => setPhotos((p) => p.filter((x) => x !== uri))}
           />
         </View>

@@ -16,7 +16,7 @@ import { useColors } from "@/hooks/useColors";
 
 interface Props {
   photos: string[];
-  onAdd: (uri: string) => void;
+  onAdd: (uris: string[]) => void;
   onRemove: (uri: string) => void;
   maxPhotos?: number;
 }
@@ -37,14 +37,17 @@ export function PhotoGrid({ photos, onAdd, onRemove, maxPhotos = 6 }: Props) {
       return;
     }
 
+    const remaining = maxPhotos - photos.length;
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       quality: 0.85,
       allowsEditing: false,
+      allowsMultipleSelection: true,
+      selectionLimit: remaining,
     });
 
-    if (!result.canceled && result.assets[0]) {
-      onAdd(result.assets[0].uri);
+    if (!result.canceled && result.assets.length > 0) {
+      onAdd(result.assets.map((a) => a.uri));
     }
   }
 
@@ -65,7 +68,7 @@ export function PhotoGrid({ photos, onAdd, onRemove, maxPhotos = 6 }: Props) {
     });
 
     if (!result.canceled && result.assets[0]) {
-      onAdd(result.assets[0].uri);
+      onAdd([result.assets[0].uri]);
     }
   }
 

@@ -12,14 +12,20 @@ import React, { useEffect, useRef } from "react";
 import { ActivityIndicator, LogBox, View } from "react-native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 
-// Show notification banners even when the app is in the foreground
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
+// Show notification banners even when the app is in the foreground.
+// Wrapped in try/catch because this throws in Expo Go on SDK 53+ (Android).
+try {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+    }),
+  });
+} catch {
+  // Push notifications are not supported in Expo Go on Android SDK 53+.
+  // Build a development client via `eas build --platform android --profile development`.
+}
 
 // react-native-draggable-flatlist uses InteractionManager internally;
 // suppress the deprecation warning until the library is updated.
@@ -58,17 +64,23 @@ function RootNavigator() {
     routerRef.current = router;
   });
 
-  // Navigate to the relevant task when a notification is tapped
+  // Navigate to the relevant task when a notification is tapped.
+  // Guarded because the listener API throws in Expo Go on Android SDK 53+.
   useEffect(() => {
-    const subscription = Notifications.addNotificationResponseReceivedListener(
-      (response) => {
-        const taskId = response.notification.request.content.data?.taskId as string | undefined;
-        if (taskId) {
-          routerRef.current.push(`/task/${taskId}`);
-        }
-      },
-    );
-    return () => subscription.remove();
+    let subscription: ReturnType<typeof Notifications.addNotificationResponseReceivedListener> | null = null;
+    try {
+      subscription = Notifications.addNotificationResponseReceivedListener(
+        (response) => {
+          const taskId = response.notification.request.content.data?.taskId as string | undefined;
+          if (taskId) {
+            routerRef.current.push(`/task/${taskId}`);
+          }
+        },
+      );
+    } catch {
+      // Not available in Expo Go on Android SDK 53+.
+    }
+    return () => subscription?.remove();
   }, []);
 
   useEffect(() => {

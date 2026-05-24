@@ -198,7 +198,7 @@ export default function NewTaskScreen() {
           <Text style={[styles.label, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>Photos</Text>
           <PhotoGrid
             photos={photos}
-            onAdd={(uri) => setPhotos((p) => [...p, uri])}
+            onAdd={(uris) => setPhotos((p) => [...p, ...uris])}
             onRemove={(uri) => setPhotos((p) => p.filter((x) => x !== uri))}
           />
         </View>

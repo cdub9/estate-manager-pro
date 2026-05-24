@@ -170,20 +170,18 @@ export default function InventoryDetailScreen() {
         >
           {item.name}
         </Text>
-        <View style={styles.headerRight}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Delete item"
-            onPress={handleDelete}
-            hitSlop={8}
-            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, padding: 4 })}
-          >
-            <Feather name="trash-2" size={20} color={colors.destructive} />
-          </Pressable>
-          {!isArchived && (
-            <Button title="Save" onPress={handleSave} loading={saving} size="sm" disabled={!isDirty} />
-          )}
-        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Delete item"
+          onPress={handleDelete}
+          hitSlop={8}
+          style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, padding: 4, marginRight: 8 })}
+        >
+          <Feather name="trash-2" size={20} color={colors.destructive} />
+        </Pressable>
+        {!isArchived && (
+          <Button title="Save" onPress={handleSave} loading={saving} size="sm" disabled={!isDirty} />
+        )}
       </View>
 
       <KeyboardAwareScrollViewCompat

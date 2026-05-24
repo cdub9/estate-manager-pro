@@ -4,7 +4,6 @@ import {
   Modal,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -26,46 +25,68 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December",
 ];
 
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
-const MINUTES = [0, 15, 30, 45];
-
-function pad(n: number) {
-  return String(n).padStart(2, "0");
-}
+const DOW = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
 function daysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate();
 }
 
+/** Returns the 0-based weekday (0 = Sun) of the first day of the month. */
+function firstWeekday(year: number, month: number) {
+  return new Date(year, month, 1).getDay();
+}
+
 export function DatePickerModal({ visible, value, onConfirm, onCancel, minDate, maxDate }: Props) {
   const colors = useColors();
-  const now = value ? new Date(value) : new Date();
 
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth());
-  const [day, setDay] = useState(now.getDate());
-  const [hour, setHour] = useState(now.getHours() === 0 ? 12 : now.getHours());
-  const [minute, setMinute] = useState(MINUTES.reduce((prev, curr) =>
-    Math.abs(curr - now.getMinutes()) < Math.abs(prev - now.getMinutes()) ? curr : prev
-  ));
+  const initial = value ? new Date(value) : new Date();
+  const [year, setYear] = useState(initial.getFullYear());
+  const [month, setMonth] = useState(initial.getMonth());
+  const [selectedDay, setSelectedDay] = useState(initial.getDate());
 
-  const numDays = daysInMonth(year, month);
-  const safeDay = Math.min(day, numDays);
+  const today = new Date();
+  const todayY = today.getFullYear();
+  const todayM = today.getMonth();
+  const todayD = today.getDate();
 
-  const maxYear = new Date().getFullYear() + 10;
-  const minYear = new Date().getFullYear() - 1;
+  const maxYear = todayY + 10;
+  const minYear = todayY - 1;
+
+  function prevMonth() {
+    if (month === 0) { if (year > minYear) { setMonth(11); setYear((y) => y - 1); } }
+    else setMonth((m) => m - 1);
+  }
+
+  function nextMonth() {
+    if (month === 11) { if (year < maxYear) { setMonth(0); setYear((y) => y + 1); } }
+    else setMonth((m) => m + 1);
+  }
+
+  function handleDayPress(day: number) {
+    setSelectedDay(day);
+  }
 
   function handleConfirm() {
-    const d = new Date(year, month, safeDay, hour, minute, 0, 0);
+    // Use noon local time to avoid off-by-one date shifts from timezone offsets.
+    const d = new Date(year, month, selectedDay, 12, 0, 0, 0);
     const ts = d.getTime();
     if (minDate && ts < minDate) return;
     if (maxDate && ts > maxDate) return;
     onConfirm(ts);
   }
 
-  const cardBg = { backgroundColor: colors.card, borderRadius: colors.radius };
-  const labelStyle = { color: colors.mutedForeground, fontFamily: "Inter_500Medium" as const, fontSize: 12 };
-  const valueStyle = { color: colors.foreground, fontFamily: "Inter_600SemiBold" as const, fontSize: 15 };
+  const numDays = daysInMonth(year, month);
+  const startOffset = firstWeekday(year, month);
+
+  // Build a flat array of cells: nulls for leading empty slots, then 1..numDays
+  const cells: (number | null)[] = [
+    ...Array(startOffset).fill(null),
+    ...Array.from({ length: numDays }, (_, i) => i + 1),
+  ];
+  // Pad to complete the last row
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  const safeSelected = Math.min(selectedDay, numDays);
 
   return (
     <Modal visible={visible} animationType="fade" transparent onRequestClose={onCancel}>
@@ -74,157 +95,94 @@ export function DatePickerModal({ visible, value, onConfirm, onCancel, minDate, 
           style={[
             styles.sheet,
             { backgroundColor: colors.card, borderRadius: colors.radius },
-            Platform.OS === "web" ? { maxWidth: 420 } : {},
+            Platform.OS === "web" ? { maxWidth: 360 } : {},
           ]}
           onPress={(e) => e.stopPropagation()}
         >
-          <Text style={[styles.title, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
-            Pick a date & time
-          </Text>
+          {/* Month / Year navigation */}
+          <View style={styles.navRow}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Previous month"
+              onPress={prevMonth}
+              hitSlop={10}
+              style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+            >
+              <Feather name="chevron-left" size={22} color={colors.foreground} />
+            </Pressable>
 
-          {/* Month / Year row */}
-          <View style={styles.row}>
-            <View style={[styles.pickerCol, cardBg]}>
-              <Text style={labelStyle}>Month</Text>
-              <View style={styles.stepper}>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Previous month"
-                  onPress={() => setMonth((m) => (m === 0 ? 11 : m - 1))}
-                  hitSlop={8}
-                >
-                  <Feather name="chevron-left" size={18} color={colors.mutedForeground} />
-                </Pressable>
-                <Text style={valueStyle}>{MONTHS[month].slice(0, 3)}</Text>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Next month"
-                  onPress={() => setMonth((m) => (m === 11 ? 0 : m + 1))}
-                  hitSlop={8}
-                >
-                  <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
-                </Pressable>
-              </View>
-            </View>
+            <Text style={[styles.monthLabel, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
+              {MONTHS[month]} {year}
+            </Text>
 
-            <View style={[styles.pickerCol, cardBg]}>
-              <Text style={labelStyle}>Day</Text>
-              <View style={styles.stepper}>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Previous day"
-                  onPress={() => setDay((d) => (d === 1 ? numDays : d - 1))}
-                  hitSlop={8}
-                >
-                  <Feather name="chevron-left" size={18} color={colors.mutedForeground} />
-                </Pressable>
-                <Text style={valueStyle}>{safeDay}</Text>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Next day"
-                  onPress={() => setDay((d) => (d === numDays ? 1 : d + 1))}
-                  hitSlop={8}
-                >
-                  <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
-                </Pressable>
-              </View>
-            </View>
-
-            <View style={[styles.pickerCol, cardBg]}>
-              <Text style={labelStyle}>Year</Text>
-              <View style={styles.stepper}>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Previous year"
-                  onPress={() => setYear((y) => Math.max(minYear, y - 1))}
-                  hitSlop={8}
-                >
-                  <Feather name="chevron-left" size={18} color={colors.mutedForeground} />
-                </Pressable>
-                <Text style={valueStyle}>{year}</Text>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Next year"
-                  onPress={() => setYear((y) => Math.min(maxYear, y + 1))}
-                  hitSlop={8}
-                >
-                  <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
-                </Pressable>
-              </View>
-            </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Next month"
+              onPress={nextMonth}
+              hitSlop={10}
+              style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+            >
+              <Feather name="chevron-right" size={22} color={colors.foreground} />
+            </Pressable>
           </View>
 
-          {/* Time row */}
-          <View style={[styles.row, { marginTop: 8 }]}>
-            <View style={[styles.pickerCol, cardBg]}>
-              <Text style={labelStyle}>Hour</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.scrollPicker}
-              >
-                {HOURS.map((h) => (
-                  <Pressable
-                    key={h}
-                    accessibilityRole="radio"
-                    accessibilityLabel={`${h}:00`}
-                    accessibilityState={{ checked: hour === h }}
-                    onPress={() => setHour(h)}
-                    style={[
-                      styles.timePill,
-                      {
-                        backgroundColor: hour === h ? colors.primary : colors.secondary,
-                        borderRadius: 8,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={{
-                        color: hour === h ? "#fff" : colors.secondaryForeground,
-                        fontFamily: "Inter_500Medium",
-                        fontSize: 13,
-                      }}
-                    >
-                      {pad(h)}
-                    </Text>
-                  </Pressable>
-                ))}
-              </ScrollView>
-            </View>
-
-            <View style={[styles.pickerCol, cardBg]}>
-              <Text style={labelStyle}>Min</Text>
-              <View style={styles.stepper}>
-                {MINUTES.map((m) => (
-                  <Pressable
-                    key={m}
-                    accessibilityRole="radio"
-                    accessibilityLabel={`${m} minutes`}
-                    accessibilityState={{ checked: minute === m }}
-                    onPress={() => setMinute(m)}
-                    style={[
-                      styles.timePill,
-                      {
-                        backgroundColor: minute === m ? colors.primary : colors.secondary,
-                        borderRadius: 8,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={{
-                        color: minute === m ? "#fff" : colors.secondaryForeground,
-                        fontFamily: "Inter_500Medium",
-                        fontSize: 13,
-                      }}
-                    >
-                      :{pad(m)}
-                    </Text>
-                  </Pressable>
-                ))}
+          {/* Day-of-week headers */}
+          <View style={styles.grid}>
+            {DOW.map((d) => (
+              <View key={d} style={styles.cell}>
+                <Text style={[styles.dowText, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
+                  {d}
+                </Text>
               </View>
-            </View>
+            ))}
+
+            {/* Day cells */}
+            {cells.map((day, idx) => {
+              if (day === null) {
+                return <View key={`empty-${idx}`} style={styles.cell} />;
+              }
+
+              const isSelected = day === safeSelected;
+              const isToday = day === todayD && month === todayM && year === todayY;
+
+              let cellBg = "transparent";
+              if (isSelected) cellBg = colors.primary;
+              else if (isToday) cellBg = colors.secondary;
+
+              const textColor = isSelected ? "#fff" : isToday ? colors.primary : colors.foreground;
+
+              return (
+                <Pressable
+                  key={day}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${MONTHS[month]} ${day}, ${year}`}
+                  accessibilityState={{ selected: isSelected }}
+                  onPress={() => handleDayPress(day)}
+                  style={({ pressed }) => [
+                    styles.cell,
+                    { opacity: pressed ? 0.7 : 1 },
+                  ]}
+                >
+                  <View style={[
+                    styles.dayCircle,
+                    { backgroundColor: cellBg, borderRadius: 999 },
+                  ]}>
+                    <Text style={[
+                      styles.dayText,
+                      {
+                        color: textColor,
+                        fontFamily: isSelected || isToday ? "Inter_600SemiBold" : "Inter_400Regular",
+                      },
+                    ]}>
+                      {day}
+                    </Text>
+                  </View>
+                </Pressable>
+              );
+            })}
           </View>
 
+          {/* Actions */}
           <View style={styles.actions}>
             <Pressable
               accessibilityRole="button"
@@ -241,7 +199,7 @@ export function DatePickerModal({ visible, value, onConfirm, onCancel, minDate, 
             </Pressable>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Confirm date and time"
+              accessibilityLabel="Confirm date"
               onPress={handleConfirm}
               style={({ pressed }) => [
                 styles.btn,
@@ -259,6 +217,8 @@ export function DatePickerModal({ visible, value, onConfirm, onCancel, minDate, 
   );
 }
 
+const CELL_SIZE = 40;
+
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
@@ -270,40 +230,42 @@ const styles = StyleSheet.create({
   sheet: {
     width: "100%",
     padding: 20,
-    gap: 12,
+    gap: 16,
   },
-  title: {
-    fontSize: 16,
-    marginBottom: 4,
-  },
-  row: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  pickerCol: {
-    flex: 1,
-    padding: 10,
-    gap: 8,
-  },
-  stepper: {
+  navRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
-  scrollPicker: {
-    flexDirection: "row",
-    gap: 4,
-    paddingBottom: 2,
+  monthLabel: {
+    fontSize: 16,
   },
-  timePill: {
-    paddingHorizontal: 8,
-    paddingVertical: 5,
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+  cell: {
+    width: `${100 / 7}%`,
     alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 2,
+  },
+  dowText: {
+    fontSize: 12,
+    paddingVertical: 4,
+  },
+  dayCircle: {
+    width: CELL_SIZE,
+    height: CELL_SIZE,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  dayText: {
+    fontSize: 14,
   },
   actions: {
     flexDirection: "row",
     gap: 8,
-    marginTop: 8,
   },
   btn: {
     paddingVertical: 12,
