@@ -166,7 +166,7 @@ export default function TaskDetailScreen() {
           accessibilityLabel="Delete task"
           onPress={handleDelete}
           hitSlop={8}
-          style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, padding: 4, marginRight: 8 })}
+          style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, padding: 4, marginRight: 32 })}
         >
           <Feather name="trash-2" size={20} color={colors.destructive} />
         </Pressable>
