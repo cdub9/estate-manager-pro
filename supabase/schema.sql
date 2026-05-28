@@ -224,3 +224,18 @@ as $$
   where estate_id = get_my_estate_id()
     and p_inventory_id = any(inventory_ids);
 $$;
+
+-- Permanently delete the calling user's account and all their data.
+-- Runs as superuser (security definer) so it can delete from auth.users.
+-- Cascade: auth.users → profiles. If the user is the sole estate member,
+-- the estate (and all its tasks/inventory) is also deleted via FK cascade.
+create or replace function delete_my_account()
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+begin
+  delete from auth.users where id = auth.uid();
+end;
+$$;

@@ -1,3 +1,4 @@
+import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -10,6 +11,8 @@ import {
   Text,
   View,
 } from "react-native";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 import { Button } from "@/components/Button";
 import { TextField } from "@/components/TextField";
@@ -27,11 +30,17 @@ export default function RegisterScreen() {
   const [confirm, setConfirm] = useState("");
   const [joinMode, setJoinMode] = useState(false);
   const [estateCode, setEstateCode] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleRegister() {
     if (!email.trim()) {
       Alert.alert("Required", "Please enter your email address.");
+      return;
+    }
+    if (!EMAIL_RE.test(email.trim())) {
+      Alert.alert("Invalid email", "Please enter a valid email address.");
       return;
     }
     if (!name.trim()) {
@@ -156,17 +165,37 @@ export default function RegisterScreen() {
             value={password}
             onChangeText={setPassword}
             placeholder="At least 8 characters"
-            secureTextEntry
+            secureTextEntry={!showPassword}
             returnKeyType="next"
+            rightElement={
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={showPassword ? "Hide password" : "Show password"}
+                onPress={() => setShowPassword((v) => !v)}
+                hitSlop={8}
+              >
+                <Feather name={showPassword ? "eye-off" : "eye"} size={18} color="#9aa094" />
+              </Pressable>
+            }
           />
           <TextField
             label="Confirm password"
             value={confirm}
             onChangeText={setConfirm}
             placeholder="Repeat password"
-            secureTextEntry
+            secureTextEntry={!showConfirm}
             returnKeyType={joinMode ? "next" : "done"}
             onSubmitEditing={joinMode ? undefined : handleRegister}
+            rightElement={
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={showConfirm ? "Hide password" : "Show password"}
+                onPress={() => setShowConfirm((v) => !v)}
+                hitSlop={8}
+              >
+                <Feather name={showConfirm ? "eye-off" : "eye"} size={18} color="#9aa094" />
+              </Pressable>
+            }
           />
 
           {joinMode && (
@@ -184,7 +213,7 @@ export default function RegisterScreen() {
 
           {!joinMode && (
             <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_400Regular", fontSize: 12, lineHeight: 18 }}>
-              A new estate will be created for your household. Share the join code from your profile to add other members.
+              A new estate will be created for you. Share the join code from your profile to add other members.
             </Text>
           )}
 

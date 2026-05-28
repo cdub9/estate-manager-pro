@@ -8,7 +8,8 @@ import {
 import * as Notifications from "expo-notifications";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect, useRef } from "react";
+import * as SecureStore from "expo-secure-store";
+import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, LogBox, View } from "react-native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 
@@ -18,6 +19,8 @@ try {
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
       shouldShowAlert: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
       shouldPlaySound: true,
       shouldSetBadge: false,
     }),
@@ -32,6 +35,7 @@ try {
 LogBox.ignoreLogs(["InteractionManager has been deprecated"]);
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { Onboarding } from "@/components/Onboarding";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { CategoriesProvider } from "@/contexts/CategoriesContext";
 import { InventoryProvider } from "@/contexts/InventoryContext";
@@ -59,6 +63,13 @@ function RootNavigator() {
   const router = useRouter();
   const routerRef = useRef(router);
   const colors = useColors();
+  const [onboardingDone, setOnboardingDone] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    SecureStore.getItemAsync("onboarding_complete").then((val) => {
+      setOnboardingDone(val === "1");
+    });
+  }, []);
 
   useEffect(() => {
     routerRef.current = router;
@@ -104,16 +115,26 @@ function RootNavigator() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(auth)" />
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="task/new" options={{ presentation: "modal", headerShown: false }} />
-      <Stack.Screen name="task/[id]" options={{ headerShown: false }} />
-      <Stack.Screen name="inventory/new" options={{ presentation: "modal", headerShown: false }} />
-      <Stack.Screen name="inventory/[id]" options={{ headerShown: false }} />
-      <Stack.Screen name="categories" options={{ headerShown: false }} />
-      <Stack.Screen name="+not-found" options={{ headerShown: false }} />
-    </Stack>
+    <>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(auth)/forgot-password" />
+        <Stack.Screen name="(auth)/reset-password" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="task/new" options={{ presentation: "modal", headerShown: false }} />
+        <Stack.Screen name="task/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="inventory/new" options={{ presentation: "modal", headerShown: false }} />
+        <Stack.Screen name="inventory/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="categories" options={{ headerShown: false }} />
+        <Stack.Screen name="+not-found" options={{ headerShown: false }} />
+      </Stack>
+      {currentUser && onboardingDone === false && (
+        <Onboarding
+          visible
+          onDone={() => setOnboardingDone(true)}
+        />
+      )}
+    </>
   );
 }
 

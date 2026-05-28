@@ -3,6 +3,7 @@
     "name": "Estate Manager Pro",
     "slug": "estate-manager-pro",
     "version": "1.0.0",
+    "description": "Manage your estate's tasks, staff, and equipment. Assign tasks to members, track inventory, and stay organized together.",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "estate-manager-pro",

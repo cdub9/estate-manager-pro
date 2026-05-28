@@ -56,6 +56,7 @@ interface AuthContextValue {
   updateProfile: (
     updates: Partial<Pick<User, "name" | "timezone">> & { password?: string },
   ) => Promise<void>;
+  deleteAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -246,6 +247,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [currentUser],
   );
 
+  // ── deleteAccount ──────────────────────────────────────────────────────────
+  const deleteAccount = useCallback(async () => {
+    const { error } = await supabase.rpc("delete_my_account");
+    if (error) throw error;
+    await supabase.auth.signOut();
+    // SIGNED_OUT handler clears all state
+  }, []);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       loading,
@@ -257,8 +266,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       login,
       logout,
       updateProfile,
+      deleteAccount,
     }),
-    [loading, users, currentUser, estateId, estateJoinCode, register, login, logout, updateProfile],
+    [loading, users, currentUser, estateId, estateJoinCode, register, login, logout, updateProfile, deleteAccount],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

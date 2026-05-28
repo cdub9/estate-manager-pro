@@ -51,6 +51,7 @@ export interface NewTaskInput {
 
 interface TasksContextValue {
   loading: boolean;
+  error: string | null;
   tasks: Task[];
   createTask: (input: NewTaskInput) => Promise<Task>;
   updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
@@ -82,6 +83,7 @@ function nextDueDate(due: number | null, recurrence: Recurrence): number | null 
 export function TasksProvider({ children }: { children: React.ReactNode }) {
   const { currentUser, estateId, users } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
 
   const refresh = useCallback(async () => {
@@ -91,15 +93,17 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     setLoading(true);
+    setError(null);
     try {
-      const { data, error } = await supabase
+      const { data, error: fetchError } = await supabase
         .from("tasks")
         .select("*")
         .order("order", { ascending: true });
-      if (error) throw error;
+      if (fetchError) throw fetchError;
       setTasks((data ?? []).map(rowToTask));
     } catch (err) {
       console.error("TasksContext refresh failed:", err);
+      setError("Couldn't load tasks. Check your connection.");
     } finally {
       setLoading(false);
     }
@@ -355,6 +359,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<TasksContextValue>(
     () => ({
       loading,
+      error,
       tasks,
       createTask,
       updateTask,
@@ -367,7 +372,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
       refresh,
     }),
     [
-      loading, tasks, createTask, updateTask, deleteTask,
+      loading, error, tasks, createTask, updateTask, deleteTask,
       toggleComplete, reorderTasks, removeInventoryFromAll,
       removeCategoryFromAll, addComment, refresh,
     ],

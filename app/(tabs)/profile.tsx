@@ -1,5 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import * as Linking from "expo-linking";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
@@ -10,6 +11,8 @@ import {
   Text,
   View,
 } from "react-native";
+
+const PRIVACY_POLICY_URL = "https://cdub9.github.io/estate-manager-pro/privacy-policy";
 
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
@@ -38,7 +41,7 @@ const THEME_OPTIONS: { value: ThemePreference; label: string; icon: string }[] =
 export default function ProfileScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { currentUser, users, logout, updateProfile, estateJoinCode } = useAuth();
+  const { currentUser, users, logout, updateProfile, deleteAccount, estateJoinCode } = useAuth();
   const { themePreference, setThemePreference } = useTheme();
 
   const [editing, setEditing] = useState(false);
@@ -120,6 +123,28 @@ export default function ProfileScreen() {
     ]);
   }
 
+  function handleDeleteAccount() {
+    Alert.alert(
+      "Delete account",
+      "This will permanently delete your account and all your data. This cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteAccount();
+            } catch (err) {
+              const msg = err instanceof Error ? err.message : "Could not delete account.";
+              Alert.alert("Error", msg);
+            }
+          },
+        },
+      ],
+    );
+  }
+
   async function handleShareCode() {
     if (!estateJoinCode) return;
     await Share.share({
@@ -179,16 +204,16 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      {/* Estate / household */}
+      {/* Estate */}
       {estateJoinCode && (
         <View style={[styles.card, { backgroundColor: colors.card, borderRadius: colors.radius }]}>
           <Text style={[styles.sectionLabel, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
-            Household
+            Estate
           </Text>
           <View style={styles.joinCodeRow}>
             <View style={{ flex: 1 }}>
               <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_400Regular", fontSize: 12, marginBottom: 2 }}>
-                Join code — share with household members
+                Join code — share with estate members
               </Text>
               <Text style={{ color: colors.foreground, fontFamily: "Inter_700Bold", fontSize: 22, letterSpacing: 4 }}>
                 {estateJoinCode}
@@ -387,6 +412,37 @@ export default function ProfileScreen() {
           Sign out
         </Text>
       </Pressable>
+
+      {/* Legal & danger zone */}
+      <View style={[styles.card, { backgroundColor: colors.card, borderRadius: colors.radius }]}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Privacy policy"
+          onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}
+          style={({ pressed }) => [styles.linkRow, { opacity: pressed ? 0.7 : 1 }]}
+        >
+          <Feather name="shield" size={18} color={colors.mutedForeground} />
+          <Text style={{ color: colors.foreground, fontFamily: "Inter_500Medium", fontSize: 15, flex: 1 }}>
+            Privacy Policy
+          </Text>
+          <Feather name="external-link" size={16} color={colors.mutedForeground} />
+        </Pressable>
+      </View>
+
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Delete my account"
+        onPress={handleDeleteAccount}
+        style={({ pressed }) => [
+          styles.deleteBtn,
+          { borderColor: colors.destructive, borderRadius: colors.radius, opacity: pressed ? 0.8 : 1 },
+        ]}
+      >
+        <Feather name="trash-2" size={16} color={colors.destructive} />
+        <Text style={{ color: colors.destructive, fontFamily: "Inter_500Medium", fontSize: 14 }}>
+          Delete My Account
+        </Text>
+      </Pressable>
     </ScrollView>
   );
 }
@@ -474,6 +530,15 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   signOutBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 14,
+    borderWidth: 1,
+    marginTop: 4,
+  },
+  deleteBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",

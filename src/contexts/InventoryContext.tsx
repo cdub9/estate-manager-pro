@@ -23,6 +23,7 @@ export interface NewInventoryInput {
 
 interface InventoryContextValue {
   loading: boolean;
+  error: string | null;
   items: InventoryItem[];
   archivedItems: InventoryItem[];
   archivedMode: boolean;
@@ -59,6 +60,7 @@ function rowToItem(row: Record<string, unknown>): InventoryItem {
 export function InventoryProvider({ children }: { children: React.ReactNode }) {
   const { currentUser, estateId } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [archivedItems, setArchivedItems] = useState<InventoryItem[]>([]);
   const [archivedMode, setArchivedMode] = useState(false);
@@ -71,17 +73,19 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     setLoading(true);
+    setError(null);
     try {
-      const { data, error } = await supabase
+      const { data, error: fetchError } = await supabase
         .from("inventory")
         .select("*")
         .order("created_at", { ascending: false });
-      if (error) throw error;
+      if (fetchError) throw fetchError;
       const all = (data ?? []).map(rowToItem);
       setItems(all.filter((it) => !it.archivedAt));
       setArchivedItems(all.filter((it) => Boolean(it.archivedAt)));
     } catch (err) {
       console.error("InventoryContext refresh failed:", err);
+      setError("Couldn't load inventory. Check your connection.");
     } finally {
       setLoading(false);
     }
@@ -195,12 +199,12 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<InventoryContextValue>(
     () => ({
-      loading, items, archivedItems, archivedMode,
+      loading, error, items, archivedItems, archivedMode,
       createItem, updateItem, archiveItem, unarchiveItem, deleteItem,
       getItemById, refresh, showArchived, showActive, setArchivedMode,
     }),
     [
-      loading, items, archivedItems, archivedMode,
+      loading, error, items, archivedItems, archivedMode,
       createItem, updateItem, archiveItem, unarchiveItem, deleteItem,
       getItemById, refresh, showArchived, showActive,
     ],

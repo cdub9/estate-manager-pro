@@ -1,3 +1,4 @@
+import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -16,6 +17,8 @@ import { TextField } from "@/components/TextField";
 import { useAuth } from "@/contexts/AuthContext";
 import { useColors } from "@/hooks/useColors";
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function LoginScreen() {
   const colors = useColors();
   const router = useRouter();
@@ -23,11 +26,16 @@ export default function LoginScreen() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleLogin() {
     if (!email.trim()) {
       Alert.alert("Required", "Please enter your email address.");
+      return;
+    }
+    if (!EMAIL_RE.test(email.trim())) {
+      Alert.alert("Invalid email", "Please enter a valid email address.");
       return;
     }
     if (!password) {
@@ -80,10 +88,35 @@ export default function LoginScreen() {
             value={password}
             onChangeText={setPassword}
             placeholder="Password"
-            secureTextEntry
+            secureTextEntry={!showPassword}
             returnKeyType="done"
             onSubmitEditing={handleLogin}
+            rightElement={
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={showPassword ? "Hide password" : "Show password"}
+                onPress={() => setShowPassword((v) => !v)}
+                hitSlop={8}
+              >
+                <Feather
+                  name={showPassword ? "eye-off" : "eye"}
+                  size={18}
+                  color={colors.mutedForeground}
+                />
+              </Pressable>
+            }
           />
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Forgot password"
+            onPress={() => router.push("/(auth)/forgot-password")}
+            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, alignSelf: "flex-end" })}
+          >
+            <Text style={{ color: colors.primary, fontFamily: "Inter_500Medium", fontSize: 13 }}>
+              Forgot password?
+            </Text>
+          </Pressable>
 
           <Button
             title="Sign in"

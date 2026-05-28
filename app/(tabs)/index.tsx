@@ -28,7 +28,7 @@ export default function TasksScreen() {
   const colors = useColors();
   const router = useRouter();
   const { currentUser, users } = useAuth();
-  const { tasks, updateTask, reorderTasks } = useTasks();
+  const { tasks, loading, error, refresh, updateTask, reorderTasks } = useTasks();
   const { getCategory } = useCategories();
 
   const [query, setQuery] = useState("");
@@ -188,21 +188,41 @@ export default function TasksScreen() {
         </View>
       )}
 
-      <DraggableFlatList
-        data={filtered}
-        keyExtractor={(t) => t.id}
-        renderItem={renderItem}
-        onDragEnd={handleDragEnd}
-        activationDistance={filtersActive ? 99999 : 10}
-        contentContainerStyle={styles.list}
-        ListEmptyComponent={
-          <EmptyState
-            icon="check-square"
-            title={filtersActive ? "No matching tasks" : "No tasks yet"}
-            description={filtersActive ? "Try adjusting your search or filters" : "Tap + to create your first task"}
-          />
-        }
-      />
+      {!loading && error ? (
+        <View style={styles.errorState}>
+          <Feather name="wifi-off" size={32} color={colors.mutedForeground} />
+          <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_500Medium", fontSize: 15, textAlign: "center" }}>
+            {error}
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Retry loading tasks"
+            onPress={refresh}
+            style={({ pressed }) => [
+              styles.retryBtn,
+              { backgroundColor: colors.primary, borderRadius: colors.radius, opacity: pressed ? 0.85 : 1 },
+            ]}
+          >
+            <Text style={{ color: "#fff", fontFamily: "Inter_600SemiBold", fontSize: 14 }}>Retry</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <DraggableFlatList
+          data={filtered}
+          keyExtractor={(t) => t.id}
+          renderItem={renderItem}
+          onDragEnd={handleDragEnd}
+          activationDistance={filtersActive ? 99999 : 10}
+          contentContainerStyle={styles.list}
+          ListEmptyComponent={
+            <EmptyState
+              icon="check-square"
+              title={filtersActive ? "No matching tasks" : "No tasks yet"}
+              description={filtersActive ? "Try adjusting your search or filters" : "Tap + to create your first task"}
+            />
+          }
+        />
+      )}
     </GestureHandlerRootView>
   );
 }
@@ -266,5 +286,17 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 8,
     paddingBottom: 40,
+  },
+  errorState: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 32,
+    gap: 16,
+  },
+  retryBtn: {
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    marginTop: 4,
   },
 });

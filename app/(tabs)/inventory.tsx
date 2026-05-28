@@ -19,7 +19,7 @@ import { useColors } from "@/hooks/useColors";
 export default function InventoryScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { items, archivedItems, archivedMode, showArchived, showActive } = useInventory();
+  const { items, archivedItems, archivedMode, loading, error, refresh, showArchived, showActive } = useInventory();
   const { tasks } = useTasks();
 
   const taskCountByItem = useMemo(() => {
@@ -141,31 +141,51 @@ export default function InventoryScreen() {
         </Pressable>
       </View>
 
-      <FlatList
-        data={filtered}
-        keyExtractor={(i) => i.id}
-        contentContainerStyle={styles.list}
-        renderItem={({ item }) => (
-          <InventoryCard
+      {!loading && error ? (
+        <View style={styles.errorState}>
+          <Feather name="wifi-off" size={32} color={colors.mutedForeground} />
+          <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_500Medium", fontSize: 15, textAlign: "center" }}>
+            {error}
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Retry loading inventory"
+            onPress={refresh}
+            style={({ pressed }) => [
+              styles.retryBtn,
+              { backgroundColor: colors.primary, borderRadius: colors.radius, opacity: pressed ? 0.85 : 1 },
+            ]}
+          >
+            <Text style={{ color: "#fff", fontFamily: "Inter_600SemiBold", fontSize: 14 }}>Retry</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <FlatList
+          data={filtered}
+          keyExtractor={(i) => i.id}
+          contentContainerStyle={styles.list}
+          renderItem={({ item }) => (
+            <InventoryCard
               item={item}
               taskCount={taskCountByItem[item.id] ?? 0}
               onPress={() => router.push(`/inventory/${item.id}`)}
             />
-        )}
-        ListEmptyComponent={
-          <EmptyState
-            icon="package"
-            title={query ? "No matching items" : archivedMode ? "No archived items" : "No inventory yet"}
-            description={
-              query
-                ? "Try adjusting your search"
-                : archivedMode
-                ? "Archived items appear here"
-                : "Tap + to add your first item"
-            }
-          />
-        }
-      />
+          )}
+          ListEmptyComponent={
+            <EmptyState
+              icon="package"
+              title={query ? "No matching items" : archivedMode ? "No archived items" : "No inventory yet"}
+              description={
+                query
+                  ? "Try adjusting your search"
+                  : archivedMode
+                  ? "Archived items appear here"
+                  : "Tap + to add your first item"
+              }
+            />
+          }
+        />
+      )}
     </View>
   );
 }
@@ -219,5 +239,17 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 8,
     paddingBottom: 40,
+  },
+  errorState: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 32,
+    gap: 16,
+  },
+  retryBtn: {
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    marginTop: 4,
   },
 });

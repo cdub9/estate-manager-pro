@@ -1,7 +1,11 @@
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
+import { Alert } from "react-native";
 
 import { supabase } from "@/lib/supabase";
+
+// EAS project ID — required for getExpoPushTokenAsync() in production builds
+const EAS_PROJECT_ID = "9c989a6b-4621-42b6-9291-e933b6182e17";
 
 /**
  * Request permission and register this device's Expo Push Token in Supabase.
@@ -15,7 +19,21 @@ export async function registerForPushNotifications(userId: string): Promise<void
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
   let finalStatus = existingStatus;
 
-  if (existingStatus !== "granted") {
+  if (existingStatus === "undetermined") {
+    // Show a friendly pre-prompt before the OS permission dialog
+    await new Promise<void>((resolve) =>
+      Alert.alert(
+        "Stay in the loop",
+        "Get notified when tasks are assigned to you.",
+        [
+          { text: "Not now", onPress: () => resolve() },
+          { text: "Continue", onPress: () => resolve() },
+        ],
+      )
+    );
+    const { status } = await Notifications.requestPermissionsAsync();
+    finalStatus = status;
+  } else if (existingStatus !== "granted") {
     const { status } = await Notifications.requestPermissionsAsync();
     finalStatus = status;
   }
@@ -23,7 +41,9 @@ export async function registerForPushNotifications(userId: string): Promise<void
   if (finalStatus !== "granted") return;
 
   try {
-    const { data } = await Notifications.getExpoPushTokenAsync();
+    const { data } = await Notifications.getExpoPushTokenAsync({
+      projectId: EAS_PROJECT_ID,
+    });
     await supabase
       .from("profiles")
       .update({ push_token: data })
