@@ -4,6 +4,7 @@
     "slug": "estate-manager-pro",
     "version": "1.0.0",
     "description": "Manage your estate's tasks, staff, and equipment. Assign tasks to members, track inventory, and stay organized together.",
+    "privacyPolicyUrl": "https://cdub9.github.io/estate-manager-pro/privacy-policy",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "estate-manager-pro",
