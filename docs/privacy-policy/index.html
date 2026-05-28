@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — Estate Manager Pro</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+      color: #1a1a1a;
+      background: #faf6ef;
+      padding: 24px 16px 64px;
+    }
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 14px;
+      padding: 40px 48px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    header { margin-bottom: 36px; }
+    header h1 { font-size: 28px; font-weight: 700; color: #2f6b3a; margin-bottom: 4px; }
+    header .app-name { font-size: 15px; color: #6b7280; }
+    header .updated { font-size: 13px; color: #9ca3af; margin-top: 6px; }
+    h2 {
+      font-size: 17px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-top: 36px;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    p { margin-bottom: 12px; color: #374151; }
+    ul { margin: 8px 0 12px 20px; color: #374151; }
+    li { margin-bottom: 6px; }
+    strong { color: #111827; }
+    a { color: #2f6b3a; text-decoration: underline; }
+    a:hover { color: #1e4a27; }
+    .highlight {
+      background: #f0fdf4;
+      border-left: 3px solid #2f6b3a;
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      margin: 16px 0;
+    }
+    .highlight p { margin: 0; }
+    footer {
+      margin-top: 48px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+      font-size: 13px;
+      color: #9ca3af;
+    }
+    @media (max-width: 600px) {
+      .container { padding: 28px 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Privacy Policy</h1>
+      <div class="app-name">Estate Manager Pro</div>
+      <div class="updated">Last updated: May 27, 2026</div>
+    </header>
+
+    <h2>Overview</h2>
+    <p>Estate Manager Pro ("the App") is a mobile application for managing estate tasks, equipment inventory, and team members. This policy explains what data we collect, how we use it, and your rights regarding that data.</p>
+
+    <h2>Data We Collect</h2>
+    <p><strong>Account information</strong></p>
+    <ul>
+      <li><strong>Email address</strong> — used to create and identify your account</li>
+      <li><strong>Display name</strong> — shown to other estate members</li>
+      <li><strong>Password</strong> — stored securely via Supabase Auth (hashed; never visible to us)</li>
+    </ul>
+    <p><strong>Profile information</strong></p>
+    <ul>
+      <li><strong>Timezone</strong> — used to display dates and times correctly for your location</li>
+      <li><strong>Push notification token</strong> — used to deliver task assignment notifications to your device</li>
+    </ul>
+    <p><strong>User-generated content</strong></p>
+    <ul>
+      <li>Tasks — titles, descriptions, due dates, status, and photos attached to tasks</li>
+      <li>Inventory items — names, vendor info, location, descriptions, and photos</li>
+      <li>Categories — names and colors you create to organize tasks</li>
+    </ul>
+
+    <h2>How We Use Your Data</h2>
+    <ul>
+      <li>To provide core app functionality: managing tasks, inventory, and team members</li>
+      <li>To send push notifications when tasks are assigned to you (only if you grant permission)</li>
+      <li>To identify you within your estate and display your name to other members</li>
+    </ul>
+    <div class="highlight">
+      <p>We do <strong>not</strong> sell your data. We do <strong>not</strong> use your data for advertising.</p>
+    </div>
+
+    <h2>Data Sharing</h2>
+    <p>Your data is shared only with:</p>
+    <ul>
+      <li><strong>Other members of your estate</strong> — they can see tasks, inventory, and member names/emails within the shared estate</li>
+      <li><strong>Supabase</strong> — our database and authentication provider. <a href="https://supabase.com/privacy" target="_blank" rel="noopener">Supabase Privacy Policy</a></li>
+      <li><strong>Expo</strong> — our push notification delivery service. <a href="https://expo.dev/privacy" target="_blank" rel="noopener">Expo Privacy Policy</a></li>
+    </ul>
+    <p>No other third parties receive your data.</p>
+
+    <h2>Data Storage and Security</h2>
+    <ul>
+      <li>All data is stored in Supabase's secure PostgreSQL infrastructure</li>
+      <li>Authentication is handled by Supabase Auth with industry-standard password hashing</li>
+      <li>Row-level security (RLS) ensures you can only access data belonging to your estate</li>
+      <li>We do not store payment information</li>
+    </ul>
+
+    <h2>Data Retention</h2>
+    <p>Your data is retained as long as your account is active. When you delete your account, all associated data is permanently and immediately removed.</p>
+
+    <h2>Deleting Your Account and Data</h2>
+    <p>You can permanently delete your account and all associated data directly within the App:</p>
+    <ol style="margin: 8px 0 12px 20px; color: #374151;">
+      <li style="margin-bottom: 6px;">Open the App</li>
+      <li style="margin-bottom: 6px;">Go to <strong>Profile</strong> (bottom navigation)</li>
+      <li style="margin-bottom: 6px;">Scroll to the bottom and tap <strong>Delete My Account</strong></li>
+      <li style="margin-bottom: 6px;">Confirm the deletion</li>
+    </ol>
+    <div class="highlight">
+      <p>This action is <strong>irreversible</strong>. It immediately removes your account, profile, and all data you created. If you are the sole member of an estate, the estate and all its data will also be deleted.</p>
+    </div>
+
+    <h2>Your Rights</h2>
+    <p>Depending on your location, you may have the right to:</p>
+    <ul>
+      <li>Access the personal data we hold about you</li>
+      <li>Correct inaccurate data (via the Profile screen in the App)</li>
+      <li>Delete your data (via in-app account deletion, described above)</li>
+      <li>Export your data (contact us at the email below)</li>
+    </ul>
+
+    <h2>Children's Privacy</h2>
+    <p>This App is not directed to children under 13. We do not knowingly collect personal information from children under 13. If you believe a child under 13 has provided us with personal data, please contact us so we can delete it.</p>
+
+    <h2>Changes to This Policy</h2>
+    <p>We may update this policy from time to time. We will notify you of significant changes by updating the "Last updated" date at the top of this page. Continued use of the App after changes constitutes acceptance of the revised policy.</p>
+
+    <h2>Contact</h2>
+    <p>For privacy questions or data requests, please contact:</p>
+    <p><strong>Email:</strong> <a href="mailto:colemanwarren9@gmail.com">colemanwarren9@gmail.com</a></p>
+
+    <footer>
+      <p>Estate Manager Pro is an independent app and is not affiliated with Apple Inc. or Google LLC.</p>
+      <p style="margin-top: 8px;">Copyright &copy; 2026 Coleman Warren. All Rights Reserved.</p>
+    </footer>
+  </div>
+</body>
+</html>
