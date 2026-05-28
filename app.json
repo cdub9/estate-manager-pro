@@ -59,11 +59,9 @@
           "color": "#2f6b3a"
         }
       ],
-      "expo-font"
     ],
     "experiments": {
-      "typedRoutes": false,
-      "newArchEnabled": true
+      "typedRoutes": false
     },
     "extra": {
       "router": {},
