@@ -9,6 +9,10 @@
       "android": {
         "buildType": "apk",
         "image": "ubuntu-24.04-jdk-17-ndk-r27b-sdk-55"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://gixffygbmgvpydwikdrb.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpeGZmeWdibWd2cHlkd2lrZHJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MTA4MTksImV4cCI6MjA5NDk4NjgxOX0.5AWvlbTyQpBC-zgtbArnoQ7rRXeStaPx7SbIwl4_0lY"
       }
     },
     "preview": {
@@ -19,12 +23,20 @@
       },
       "ios": {
         "simulator": false
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://gixffygbmgvpydwikdrb.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpeGZmeWdibWd2cHlkd2lrZHJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MTA4MTksImV4cCI6MjA5NDk4NjgxOX0.5AWvlbTyQpBC-zgtbArnoQ7rRXeStaPx7SbIwl4_0lY"
       }
     },
     "production": {
       "autoIncrement": true,
       "android": {
         "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://gixffygbmgvpydwikdrb.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpeGZmeWdibWd2cHlkd2lrZHJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MTA4MTksImV4cCI6MjA5NDk4NjgxOX0.5AWvlbTyQpBC-zgtbArnoQ7rRXeStaPx7SbIwl4_0lY"
       }
     }
   },
