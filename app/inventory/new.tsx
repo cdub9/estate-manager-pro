@@ -9,12 +9,15 @@ import {
   View,
 } from "react-native";
 
+import { ActivityIndicator } from "react-native";
+
 import { Button } from "@/components/Button";
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { SinglePhotoPicker } from "@/components/SinglePhotoPicker";
 import { TextField } from "@/components/TextField";
 import { useInventory } from "@/contexts/InventoryContext";
 import { useColors } from "@/hooks/useColors";
+import { identifyInventoryFromPhoto } from "@/utils/identifyInventory";
 
 export default function NewInventoryScreen() {
   const colors = useColors();
@@ -28,6 +31,25 @@ export default function NewInventoryScreen() {
   const [description, setDescription] = useState("");
   const [photo, setPhoto] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [identifying, setIdentifying] = useState(false);
+
+  async function handleIdentify() {
+    if (!photo || identifying) return;
+    setIdentifying(true);
+    try {
+      const guess = await identifyInventoryFromPhoto(photo);
+      // Only overwrite empty fields so manual edits aren't blown away.
+      if (!name.trim() && guess.name) setName(guess.name);
+      if (!vendor.trim() && guess.vendor) setVendor(guess.vendor);
+      if (!partNumber.trim() && guess.partNumber) setPartNumber(guess.partNumber);
+      if (!description.trim() && guess.description) setDescription(guess.description);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Try again.";
+      Alert.alert("Couldn't identify", msg);
+    } finally {
+      setIdentifying(false);
+    }
+  }
 
   const isDirty =
     name.trim().length > 0 ||
@@ -129,6 +151,32 @@ export default function NewInventoryScreen() {
         <View style={styles.fieldGroup}>
           <Text style={[styles.label, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>Photo</Text>
           <SinglePhotoPicker value={photo} onChange={setPhoto} label="Item" />
+          {photo && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Identify item with AI"
+              accessibilityState={{ disabled: identifying }}
+              onPress={handleIdentify}
+              disabled={identifying}
+              style={({ pressed }) => [
+                styles.identifyBtn,
+                {
+                  backgroundColor: colors.primary,
+                  borderRadius: colors.radius,
+                  opacity: identifying ? 0.7 : pressed ? 0.85 : 1,
+                },
+              ]}
+            >
+              {identifying ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Feather name="zap" size={15} color="#fff" />
+              )}
+              <Text style={{ color: "#fff", fontFamily: "Inter_600SemiBold", fontSize: 14 }}>
+                {identifying ? "Identifying…" : "Identify with AI"}
+              </Text>
+            </Pressable>
+          )}
         </View>
       </KeyboardAwareScrollViewCompat>
     </>
@@ -158,5 +206,13 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 13,
+  },
+  identifyBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 12,
+    marginTop: 4,
   },
 });

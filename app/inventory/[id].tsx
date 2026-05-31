@@ -2,6 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Pressable,
   StyleSheet,
@@ -17,6 +18,7 @@ import { useInventory } from "@/contexts/InventoryContext";
 import { useColors } from "@/hooks/useColors";
 import { formatDate } from "@/utils/dates";
 import { InventoryItem } from "@/types";
+import { identifyInventoryFromPhoto } from "@/utils/identifyInventory";
 
 type ConfirmAction = "archive" | "unarchive" | null;
 
@@ -36,6 +38,25 @@ export default function InventoryDetailScreen() {
   const [photo, setPhoto] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
+  const [identifying, setIdentifying] = useState(false);
+
+  async function handleIdentify() {
+    if (!photo || identifying) return;
+    setIdentifying(true);
+    try {
+      const guess = await identifyInventoryFromPhoto(photo);
+      // Only overwrite empty fields so manual edits aren't blown away.
+      if (!name.trim() && guess.name) setName(guess.name);
+      if (!vendor.trim() && guess.vendor) setVendor(guess.vendor);
+      if (!partNumber.trim() && guess.partNumber) setPartNumber(guess.partNumber);
+      if (!description.trim() && guess.description) setDescription(guess.description);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Try again.";
+      Alert.alert("Couldn't identify", msg);
+    } finally {
+      setIdentifying(false);
+    }
+  }
 
   const initialItem = useRef<InventoryItem | null>(null);
 
@@ -245,7 +266,35 @@ export default function InventoryDetailScreen() {
               </View>
             ) : null
           ) : (
-            <SinglePhotoPicker value={photo} onChange={setPhoto} label="Item" />
+            <>
+              <SinglePhotoPicker value={photo} onChange={setPhoto} label="Item" />
+              {photo && (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Identify item with AI"
+                  accessibilityState={{ disabled: identifying }}
+                  onPress={handleIdentify}
+                  disabled={identifying}
+                  style={({ pressed }) => [
+                    styles.identifyBtn,
+                    {
+                      backgroundColor: colors.primary,
+                      borderRadius: colors.radius,
+                      opacity: identifying ? 0.7 : pressed ? 0.85 : 1,
+                    },
+                  ]}
+                >
+                  {identifying ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Feather name="zap" size={15} color="#fff" />
+                  )}
+                  <Text style={{ color: "#fff", fontFamily: "Inter_600SemiBold", fontSize: 14 }}>
+                    {identifying ? "Identifying…" : "Identify with AI"}
+                  </Text>
+                </Pressable>
+              )}
+            </>
           )}
         </View>
 
@@ -328,5 +377,13 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderWidth: 1,
     marginTop: 8,
+  },
+  identifyBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 12,
+    marginTop: 4,
   },
 });
