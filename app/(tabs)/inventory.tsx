@@ -11,6 +11,7 @@ import {
 } from "react-native";
 
 import { EmptyState } from "@/components/EmptyState";
+import { EmeraldFill, GoldHairlineRule } from "@/components/Gradients";
 import { InventoryCard } from "@/components/InventoryCard";
 import { useInventory } from "@/contexts/InventoryContext";
 import { useTasks } from "@/contexts/TasksContext";
@@ -48,25 +49,53 @@ export default function InventoryScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
-        <Text style={[styles.title, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-          Inventory
-        </Text>
+      <View style={[styles.header, { backgroundColor: colors.background }]}>
+        <View>
+          <Text style={[styles.eyebrow, { color: colors.goldDeep, fontFamily: "Inter_600SemiBold" }]}>
+            ESTATE
+          </Text>
+          <Text style={[styles.title, { color: colors.foreground, fontFamily: "PlayfairDisplay_600SemiBold" }]}>
+            Inventory
+          </Text>
+        </View>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="New inventory item"
           onPress={() => router.push("/inventory/new")}
           style={({ pressed }) => [
             styles.addBtn,
-            { backgroundColor: colors.primary, borderRadius: 99, opacity: pressed ? 0.85 : 1 },
+            {
+              borderRadius: 99,
+              borderWidth: 1,
+              borderColor: colors.goldHair,
+              opacity: pressed ? 0.85 : 1,
+              overflow: "hidden",
+              shadowColor: "#0b2c22",
+              shadowOpacity: 0.18,
+              shadowRadius: 10,
+              shadowOffset: { width: 0, height: 4 },
+              elevation: 3,
+            },
           ]}
         >
-          <Feather name="plus" size={20} color="#fff" />
+          <EmeraldFill borderRadius={99} />
+          <Feather name="plus" size={20} color={colors.onEmeraldIcon} />
         </Pressable>
       </View>
+      <GoldHairlineRule />
 
       <View style={[styles.searchRow, { backgroundColor: colors.background }]}>
-        <View style={[styles.searchWrap, { backgroundColor: colors.secondary, borderRadius: colors.radius }]}>
+        <View
+          style={[
+            styles.searchWrap,
+            {
+              backgroundColor: colors.card,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: colors.border,
+            },
+          ]}
+        >
           <Feather name="search" size={16} color={colors.mutedForeground} />
           <TextInput
             accessibilityLabel="Search inventory"
@@ -99,15 +128,19 @@ export default function InventoryScreen() {
           style={({ pressed }) => [
             styles.toggleChip,
             {
-              backgroundColor: !archivedMode ? colors.primary : colors.secondary,
+              backgroundColor: "transparent",
               borderRadius: 99,
+              borderWidth: 1,
+              borderColor: !archivedMode ? colors.goldHair : colors.border,
               opacity: pressed ? 0.85 : 1,
+              overflow: "hidden",
             },
           ]}
         >
+          {!archivedMode ? <EmeraldFill borderRadius={99} /> : null}
           <Text
             style={{
-              color: !archivedMode ? "#fff" : colors.secondaryForeground,
+              color: !archivedMode ? colors.onEmerald : colors.secondaryForeground,
               fontFamily: "Inter_600SemiBold",
               fontSize: 12,
             }}
@@ -123,15 +156,19 @@ export default function InventoryScreen() {
           style={({ pressed }) => [
             styles.toggleChip,
             {
-              backgroundColor: archivedMode ? colors.primary : colors.secondary,
+              backgroundColor: "transparent",
               borderRadius: 99,
+              borderWidth: 1,
+              borderColor: archivedMode ? colors.goldHair : colors.border,
               opacity: pressed ? 0.85 : 1,
+              overflow: "hidden",
             },
           ]}
         >
+          {archivedMode ? <EmeraldFill borderRadius={99} /> : null}
           <Text
             style={{
-              color: archivedMode ? "#fff" : colors.secondaryForeground,
+              color: archivedMode ? colors.onEmerald : colors.secondaryForeground,
               fontFamily: "Inter_600SemiBold",
               fontSize: 12,
             }}
@@ -193,24 +230,29 @@ export default function InventoryScreen() {
 const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-end",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingTop: 56,
     paddingBottom: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  eyebrow: {
+    fontSize: 10.5,
+    letterSpacing: 2,
+    marginBottom: 4,
   },
   title: {
-    fontSize: 28,
+    fontSize: 30,
+    letterSpacing: 0.2,
   },
   addBtn: {
-    width: 40,
-    height: 40,
+    width: 42,
+    height: 42,
     alignItems: "center",
     justifyContent: "center",
   },
   searchRow: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingVertical: 10,
   },
   searchWrap: {
@@ -227,17 +269,19 @@ const styles = StyleSheet.create({
   },
   toggleRow: {
     flexDirection: "row",
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingBottom: 10,
     gap: 8,
   },
   toggleChip: {
     paddingHorizontal: 12,
     paddingVertical: 6,
+    alignItems: "center",
+    justifyContent: "center",
   },
   list: {
-    padding: 16,
-    gap: 8,
+    padding: 20,
+    gap: 9,
     paddingBottom: 40,
   },
   errorState: {

@@ -9,11 +9,13 @@ interface Props {
   user: Pick<User, "name" | "colorIndex"> | null;
   size?: number;
   fallbackLabel?: string;
+  /** Show the goldHair ring (default true for Luxe styling). */
+  ring?: boolean;
 }
 
-export function Avatar({ user, size = 36, fallbackLabel = "?" }: Props) {
+export function Avatar({ user, size = 36, fallbackLabel = "?", ring = true }: Props) {
   const colors = useColors();
-  const bg = user ? avatarColor(user.colorIndex) : colors.mutedForeground;
+  const bg = user ? avatarColor(user.colorIndex) : colors.faint;
   const label = user ? initials(user.name) : fallbackLabel;
   return (
     <View
@@ -25,12 +27,14 @@ export function Avatar({ user, size = 36, fallbackLabel = "?" }: Props) {
           width: size,
           height: size,
           borderRadius: size / 2,
+          borderWidth: ring ? 1 : 0,
+          borderColor: ring ? colors.goldHair : "transparent",
         },
       ]}
     >
       <Text
         style={{
-          color: "#fff",
+          color: colors.onEmerald,
           fontSize: size * 0.38,
           fontFamily: "Inter_600SemiBold",
         }}

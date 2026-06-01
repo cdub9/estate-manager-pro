@@ -15,6 +15,7 @@ import DraggableFlatList, {
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { EmptyState } from "@/components/EmptyState";
+import { EmeraldFill, GoldHairlineRule } from "@/components/Gradients";
 import { TaskCard } from "@/components/TaskCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCategories } from "@/contexts/CategoriesContext";
@@ -97,26 +98,51 @@ export default function TasksScreen() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
-      <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
-        <Text style={[styles.title, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>Tasks</Text>
+      <View style={[styles.header, { backgroundColor: colors.background }]}>
+        <View>
+          <Text style={[styles.eyebrow, { color: colors.goldDeep, fontFamily: "Inter_600SemiBold" }]}>
+            ESTATE
+          </Text>
+          <Text style={[styles.title, { color: colors.foreground, fontFamily: "PlayfairDisplay_600SemiBold" }]}>
+            Tasks
+          </Text>
+        </View>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="New task"
           onPress={() => router.push("/task/new")}
           style={({ pressed }) => [
             styles.addBtn,
-            { backgroundColor: colors.primary, borderRadius: 99, opacity: pressed ? 0.85 : 1 },
+            {
+              borderRadius: 99,
+              borderWidth: 1,
+              borderColor: colors.goldHair,
+              opacity: pressed ? 0.85 : 1,
+              overflow: "hidden",
+              shadowColor: "#0b2c22",
+              shadowOpacity: 0.18,
+              shadowRadius: 10,
+              shadowOffset: { width: 0, height: 4 },
+              elevation: 3,
+            },
           ]}
         >
-          <Feather name="plus" size={20} color="#fff" />
+          <EmeraldFill borderRadius={99} />
+          <Feather name="plus" size={20} color={colors.onEmeraldIcon} />
         </Pressable>
       </View>
+      <GoldHairlineRule />
 
       <View style={[styles.searchRow, { backgroundColor: colors.background }]}>
         <View
           style={[
             styles.searchWrap,
-            { backgroundColor: colors.secondary, borderRadius: colors.radius },
+            {
+              backgroundColor: colors.card,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: colors.border,
+            },
           ]}
         >
           <Feather name="search" size={16} color={colors.mutedForeground} />
@@ -159,15 +185,19 @@ export default function TasksScreen() {
               style={({ pressed }) => [
                 styles.filterChip,
                 {
-                  backgroundColor: active ? colors.primary : colors.secondary,
+                  backgroundColor: active ? "transparent" : "transparent",
                   borderRadius: 99,
+                  borderWidth: 1,
+                  borderColor: active ? colors.goldHair : colors.border,
                   opacity: pressed ? 0.85 : 1,
+                  overflow: "hidden",
                 },
               ]}
             >
+              {active ? <EmeraldFill borderRadius={99} /> : null}
               <Text
                 style={{
-                  color: active ? "#fff" : colors.secondaryForeground,
+                  color: active ? colors.onEmerald : colors.secondaryForeground,
                   fontFamily: "Inter_600SemiBold",
                   fontSize: 12,
                 }}
@@ -230,24 +260,29 @@ export default function TasksScreen() {
 const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-end",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingTop: 56,
     paddingBottom: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  eyebrow: {
+    fontSize: 10.5,
+    letterSpacing: 2,
+    marginBottom: 4,
   },
   title: {
-    fontSize: 28,
+    fontSize: 30,
+    letterSpacing: 0.2,
   },
   addBtn: {
-    width: 40,
-    height: 40,
+    width: 42,
+    height: 42,
     alignItems: "center",
     justifyContent: "center",
   },
   searchRow: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingVertical: 10,
   },
   searchWrap: {
@@ -264,7 +299,7 @@ const styles = StyleSheet.create({
   },
   filterRow: {
     flexDirection: "row",
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingBottom: 10,
     gap: 8,
   },
@@ -283,8 +318,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   list: {
-    padding: 16,
-    gap: 8,
+    padding: 20,
+    gap: 9,
     paddingBottom: 40,
   },
   errorState: {

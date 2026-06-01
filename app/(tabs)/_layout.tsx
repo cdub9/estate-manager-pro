@@ -1,8 +1,55 @@
 import { Feather } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
+import { StyleSheet, View } from "react-native";
 
+import { GoldHairlineRule } from "@/components/Gradients";
 import { useColors } from "@/hooks/useColors";
+
+/**
+ * Tab bar background: solid `card` surface with a gold-hairline rule
+ * across the top edge (transparent → goldHair → transparent).
+ */
+function TabBarBackground() {
+  const colors = useColors();
+  return (
+    <View style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.card }]}>
+      <GoldHairlineRule />
+    </View>
+  );
+}
+
+/**
+ * Icon + a small gold diamond (4px, 45°) under the active tab.
+ */
+function TabIcon({
+  name,
+  color,
+  size,
+  focused,
+  goldColor,
+}: {
+  name: keyof typeof Feather.glyphMap;
+  color: string;
+  size: number;
+  focused: boolean;
+  goldColor: string;
+}) {
+  return (
+    <View style={{ alignItems: "center", justifyContent: "center" }}>
+      <Feather name={name} size={size} color={color} />
+      <View
+        style={{
+          width: 4,
+          height: 4,
+          marginTop: 3,
+          backgroundColor: focused ? goldColor : "transparent",
+          transform: [{ rotate: "45deg" }],
+        }}
+      />
+    </View>
+  );
+}
 
 export default function TabsLayout() {
   const colors = useColors();
@@ -13,12 +60,13 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
+        tabBarBackground: () => <TabBarBackground />,
         tabBarStyle: {
-          backgroundColor: colors.card,
-          borderTopColor: colors.border,
+          borderTopWidth: 0,
+          backgroundColor: "transparent",
         },
         tabBarLabelStyle: {
-          fontFamily: "Inter_500Medium",
+          fontFamily: "Inter_600SemiBold",
           fontSize: 11,
         },
       }}
@@ -27,8 +75,14 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: "Tasks",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="check-square" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <TabIcon
+              name="check-square"
+              color={color}
+              size={size}
+              focused={focused}
+              goldColor={colors.gold}
+            />
           ),
         }}
       />
@@ -36,8 +90,14 @@ export default function TabsLayout() {
         name="inventory"
         options={{
           title: "Inventory",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="package" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <TabIcon
+              name="package"
+              color={color}
+              size={size}
+              focused={focused}
+              goldColor={colors.gold}
+            />
           ),
         }}
       />
@@ -45,8 +105,14 @@ export default function TabsLayout() {
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="user" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <TabIcon
+              name="user"
+              color={color}
+              size={size}
+              focused={focused}
+              goldColor={colors.gold}
+            />
           ),
         }}
       />

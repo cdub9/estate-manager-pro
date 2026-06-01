@@ -12,6 +12,7 @@ import {
 import { AssigneePicker } from "@/components/AssigneePicker";
 import { Button } from "@/components/Button";
 import { CategoryPicker } from "@/components/CategoryPicker";
+import { GoldHairlineRule } from "@/components/Gradients";
 import { CommentSection } from "@/components/CommentSection";
 import { DatePickerModal } from "@/components/DatePickerModal";
 import { InventoryLinkPicker } from "@/components/InventoryLinkPicker";
@@ -148,7 +149,7 @@ export default function TaskDetailScreen() {
 
   return (
     <>
-      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+      <View style={[styles.header, { backgroundColor: colors.card }]}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Go back"
@@ -158,7 +159,7 @@ export default function TaskDetailScreen() {
         >
           <Feather name="arrow-left" size={22} color={colors.foreground} />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]} numberOfLines={1}>
+        <Text style={[styles.headerTitle, { color: colors.foreground, fontFamily: "PlayfairDisplay_600SemiBold" }]} numberOfLines={1}>
           Edit Task
         </Text>
         <Pressable
@@ -172,6 +173,7 @@ export default function TaskDetailScreen() {
         </Pressable>
         <Button title="Save" onPress={handleSave} loading={saving} size="sm" disabled={!isDirty} />
       </View>
+      <GoldHairlineRule />
 
       <KeyboardAwareScrollViewCompat
         style={{ flex: 1, backgroundColor: colors.background }}
@@ -194,17 +196,17 @@ export default function TaskDetailScreen() {
         />
 
         <View style={styles.fieldGroup}>
-          <Text style={[styles.label, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>Status</Text>
+          <Text style={[styles.label, { color: colors.goldDeep, fontFamily: "Inter_600SemiBold" }]}>STATUS</Text>
           <StatusSegmented value={status} onChange={setStatus} />
         </View>
 
         <View style={styles.fieldGroup}>
-          <Text style={[styles.label, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>Assignees</Text>
+          <Text style={[styles.label, { color: colors.goldDeep, fontFamily: "Inter_600SemiBold" }]}>ASSIGNEES</Text>
           <AssigneePicker users={users} value={assigneeIds} onChange={setAssigneeIds} />
         </View>
 
         <View style={styles.fieldGroup}>
-          <Text style={[styles.label, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>Due date</Text>
+          <Text style={[styles.label, { color: colors.goldDeep, fontFamily: "Inter_600SemiBold" }]}>DUE DATE</Text>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={dueDate ? `Due date: ${formatDate(dueDate)}` : "Set due date"}
@@ -219,7 +221,7 @@ export default function TaskDetailScreen() {
               },
             ]}
           >
-            <Feather name="calendar" size={16} color={colors.mutedForeground} />
+            <Feather name="calendar" size={16} color={colors.goldDeep} />
             <Text
               style={{
                 color: dueDate ? colors.foreground : colors.mutedForeground,
@@ -244,22 +246,22 @@ export default function TaskDetailScreen() {
         </View>
 
         <View style={styles.fieldGroup}>
-          <Text style={[styles.label, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>Recurrence</Text>
+          <Text style={[styles.label, { color: colors.goldDeep, fontFamily: "Inter_600SemiBold" }]}>RECURRENCE</Text>
           <RecurrencePicker value={recurrence} onChange={setRecurrence} />
         </View>
 
         <View style={styles.fieldGroup}>
-          <Text style={[styles.label, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>Category</Text>
+          <Text style={[styles.label, { color: colors.goldDeep, fontFamily: "Inter_600SemiBold" }]}>CATEGORY</Text>
           <CategoryPicker categories={categories} value={categoryId} onChange={setCategoryId} />
         </View>
 
         <View style={styles.fieldGroup}>
-          <Text style={[styles.label, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>Inventory</Text>
+          <Text style={[styles.label, { color: colors.goldDeep, fontFamily: "Inter_600SemiBold" }]}>INVENTORY</Text>
           <InventoryLinkPicker items={items} value={inventoryIds} onChange={setInventoryIds} />
         </View>
 
         <View style={styles.fieldGroup}>
-          <Text style={[styles.label, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>Photos</Text>
+          <Text style={[styles.label, { color: colors.goldDeep, fontFamily: "Inter_600SemiBold" }]}>PHOTOS</Text>
           <PhotoGrid
             photos={photos}
             onAdd={(uris) => setPhotos((p) => [...p, ...uris])}
@@ -299,9 +301,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   headerTitle: {
-    fontSize: 16,
+    fontSize: 18,
     flex: 1,
     marginHorizontal: 12,
+    letterSpacing: 0.2,
   },
   headerRight: {
     flexDirection: "row",
@@ -309,8 +312,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   container: {
-    padding: 16,
-    gap: 16,
+    padding: 20,
+    gap: 18,
     paddingBottom: 40,
   },
   fieldGroup: {
@@ -321,7 +324,8 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   label: {
-    fontSize: 13,
+    fontSize: 10.5,
+    letterSpacing: 2,
   },
   dateField: {
     flexDirection: "row",

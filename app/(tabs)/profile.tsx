@@ -16,6 +16,7 @@ const PRIVACY_POLICY_URL = "https://cdub9.github.io/estate-manager-pro/privacy-p
 
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
+import { EmeraldFill, GoldFlourishDivider, GoldHairlineRule } from "@/components/Gradients";
 import { TextField } from "@/components/TextField";
 import { DEFAULT_TIMEZONE, useAuth } from "@/contexts/AuthContext";
 import { ThemePreference, useTheme } from "@/contexts/ThemeContext";
@@ -160,10 +161,15 @@ export default function ProfileScreen() {
       contentContainerStyle={styles.container}
     >
       {/* Header */}
-      <View style={[styles.pageHeader, { borderBottomColor: colors.border }]}>
-        <Text style={[styles.title, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-          Profile
-        </Text>
+      <View style={styles.pageHeader}>
+        <View>
+          <Text style={[styles.eyebrow, { color: colors.goldDeep, fontFamily: "Inter_600SemiBold" }]}>
+            ACCOUNT
+          </Text>
+          <Text style={[styles.title, { color: colors.foreground, fontFamily: "PlayfairDisplay_600SemiBold" }]}>
+            Profile
+          </Text>
+        </View>
         {!editing ? (
           <Pressable
             accessibilityRole="button"
@@ -171,7 +177,7 @@ export default function ProfileScreen() {
             onPress={() => setEditing(true)}
             style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
           >
-            <Feather name="edit-2" size={20} color={colors.primary} />
+            <Feather name="edit-2" size={20} color={colors.goldDeep} />
           </Pressable>
         ) : (
           <Pressable
@@ -184,38 +190,62 @@ export default function ProfileScreen() {
           </Pressable>
         )}
       </View>
+      <GoldHairlineRule />
 
-      {/* Avatar + name */}
-      <View style={[styles.card, { backgroundColor: colors.card, borderRadius: colors.radius }]}>
-        <View style={styles.avatarRow}>
-          <Avatar user={currentUser} size={64} />
-          <View style={{ flex: 1 }}>
-            <Text style={{ color: colors.foreground, fontFamily: "Inter_700Bold", fontSize: 20 }}>
-              {currentUser.name}
-            </Text>
-            <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_400Regular", fontSize: 13, marginTop: 2 }}>
-              {currentUser.email}
-            </Text>
-            <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_400Regular", fontSize: 12, marginTop: 1 }}>
-              {TIMEZONE_OPTIONS.find((t) => t.value === (currentUser.timezone ?? DEFAULT_TIMEZONE))?.label ??
-                currentUser.timezone}
-            </Text>
-          </View>
+      {/* Identity card — centered avatar, name, email, flourish, timezone */}
+      <View
+        style={[
+          styles.card,
+          styles.identityCard,
+          {
+            backgroundColor: colors.card,
+            borderRadius: colors.radius,
+            borderWidth: 1,
+            borderColor: colors.border,
+          },
+        ]}
+      >
+        <Avatar user={currentUser} size={72} />
+        <Text style={{ color: colors.foreground, fontFamily: "PlayfairDisplay_600SemiBold", fontSize: 21, marginTop: 12 }}>
+          {currentUser.name}
+        </Text>
+        <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_400Regular", fontSize: 13, marginTop: 2 }}>
+          {currentUser.email}
+        </Text>
+        <View style={{ alignSelf: "stretch", marginTop: 14, marginBottom: 10 }}>
+          <GoldFlourishDivider />
         </View>
+        <Text style={[styles.eyebrow, { color: colors.goldDeep, fontFamily: "Inter_600SemiBold" }]}>
+          TIMEZONE
+        </Text>
+        <Text style={{ color: colors.foreground, fontFamily: "Inter_500Medium", fontSize: 13, marginTop: 4 }}>
+          {TIMEZONE_OPTIONS.find((t) => t.value === (currentUser.timezone ?? DEFAULT_TIMEZONE))?.label ??
+            currentUser.timezone}
+        </Text>
       </View>
 
       {/* Estate */}
       {estateJoinCode && (
-        <View style={[styles.card, { backgroundColor: colors.card, borderRadius: colors.radius }]}>
-          <Text style={[styles.sectionLabel, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
-            Estate
+        <View
+          style={[
+            styles.card,
+            {
+              backgroundColor: colors.card,
+              borderRadius: colors.radius,
+              borderWidth: 1,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <Text style={[styles.eyebrow, { color: colors.goldDeep, fontFamily: "Inter_600SemiBold" }]}>
+            THE ESTATE
           </Text>
           <View style={styles.joinCodeRow}>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_400Regular", fontSize: 12, marginBottom: 2 }}>
-                Join code — share with estate members
+              <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_400Regular", fontSize: 11.5, marginBottom: 2 }}>
+                Private join code
               </Text>
-              <Text style={{ color: colors.foreground, fontFamily: "Inter_700Bold", fontSize: 22, letterSpacing: 4 }}>
+              <Text style={{ color: colors.primary, fontFamily: "PlayfairDisplay_600SemiBold", fontSize: 24, letterSpacing: 4 }}>
                 {estateJoinCode}
               </Text>
             </View>
@@ -225,18 +255,26 @@ export default function ProfileScreen() {
               onPress={handleShareCode}
               style={({ pressed }) => [
                 styles.copyBtn,
-                { backgroundColor: colors.secondary, borderRadius: colors.radius - 4, opacity: pressed ? 0.7 : 1 },
+                {
+                  borderRadius: colors.radius - 4,
+                  borderWidth: 1,
+                  borderColor: colors.goldHair,
+                  opacity: pressed ? 0.85 : 1,
+                  overflow: "hidden",
+                },
               ]}
             >
-              <Feather name="share-2" size={16} color={colors.primary} />
-              <Text style={{ color: colors.primary, fontFamily: "Inter_600SemiBold", fontSize: 12 }}>Share</Text>
+              <EmeraldFill borderRadius={colors.radius - 4} />
+              <Feather name="share-2" size={14} color={colors.onEmeraldIcon} />
+              <Text style={{ color: colors.onEmerald, fontFamily: "Inter_600SemiBold", fontSize: 12 }}>Invite</Text>
             </Pressable>
           </View>
+          <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: colors.borderSoft, marginVertical: 4 }} />
 
           {users.length > 0 && (
             <>
-              <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_600SemiBold", fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                Members
+              <Text style={[styles.eyebrow, { color: colors.goldDeep, fontFamily: "Inter_600SemiBold" }]}>
+                MEMBERS
               </Text>
               {users.map((u, idx) => (
                 <View
@@ -265,9 +303,9 @@ export default function ProfileScreen() {
 
       {/* Edit form */}
       {editing && (
-        <View style={[styles.card, { backgroundColor: colors.card, borderRadius: colors.radius }]}>
-          <Text style={[styles.sectionLabel, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
-            Edit profile
+        <View style={[styles.card, { backgroundColor: colors.card, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border }]}>
+          <Text style={[styles.eyebrow, { color: colors.goldDeep, fontFamily: "Inter_600SemiBold" }]}>
+            EDIT PROFILE
           </Text>
           <TextField
             label="Name"
@@ -338,14 +376,14 @@ export default function ProfileScreen() {
       )}
 
       {/* Categories */}
-      <View style={[styles.card, { backgroundColor: colors.card, borderRadius: colors.radius }]}>
+      <View style={[styles.card, { backgroundColor: colors.card, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border }]}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Manage categories"
           onPress={() => router.push("/categories")}
           style={({ pressed }) => [styles.linkRow, { opacity: pressed ? 0.7 : 1 }]}
         >
-          <Feather name="tag" size={18} color={colors.primary} />
+          <Feather name="tag" size={18} color={colors.goldDeep} />
           <Text style={{ color: colors.foreground, fontFamily: "Inter_500Medium", fontSize: 15, flex: 1 }}>
             Manage categories
           </Text>
@@ -354,9 +392,9 @@ export default function ProfileScreen() {
       </View>
 
       {/* Appearance */}
-      <View style={[styles.card, { backgroundColor: colors.card, borderRadius: colors.radius }]}>
-        <Text style={[styles.sectionLabel, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
-          Appearance
+      <View style={[styles.card, { backgroundColor: colors.card, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border }]}>
+        <Text style={[styles.eyebrow, { color: colors.goldDeep, fontFamily: "Inter_600SemiBold" }]}>
+          APPEARANCE
         </Text>
         <View style={styles.themeOptions} accessibilityRole="radiogroup" accessibilityLabel="Theme">
           {THEME_OPTIONS.map((opt) => {
@@ -371,20 +409,24 @@ export default function ProfileScreen() {
                 style={({ pressed }) => [
                   styles.themeChip,
                   {
-                    backgroundColor: active ? colors.primary : colors.secondary,
+                    backgroundColor: active ? "transparent" : colors.secondary,
                     borderRadius: colors.radius,
+                    borderWidth: 1,
+                    borderColor: active ? colors.goldHair : "transparent",
+                    overflow: "hidden",
                     opacity: pressed ? 0.85 : 1,
                   },
                 ]}
               >
+                {active ? <EmeraldFill borderRadius={colors.radius} /> : null}
                 <Feather
                   name={opt.icon as any}
                   size={14}
-                  color={active ? "#fff" : colors.secondaryForeground}
+                  color={active ? colors.onEmeraldIcon : colors.secondaryForeground}
                 />
                 <Text
                   style={{
-                    color: active ? "#fff" : colors.secondaryForeground,
+                    color: active ? colors.onEmerald : colors.secondaryForeground,
                     fontFamily: "Inter_600SemiBold",
                     fontSize: 13,
                   }}
@@ -414,14 +456,14 @@ export default function ProfileScreen() {
       </Pressable>
 
       {/* Legal & danger zone */}
-      <View style={[styles.card, { backgroundColor: colors.card, borderRadius: colors.radius }]}>
+      <View style={[styles.card, { backgroundColor: colors.card, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border }]}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Privacy policy"
           onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}
           style={({ pressed }) => [styles.linkRow, { opacity: pressed ? 0.7 : 1 }]}
         >
-          <Feather name="shield" size={18} color={colors.mutedForeground} />
+          <Feather name="shield" size={18} color={colors.goldDeep} />
           <Text style={{ color: colors.foreground, fontFamily: "Inter_500Medium", fontSize: 15, flex: 1 }}>
             Privacy Policy
           </Text>
@@ -449,25 +491,32 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    padding: 20,
     paddingTop: 56,
-    gap: 12,
+    gap: 14,
     paddingBottom: 40,
   },
   pageHeader: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-end",
     justifyContent: "space-between",
     paddingBottom: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
     marginBottom: 4,
   },
+  eyebrow: {
+    fontSize: 10.5,
+    letterSpacing: 2,
+  },
   title: {
-    fontSize: 28,
+    fontSize: 30,
+    letterSpacing: 0.2,
   },
   card: {
-    padding: 16,
+    padding: 18,
     gap: 12,
+  },
+  identityCard: {
+    alignItems: "center",
   },
   avatarRow: {
     flexDirection: "row",
