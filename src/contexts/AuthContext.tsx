@@ -44,11 +44,13 @@ interface AuthContextValue {
   users: User[];
   currentUser: User | null;
   estateId: string | null;
+  estateName: string | null;
   estateJoinCode: string | null;
   register: (
     email: string,
     name: string,
     password: string,
+    estateName?: string,
     estateCode?: string,
   ) => Promise<User>;
   login: (email: string, password: string) => Promise<User>;
@@ -56,6 +58,7 @@ interface AuthContextValue {
   updateProfile: (
     updates: Partial<Pick<User, "name" | "timezone">> & { password?: string },
   ) => Promise<void>;
+  updateEstateName: (name: string) => Promise<void>;
   deleteAccount: () => Promise<void>;
 }
 
@@ -67,6 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [estateId, setEstateId] = useState<string | null>(null);
+  const [estateName, setEstateName] = useState<string | null>(null);
   const [estateJoinCode, setEstateJoinCode] = useState<string | null>(null);
 
   // Prevent double-loads during registration (signUp fires SIGNED_IN immediately)
@@ -86,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error || !profile) return null; // Profile not yet created (mid-registration)
 
       const [{ data: estate }, { data: members }] = await Promise.all([
-        supabase.from("estates").select("id, join_code").eq("id", profile.estate_id).single(),
+        supabase.from("estates").select("id, name, join_code").eq("id", profile.estate_id).single(),
         supabase.from("profiles").select("*").eq("estate_id", profile.estate_id),
       ]);
 
@@ -94,6 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setCurrentUser(user);
       setUsers((members ?? []).map((p) => rowToUser(p as ProfileRow)));
       setEstateId(profile.estate_id);
+      setEstateName(estate?.name ?? null);
       setEstateJoinCode(estate?.join_code ?? null);
       return user;
     } finally {
@@ -116,6 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setCurrentUser(null);
           setUsers([]);
           setEstateId(null);
+          setEstateName(null);
           setEstateJoinCode(null);
         }
         // SIGNED_IN is handled manually in login() / register() to avoid
@@ -128,7 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // ── register ───────────────────────────────────────────────────────────────
   const register = useCallback<AuthContextValue["register"]>(
-    async (email, name, password, estateCode) => {
+    async (email, name, password, newEstateName, estateCode) => {
       const trimmedName = name.trim();
       if (!trimmedName) throw new Error("Name is required");
       if (password.length < 8) throw new Error("Password must be at least 8 characters");
@@ -144,6 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Create estate + profile in one atomic RPC call
       const rpcName = estateCode ? "join_existing_estate" : "register_new_estate";
+      const trimmedEstateName = newEstateName?.trim() || `${trimmedName}'s Estate`;
       const rpcParams = estateCode
         ? {
             p_join_code: estateCode.trim().toUpperCase(),
@@ -155,11 +162,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         : {
             p_email: email.trim(),
             p_name: trimmedName,
+            p_estate_name: trimmedEstateName,
             p_color_index: colorIndex,
             p_timezone: DEFAULT_TIMEZONE,
           };
 
-      const { data: rpcData, error: rpcError } = await supabase.rpc(rpcName, rpcParams);
+      const { error: rpcError } = await supabase.rpc(rpcName, rpcParams);
       if (rpcError) throw rpcError;
 
       // Now load the profile (it exists)
@@ -247,6 +255,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [currentUser],
   );
 
+  // ── updateEstateName ───────────────────────────────────────────────────────
+  const updateEstateName = useCallback(
+    async (name: string) => {
+      const trimmed = name.trim();
+      if (!trimmed) throw new Error("Estate name cannot be empty");
+      if (!estateId) throw new Error("Not part of an estate");
+      const { error } = await supabase
+        .from("estates")
+        .update({ name: trimmed })
+        .eq("id", estateId);
+      if (error) throw error;
+      setEstateName(trimmed);
+    },
+    [estateId],
+  );
+
   // ── deleteAccount ──────────────────────────────────────────────────────────
   const deleteAccount = useCallback(async () => {
     const { error } = await supabase.rpc("delete_my_account");
@@ -261,14 +285,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       users,
       currentUser,
       estateId,
+      estateName,
       estateJoinCode,
       register,
       login,
       logout,
       updateProfile,
+      updateEstateName,
       deleteAccount,
     }),
-    [loading, users, currentUser, estateId, estateJoinCode, register, login, logout, updateProfile, deleteAccount],
+    [loading, users, currentUser, estateId, estateName, estateJoinCode, register, login, logout, updateProfile, updateEstateName, deleteAccount],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

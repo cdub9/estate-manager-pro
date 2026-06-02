@@ -42,11 +42,12 @@ const THEME_OPTIONS: { value: ThemePreference; label: string; icon: string }[] =
 export default function ProfileScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { currentUser, users, logout, updateProfile, deleteAccount, estateJoinCode } = useAuth();
+  const { currentUser, users, logout, updateProfile, updateEstateName, deleteAccount, estateJoinCode, estateName } = useAuth();
   const { themePreference, setThemePreference } = useTheme();
 
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(currentUser?.name ?? "");
+  const [estateNameEdit, setEstateNameEdit] = useState(estateName ?? "");
   const [timezone, setTimezone] = useState<Timezone>(currentUser?.timezone ?? DEFAULT_TIMEZONE);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -59,8 +60,13 @@ export default function ProfileScreen() {
     }
   }, [currentUser]);
 
+  useEffect(() => {
+    if (estateName) setEstateNameEdit(estateName);
+  }, [estateName]);
+
   const isDirty =
     name !== currentUser?.name ||
+    estateNameEdit !== (estateName ?? "") ||
     timezone !== (currentUser?.timezone ?? DEFAULT_TIMEZONE) ||
     password.length > 0;
 
@@ -74,6 +80,7 @@ export default function ProfileScreen() {
           onPress: () => {
             setEditing(false);
             setName(currentUser?.name ?? "");
+            setEstateNameEdit(estateName ?? "");
             setTimezone(currentUser?.timezone ?? DEFAULT_TIMEZONE);
             setPassword("");
             setConfirmPassword("");
@@ -106,6 +113,9 @@ export default function ProfileScreen() {
         timezone,
         password: password || undefined,
       });
+      if (estateNameEdit.trim() && estateNameEdit.trim() !== estateName) {
+        await updateEstateName(estateNameEdit.trim());
+      }
       setEditing(false);
       setPassword("");
       setConfirmPassword("");
@@ -164,7 +174,7 @@ export default function ProfileScreen() {
       <View style={styles.pageHeader}>
         <View>
           <Text style={[styles.eyebrow, { color: colors.goldDeep, fontFamily: "Inter_600SemiBold" }]}>
-            ACCOUNT
+            {estateName ? estateName.toUpperCase() : "ACCOUNT"}
           </Text>
           <Text style={[styles.title, { color: colors.foreground, fontFamily: "PlayfairDisplay_600SemiBold" }]}>
             Profile
@@ -238,7 +248,7 @@ export default function ProfileScreen() {
           ]}
         >
           <Text style={[styles.eyebrow, { color: colors.goldDeep, fontFamily: "Inter_600SemiBold" }]}>
-            THE ESTATE
+            {estateName ? estateName.toUpperCase() : "THE ESTATE"}
           </Text>
           <View style={styles.joinCodeRow}>
             <View style={{ flex: 1 }}>
@@ -313,6 +323,14 @@ export default function ProfileScreen() {
             onChangeText={setName}
             autoCapitalize="words"
             autoCorrect={false}
+          />
+          <TextField
+            label="Estate name"
+            value={estateNameEdit}
+            onChangeText={setEstateNameEdit}
+            autoCapitalize="words"
+            autoCorrect={false}
+            placeholder={estateName ?? "Your estate name"}
           />
 
           <Text style={[styles.fieldLabel, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>

@@ -92,6 +92,11 @@ create policy "read own estate"
   on estates for select
   using (id = get_my_estate_id());
 
+-- Estates: members can update their own estate (e.g. rename it)
+create policy "update own estate"
+  on estates for update
+  using (id = get_my_estate_id());
+
 -- Profiles: estate members can read each other
 create policy "read estate profiles"
   on profiles for select
@@ -145,10 +150,11 @@ create policy "delete estate inventory"
 
 -- Create a new estate and profile in one atomic call.
 create or replace function register_new_estate(
-  p_email       text,
-  p_name        text,
-  p_color_index integer,
-  p_timezone    text
+  p_email        text,
+  p_name         text,
+  p_estate_name  text,
+  p_color_index  integer,
+  p_timezone     text
 )
 returns jsonb
 language plpgsql security definer
@@ -161,7 +167,7 @@ begin
   v_created_at := (extract(epoch from now()) * 1000)::bigint;
 
   insert into estates (name)
-  values (p_name || '''s Estate')
+  values (p_estate_name)
   returning id, join_code into v_estate_id, v_join_code;
 
   insert into profiles (id, estate_id, email, name, color_index, timezone, created_at)

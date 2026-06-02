@@ -26,6 +26,7 @@ export default function RegisterScreen() {
 
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
+  const [estateName, setEstateName] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [joinMode, setJoinMode] = useState(false);
@@ -66,6 +67,7 @@ export default function RegisterScreen() {
         email.trim(),
         name.trim(),
         password,
+        joinMode ? undefined : estateName.trim() || undefined,
         joinMode ? estateCode.trim().toUpperCase() : undefined,
       );
     } catch (err) {
@@ -160,6 +162,17 @@ export default function RegisterScreen() {
             autoCorrect={false}
             returnKeyType="next"
           />
+          {!joinMode && (
+            <TextField
+              label="Estate name"
+              value={estateName}
+              onChangeText={setEstateName}
+              placeholder={name.trim() ? `${name.trim()}'s Estate` : "e.g. Holloway Estate"}
+              autoCapitalize="words"
+              autoCorrect={false}
+              returnKeyType="next"
+            />
+          )}
           <TextField
             label="Password"
             value={password}
