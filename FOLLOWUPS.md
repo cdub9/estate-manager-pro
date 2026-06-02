@@ -13,6 +13,13 @@ A running list of ideas, polish, and "nice to have" items that came up during de
 
 ---
 
+## Estate setup & onboarding UX (added 2026-06-01)
+
+- **Name your estate on registration** — currently a new estate is created silently with no name. Add a "Estate name" field to the registration flow (or a dedicated post-signup "Set up your estate" screen). Store it in the `estates` table and display it in the Profile header eyebrow (currently hardcoded "ESTATE") and anywhere else the estate identity should appear (tab bar header, invite message, etc.).
+- **Prominent "Join an existing estate" path on the sign-in screen** — the join-by-code flow currently lives only inside the registration form. Add a clear entry point on the login screen (e.g. a "Join an estate" button or link below the sign-in form) so users who have been invited don't have to hunt for it. Tapping it can route to a minimal screen with just the estate code field.
+
+---
+
 ## Luxe redesign — remaining polish (added 2026-05-31)
 
 Items from `design_handoff_luxe_redesign/README.md` deliberately deferred from the first pass:
