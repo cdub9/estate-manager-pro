@@ -176,7 +176,7 @@ export default function ProfileScreen() {
           <Text style={[styles.eyebrow, { color: colors.goldDeep, fontFamily: "Inter_600SemiBold" }]}>
             {estateName ? estateName.toUpperCase() : "ACCOUNT"}
           </Text>
-          <Text style={[styles.title, { color: colors.foreground, fontFamily: "PlayfairDisplay_600SemiBold" }]}>
+          <Text style={[styles.title, { color: colors.foreground, fontFamily: "Raleway_600SemiBold" }]}>
             Profile
           </Text>
         </View>
@@ -216,7 +216,7 @@ export default function ProfileScreen() {
         ]}
       >
         <Avatar user={currentUser} size={72} />
-        <Text style={{ color: colors.foreground, fontFamily: "PlayfairDisplay_600SemiBold", fontSize: 21, marginTop: 12 }}>
+        <Text style={{ color: colors.foreground, fontFamily: "Raleway_600SemiBold", fontSize: 25, marginTop: 12 }}>
           {currentUser.name}
         </Text>
         <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_400Regular", fontSize: 13, marginTop: 2 }}>
@@ -255,7 +255,7 @@ export default function ProfileScreen() {
               <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_400Regular", fontSize: 11.5, marginBottom: 2 }}>
                 Private join code
               </Text>
-              <Text style={{ color: colors.primary, fontFamily: "PlayfairDisplay_600SemiBold", fontSize: 24, letterSpacing: 4 }}>
+              <Text style={{ color: colors.primary, fontFamily: "Raleway_700Bold", fontSize: 24, letterSpacing: 5 }}>
                 {estateJoinCode}
               </Text>
             </View>
@@ -295,15 +295,16 @@ export default function ProfileScreen() {
                     idx === users.length - 1 && { borderBottomWidth: 0 },
                   ]}
                 >
-                  <Avatar user={u} size={32} />
+                  <Avatar user={u} size={36} />
                   <View style={{ flex: 1 }}>
-                    <Text style={{ color: colors.foreground, fontFamily: "Inter_500Medium", fontSize: 14 }}>
-                      {u.name}{u.id === currentUser.id ? " (you)" : ""}
+                    <Text style={{ color: colors.foreground, fontFamily: "Inter_600SemiBold", fontSize: 14 }}>
+                      {u.name}{u.id === currentUser.id ? " · You" : ""}
                     </Text>
-                    <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_400Regular", fontSize: 12 }}>
+                    <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_400Regular", fontSize: 11.5 }}>
                       {u.email}
                     </Text>
                   </View>
+                  <Feather name="chevron-right" size={16} color={colors.faint} />
                 </View>
               ))}
             </>
@@ -394,18 +395,18 @@ export default function ProfileScreen() {
       )}
 
       {/* Categories */}
-      <View style={[styles.card, { backgroundColor: colors.card, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border }]}>
+      <View style={[styles.card, { backgroundColor: colors.card, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border, paddingVertical: 0 }]}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Manage categories"
           onPress={() => router.push("/categories")}
           style={({ pressed }) => [styles.linkRow, { opacity: pressed ? 0.7 : 1 }]}
         >
-          <Feather name="tag" size={18} color={colors.goldDeep} />
-          <Text style={{ color: colors.foreground, fontFamily: "Inter_500Medium", fontSize: 15, flex: 1 }}>
+          <Feather name="tag" size={17} color={colors.goldDeep} />
+          <Text style={{ color: colors.foreground, fontFamily: "Inter_500Medium", fontSize: 14.5, flex: 1 }}>
             Manage categories
           </Text>
-          <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
+          <Feather name="chevron-right" size={16} color={colors.faint} />
         </Pressable>
       </View>
 
@@ -474,18 +475,18 @@ export default function ProfileScreen() {
       </Pressable>
 
       {/* Legal & danger zone */}
-      <View style={[styles.card, { backgroundColor: colors.card, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border }]}>
+      <View style={[styles.card, { backgroundColor: colors.card, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border, paddingVertical: 0 }]}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Privacy policy"
           onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}
           style={({ pressed }) => [styles.linkRow, { opacity: pressed ? 0.7 : 1 }]}
         >
-          <Feather name="shield" size={18} color={colors.goldDeep} />
-          <Text style={{ color: colors.foreground, fontFamily: "Inter_500Medium", fontSize: 15, flex: 1 }}>
+          <Feather name="shield" size={17} color={colors.goldDeep} />
+          <Text style={{ color: colors.foreground, fontFamily: "Inter_500Medium", fontSize: 14.5, flex: 1 }}>
             Privacy Policy
           </Text>
-          <Feather name="external-link" size={16} color={colors.mutedForeground} />
+          <Feather name="external-link" size={16} color={colors.faint} />
         </Pressable>
       </View>
 
@@ -593,8 +594,8 @@ const styles = StyleSheet.create({
   linkRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    paddingVertical: 4,
+    gap: 13,
+    paddingVertical: 13,
   },
   signOutBtn: {
     flexDirection: "row",

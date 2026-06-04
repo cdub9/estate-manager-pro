@@ -13,6 +13,7 @@ import {
 import { EmptyState } from "@/components/EmptyState";
 import { EmeraldFill, GoldHairlineRule } from "@/components/Gradients";
 import { InventoryCard } from "@/components/InventoryCard";
+import { useAuth } from "@/contexts/AuthContext";
 import { useInventory } from "@/contexts/InventoryContext";
 import { useTasks } from "@/contexts/TasksContext";
 import { useColors } from "@/hooks/useColors";
@@ -21,6 +22,7 @@ export default function InventoryScreen() {
   const colors = useColors();
   const router = useRouter();
   const { items, archivedItems, archivedMode, loading, error, refresh, showArchived, showActive } = useInventory();
+  const { estateName } = useAuth();
   const { tasks } = useTasks();
 
   const taskCountByItem = useMemo(() => {
@@ -52,9 +54,9 @@ export default function InventoryScreen() {
       <View style={[styles.header, { backgroundColor: colors.background }]}>
         <View>
           <Text style={[styles.eyebrow, { color: colors.goldDeep, fontFamily: "Inter_600SemiBold" }]}>
-            ESTATE
+            {estateName ? estateName.toUpperCase() : "ESTATE"}
           </Text>
-          <Text style={[styles.title, { color: colors.foreground, fontFamily: "PlayfairDisplay_600SemiBold" }]}>
+          <Text style={[styles.title, { color: colors.foreground, fontFamily: "Raleway_600SemiBold" }]}>
             Inventory
           </Text>
         </View>

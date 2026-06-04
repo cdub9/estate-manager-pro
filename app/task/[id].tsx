@@ -159,7 +159,7 @@ export default function TaskDetailScreen() {
         >
           <Feather name="arrow-left" size={22} color={colors.foreground} />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.foreground, fontFamily: "PlayfairDisplay_600SemiBold" }]} numberOfLines={1}>
+        <Text style={[styles.headerTitle, { color: colors.foreground, fontFamily: "Raleway_600SemiBold" }]} numberOfLines={1}>
           Edit Task
         </Text>
         <Pressable

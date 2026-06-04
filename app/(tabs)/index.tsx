@@ -28,10 +28,9 @@ type FilterMode = "all" | "mine" | "done";
 export default function TasksScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { currentUser, users } = useAuth();
+  const { currentUser, users, estateName } = useAuth();
   const { tasks, loading, error, refresh, updateTask, reorderTasks } = useTasks();
   const { getCategory } = useCategories();
-
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<FilterMode>("all");
 
@@ -101,9 +100,9 @@ export default function TasksScreen() {
       <View style={[styles.header, { backgroundColor: colors.background }]}>
         <View>
           <Text style={[styles.eyebrow, { color: colors.goldDeep, fontFamily: "Inter_600SemiBold" }]}>
-            ESTATE
+            {estateName ? estateName.toUpperCase() : "ESTATE"}
           </Text>
-          <Text style={[styles.title, { color: colors.foreground, fontFamily: "PlayfairDisplay_600SemiBold" }]}>
+          <Text style={[styles.title, { color: colors.foreground, fontFamily: "Raleway_600SemiBold" }]}>
             Tasks
           </Text>
         </View>

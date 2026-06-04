@@ -9,6 +9,11 @@ import {
   PlayfairDisplay_500Medium,
   PlayfairDisplay_600SemiBold,
 } from "@expo-google-fonts/playfair-display";
+import {
+  Raleway_500Medium,
+  Raleway_600SemiBold,
+  Raleway_700Bold,
+} from "@expo-google-fonts/raleway";
 import * as Notifications from "expo-notifications";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -150,6 +155,9 @@ export default function RootLayout() {
     Inter_700Bold,
     PlayfairDisplay_500Medium,
     PlayfairDisplay_600SemiBold,
+    Raleway_500Medium,
+    Raleway_600SemiBold,
+    Raleway_700Bold,
   });
 
   useEffect(() => {

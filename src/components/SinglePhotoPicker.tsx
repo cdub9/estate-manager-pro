@@ -30,8 +30,7 @@ export function SinglePhotoPicker({ value, onChange, label = "Photo" }: Props) {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       quality: 0.85,
-      allowsEditing: true,
-      aspect: [4, 3],
+      allowsEditing: false,
     });
 
     if (!result.canceled && result.assets[0]) {
@@ -52,8 +51,7 @@ export function SinglePhotoPicker({ value, onChange, label = "Photo" }: Props) {
 
     const result = await ImagePicker.launchCameraAsync({
       quality: 0.85,
-      allowsEditing: true,
-      aspect: [4, 3],
+      allowsEditing: false,
     });
 
     if (!result.canceled && result.assets[0]) {

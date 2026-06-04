@@ -122,10 +122,10 @@ export function TaskCard({
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text
             style={{
-              fontSize: 16,
-              lineHeight: 20,
+              fontSize: 20,
+              lineHeight: 24,
               color: colors.foreground,
-              fontFamily: "PlayfairDisplay_500Medium",
+              fontFamily: "Raleway_500Medium",
               textDecorationLine: isDone ? "line-through" : "none",
             }}
             numberOfLines={1}
@@ -234,26 +234,26 @@ export function TaskCard({
 function AssigneeStack({ assignees }: { assignees: User[] }) {
   const colors = useColors();
   if (assignees.length === 0) {
-    return <Avatar user={null} size={25} fallbackLabel="—" />;
+    return <Avatar user={null} size={28} fallbackLabel="—" />;
   }
   const visible = assignees.slice(0, 3);
   const overflow = assignees.length - visible.length;
-  const totalWidth = 25 + (visible.length - 1) * 16 + (overflow > 0 ? 18 : 0);
+  const totalWidth = 28 + (visible.length - 1) * 17 + (overflow > 0 ? 20 : 0);
   return (
-    <View style={{ width: totalWidth, height: 25, position: "relative" }}>
+    <View style={{ width: totalWidth, height: 28, position: "relative" }}>
       {visible.map((u, i) => (
-        <View key={u.id} style={{ position: "absolute", left: i * 16 }}>
-          <Avatar user={u} size={25} />
+        <View key={u.id} style={{ position: "absolute", left: i * 17 }}>
+          <Avatar user={u} size={28} />
         </View>
       ))}
       {overflow > 0 && (
         <View
           style={{
             position: "absolute",
-            left: visible.length * 16,
-            width: 25,
-            height: 25,
-            borderRadius: 12.5,
+            left: visible.length * 17,
+            width: 28,
+            height: 28,
+            borderRadius: 14,
             backgroundColor: colors.secondary,
             borderWidth: 1,
             borderColor: colors.goldHair,

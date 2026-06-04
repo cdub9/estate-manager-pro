@@ -5,6 +5,7 @@ import { StyleSheet, View } from "react-native";
 
 import { GoldHairlineRule } from "@/components/Gradients";
 import { useColors } from "@/hooks/useColors";
+import { Text } from "react-native";
 
 /**
  * Tab bar background: solid `card` surface with a gold-hairline rule
@@ -16,6 +17,25 @@ function TabBarBackground() {
     <View style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.card }]}>
       <GoldHairlineRule />
     </View>
+  );
+}
+
+/**
+ * Tab label — Inter 600 when focused, Inter 500 when not, 10.5px, 0.3 tracking.
+ */
+function TabLabel({ label, color, focused }: { label: string; color: string; focused: boolean }) {
+  return (
+    <Text
+      style={{
+        fontFamily: focused ? "Inter_600SemiBold" : "Inter_500Medium",
+        fontSize: 10.5,
+        letterSpacing: 0.3,
+        color,
+        marginBottom: 2,
+      }}
+    >
+      {label}
+    </Text>
   );
 }
 
@@ -66,8 +86,9 @@ export default function TabsLayout() {
           backgroundColor: "transparent",
         },
         tabBarLabelStyle: {
-          fontFamily: "Inter_600SemiBold",
-          fontSize: 11,
+          fontFamily: "Inter_500Medium",
+          fontSize: 10.5,
+          letterSpacing: 0.3,
         },
       }}
     >
@@ -75,14 +96,17 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: "Tasks",
-          tabBarIcon: ({ color, size, focused }) => (
+          tabBarIcon: ({ color, focused }) => (
             <TabIcon
               name="check-square"
               color={color}
-              size={size}
+              size={22}
               focused={focused}
               goldColor={colors.gold}
             />
+          ),
+          tabBarLabel: ({ color, focused }) => (
+            <TabLabel label="Tasks" color={color} focused={focused} />
           ),
         }}
       />
@@ -90,14 +114,17 @@ export default function TabsLayout() {
         name="inventory"
         options={{
           title: "Inventory",
-          tabBarIcon: ({ color, size, focused }) => (
+          tabBarIcon: ({ color, focused }) => (
             <TabIcon
               name="package"
               color={color}
-              size={size}
+              size={22}
               focused={focused}
               goldColor={colors.gold}
             />
+          ),
+          tabBarLabel: ({ color, focused }) => (
+            <TabLabel label="Inventory" color={color} focused={focused} />
           ),
         }}
       />
@@ -105,14 +132,17 @@ export default function TabsLayout() {
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color, size, focused }) => (
+          tabBarIcon: ({ color, focused }) => (
             <TabIcon
               name="user"
               color={color}
-              size={size}
+              size={22}
               focused={focused}
               goldColor={colors.gold}
             />
+          ),
+          tabBarLabel: ({ color, focused }) => (
+            <TabLabel label="Profile" color={color} focused={focused} />
           ),
         }}
       />

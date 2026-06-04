@@ -66,9 +66,9 @@ export function InventoryCard({ item, taskCount, onPress }: Props) {
           <Text
             style={{
               color: colors.foreground,
-              fontFamily: "PlayfairDisplay_500Medium",
-              fontSize: 16,
-              lineHeight: 20,
+              fontFamily: "Raleway_500Medium",
+              fontSize: 20,
+              lineHeight: 24,
             }}
             numberOfLines={1}
           >
@@ -118,7 +118,7 @@ export function InventoryCard({ item, taskCount, onPress }: Props) {
             <Text
               style={{
                 color: colors.goldDeep,
-                fontFamily: "PlayfairDisplay_600SemiBold",
+                fontFamily: "Raleway_600SemiBold",
                 fontSize: 17,
                 lineHeight: 20,
               }}

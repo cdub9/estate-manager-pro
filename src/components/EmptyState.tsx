@@ -31,7 +31,7 @@ export function EmptyState({ icon, title, description, action }: Props) {
       <Text
         style={[
           styles.title,
-          { color: colors.foreground, fontFamily: "PlayfairDisplay_500Medium" },
+          { color: colors.foreground, fontFamily: "Raleway_500Medium" },
         ]}
       >
         {title}
