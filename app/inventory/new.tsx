@@ -113,41 +113,6 @@ export default function NewInventoryScreen() {
         style={{ flex: 1, backgroundColor: colors.background }}
         contentContainerStyle={styles.container}
       >
-        <TextField
-          label="Name"
-          value={name}
-          onChangeText={setName}
-          placeholder="Item name"
-          autoFocus
-        />
-        <TextField
-          label="Vendor"
-          value={vendor}
-          onChangeText={setVendor}
-          placeholder="Manufacturer or supplier"
-        />
-        <TextField
-          label="Part number"
-          value={partNumber}
-          onChangeText={setPartNumber}
-          placeholder="SKU or model number"
-          autoCapitalize="characters"
-        />
-        <TextField
-          label="Location"
-          value={location}
-          onChangeText={setLocation}
-          placeholder="Where is this stored?"
-        />
-        <TextField
-          label="Description"
-          value={description}
-          onChangeText={setDescription}
-          placeholder="Notes, specs, or details…"
-          multiline
-          numberOfLines={3}
-        />
-
         <View style={styles.fieldGroup}>
           <Text style={[styles.label, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>Photo</Text>
           <SinglePhotoPicker value={photo} onChange={setPhoto} label="Item" />
@@ -178,6 +143,40 @@ export default function NewInventoryScreen() {
             </Pressable>
           )}
         </View>
+
+        <TextField
+          label="Name"
+          value={name}
+          onChangeText={setName}
+          placeholder="Item name"
+        />
+        <TextField
+          label="Vendor"
+          value={vendor}
+          onChangeText={setVendor}
+          placeholder="Manufacturer or supplier"
+        />
+        <TextField
+          label="Part number"
+          value={partNumber}
+          onChangeText={setPartNumber}
+          placeholder="SKU or model number"
+          autoCapitalize="characters"
+        />
+        <TextField
+          label="Location"
+          value={location}
+          onChangeText={setLocation}
+          placeholder="Where is this stored?"
+        />
+        <TextField
+          label="Description"
+          value={description}
+          onChangeText={setDescription}
+          placeholder="Notes, specs, or details…"
+          multiline
+          numberOfLines={3}
+        />
       </KeyboardAwareScrollViewCompat>
     </>
   );
