@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   Alert,
@@ -23,13 +23,14 @@ export default function RegisterScreen() {
   const colors = useColors();
   const router = useRouter();
   const { register } = useAuth();
+  const { mode } = useLocalSearchParams<{ mode?: string }>();
 
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [estateName, setEstateName] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [joinMode, setJoinMode] = useState(false);
+  const [joinMode, setJoinMode] = useState(mode === "join");
   const [estateCode, setEstateCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);

@@ -136,6 +136,29 @@ export default function LoginScreen() {
             New user? Create an account
           </Text>
         </Pressable>
+
+        <View style={styles.dividerRow}>
+          <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+          <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_500Medium", fontSize: 12 }}>
+            or
+          </Text>
+          <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+        </View>
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Join an existing estate with a code"
+          onPress={() => router.push("/(auth)/register?mode=join")}
+          style={({ pressed }) => [
+            styles.joinBtn,
+            { borderColor: colors.border, borderRadius: colors.radius, opacity: pressed ? 0.7 : 1 },
+          ]}
+        >
+          <Feather name="users" size={16} color={colors.primary} />
+          <Text style={{ color: colors.primary, fontFamily: "Inter_600SemiBold", fontSize: 14 }}>
+            Join an estate with a code
+          </Text>
+        </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -162,5 +185,23 @@ const styles = StyleSheet.create({
   card: {
     padding: 16,
     gap: 12,
+  },
+  dividerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginTop: 4,
+  },
+  dividerLine: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
+  },
+  joinBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 13,
+    borderWidth: 1,
   },
 });

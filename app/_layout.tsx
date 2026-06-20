@@ -45,6 +45,7 @@ LogBox.ignoreLogs(["InteractionManager has been deprecated"]);
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Onboarding } from "@/components/Onboarding";
+import { WelcomeInvite } from "@/components/WelcomeInvite";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { CategoriesProvider } from "@/contexts/CategoriesContext";
 import { InventoryProvider } from "@/contexts/InventoryContext";
@@ -67,7 +68,7 @@ function AppProviders({ children }: { children: React.ReactNode }) {
 }
 
 function RootNavigator() {
-  const { currentUser, loading } = useAuth();
+  const { currentUser, loading, justCreatedEstate, dismissWelcome } = useAuth();
   const segments = useSegments();
   const router = useRouter();
   const routerRef = useRef(router);
@@ -142,6 +143,11 @@ function RootNavigator() {
           visible
           onDone={() => setOnboardingDone(true)}
         />
+      )}
+      {/* Shown after a fresh estate is created — gated on onboarding being
+          finished so the two first-run overlays never stack. */}
+      {currentUser && justCreatedEstate && onboardingDone === true && (
+        <WelcomeInvite visible onDone={dismissWelcome} />
       )}
     </>
   );

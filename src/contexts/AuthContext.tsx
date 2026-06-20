@@ -46,6 +46,9 @@ interface AuthContextValue {
   estateId: string | null;
   estateName: string | null;
   estateJoinCode: string | null;
+  /** True once after this user creates a brand-new estate; drives the welcome-invite prompt. */
+  justCreatedEstate: boolean;
+  dismissWelcome: () => void;
   register: (
     email: string,
     name: string,
@@ -72,6 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [estateId, setEstateId] = useState<string | null>(null);
   const [estateName, setEstateName] = useState<string | null>(null);
   const [estateJoinCode, setEstateJoinCode] = useState<string | null>(null);
+  const [justCreatedEstate, setJustCreatedEstate] = useState(false);
 
   // Prevent double-loads during registration (signUp fires SIGNED_IN immediately)
   const loadingProfile = useRef(false);
@@ -123,6 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setEstateId(null);
           setEstateName(null);
           setEstateJoinCode(null);
+          setJustCreatedEstate(false);
         }
         // SIGNED_IN is handled manually in login() / register() to avoid
         // a race where the profile row doesn't exist yet.
@@ -169,6 +174,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const { error: rpcError } = await supabase.rpc(rpcName, rpcParams);
       if (rpcError) throw rpcError;
+
+      // Flag a fresh estate creation (not a join) so the UI can show the
+      // post-registration welcome/invite prompt once.
+      if (!estateCode) setJustCreatedEstate(true);
 
       // Now load the profile (it exists)
       const user = await loadUserData(signUpData.user.id);
@@ -271,6 +280,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [estateId],
   );
 
+  // ── dismissWelcome ─────────────────────────────────────────────────────────
+  const dismissWelcome = useCallback(() => setJustCreatedEstate(false), []);
+
   // ── deleteAccount ──────────────────────────────────────────────────────────
   const deleteAccount = useCallback(async () => {
     const { error } = await supabase.rpc("delete_my_account");
@@ -287,6 +299,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       estateId,
       estateName,
       estateJoinCode,
+      justCreatedEstate,
+      dismissWelcome,
       register,
       login,
       logout,
@@ -294,7 +308,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       updateEstateName,
       deleteAccount,
     }),
-    [loading, users, currentUser, estateId, estateName, estateJoinCode, register, login, logout, updateProfile, updateEstateName, deleteAccount],
+    [loading, users, currentUser, estateId, estateName, estateJoinCode, justCreatedEstate, dismissWelcome, register, login, logout, updateProfile, updateEstateName, deleteAccount],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

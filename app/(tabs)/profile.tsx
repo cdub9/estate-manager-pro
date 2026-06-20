@@ -6,7 +6,6 @@ import {
   Alert,
   Pressable,
   ScrollView,
-  Share,
   StyleSheet,
   Text,
   View,
@@ -16,6 +15,7 @@ const PRIVACY_POLICY_URL = "https://cdub9.github.io/estate-manager-pro/privacy-p
 
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
+import { EstateJoinCode } from "@/components/EstateJoinCode";
 import { EmeraldFill, GoldFlourishDivider, GoldHairlineRule } from "@/components/Gradients";
 import { TextField } from "@/components/TextField";
 import { DEFAULT_TIMEZONE, useAuth } from "@/contexts/AuthContext";
@@ -156,13 +156,6 @@ export default function ProfileScreen() {
     );
   }
 
-  async function handleShareCode() {
-    if (!estateJoinCode) return;
-    await Share.share({
-      message: `Join my estate on Estate Manager Pro with code: ${estateJoinCode}`,
-    });
-  }
-
   if (!currentUser) return null;
 
   return (
@@ -250,35 +243,7 @@ export default function ProfileScreen() {
           <Text style={[styles.eyebrow, { color: colors.goldDeep, fontFamily: "Inter_600SemiBold" }]}>
             {estateName ? estateName.toUpperCase() : "THE ESTATE"}
           </Text>
-          <View style={styles.joinCodeRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_400Regular", fontSize: 11.5, marginBottom: 2 }}>
-                Private join code
-              </Text>
-              <Text style={{ color: colors.primary, fontFamily: "Raleway_700Bold", fontSize: 24, letterSpacing: 5 }}>
-                {estateJoinCode}
-              </Text>
-            </View>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Share join code"
-              onPress={handleShareCode}
-              style={({ pressed }) => [
-                styles.copyBtn,
-                {
-                  borderRadius: colors.radius - 4,
-                  borderWidth: 1,
-                  borderColor: colors.goldHair,
-                  opacity: pressed ? 0.85 : 1,
-                  overflow: "hidden",
-                },
-              ]}
-            >
-              <EmeraldFill borderRadius={colors.radius - 4} />
-              <Feather name="share-2" size={14} color={colors.onEmeraldIcon} />
-              <Text style={{ color: colors.onEmerald, fontFamily: "Inter_600SemiBold", fontSize: 12 }}>Invite</Text>
-            </Pressable>
-          </View>
+          <EstateJoinCode />
           <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: colors.borderSoft, marginVertical: 4 }} />
 
           {users.length > 0 && (
@@ -571,18 +536,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 6,
     paddingVertical: 10,
-  },
-  joinCodeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  copyBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
   },
   memberRow: {
     flexDirection: "row",
