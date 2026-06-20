@@ -12,12 +12,13 @@ import {
 import { ActivityIndicator } from "react-native";
 
 import { Button } from "@/components/Button";
+import { IdentifyResultsSheet } from "@/components/IdentifyResultsSheet";
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { SinglePhotoPicker } from "@/components/SinglePhotoPicker";
 import { TextField } from "@/components/TextField";
 import { useInventory } from "@/contexts/InventoryContext";
 import { useColors } from "@/hooks/useColors";
-import { identifyInventoryFromPhoto } from "@/utils/identifyInventory";
+import { identifyMultipleFromPhoto, InventoryGuess } from "@/utils/identifyInventory";
 
 export default function NewInventoryScreen() {
   const colors = useColors();
@@ -32,22 +33,65 @@ export default function NewInventoryScreen() {
   const [photo, setPhoto] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [identifying, setIdentifying] = useState(false);
+  const [pendingResults, setPendingResults] = useState<InventoryGuess[]>([]);
+  const [sheetVisible, setSheetVisible] = useState(false);
+
+  // Fill only empty fields so manual edits aren't blown away.
+  function applyGuessToForm(guess: InventoryGuess) {
+    if (!name.trim() && guess.name) setName(guess.name);
+    if (!vendor.trim() && guess.vendor) setVendor(guess.vendor);
+    if (!partNumber.trim() && guess.partNumber) setPartNumber(guess.partNumber);
+    if (!description.trim() && guess.description) setDescription(guess.description);
+  }
 
   async function handleIdentify() {
     if (!photo || identifying) return;
     setIdentifying(true);
     try {
-      const guess = await identifyInventoryFromPhoto(photo);
-      // Only overwrite empty fields so manual edits aren't blown away.
-      if (!name.trim() && guess.name) setName(guess.name);
-      if (!vendor.trim() && guess.vendor) setVendor(guess.vendor);
-      if (!partNumber.trim() && guess.partNumber) setPartNumber(guess.partNumber);
-      if (!description.trim() && guess.description) setDescription(guess.description);
+      const guesses = await identifyMultipleFromPhoto(photo);
+      if (guesses.length === 0) {
+        Alert.alert("Couldn't identify", "No recognizable items were found in this photo.");
+      } else if (guesses.length === 1) {
+        applyGuessToForm(guesses[0]);
+      } else {
+        // Multiple items — let the user pick which to add.
+        setPendingResults(guesses);
+        setSheetVisible(true);
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Try again.";
       Alert.alert("Couldn't identify", msg);
     } finally {
       setIdentifying(false);
+    }
+  }
+
+  // The first selected item populates this form (so the user can still add a
+  // location and review before saving); the rest are created immediately,
+  // sharing the same photo.
+  async function handleConfirmResults(selected: InventoryGuess[]) {
+    setSheetVisible(false);
+    if (selected.length === 0) return;
+    const [first, ...rest] = selected;
+    applyGuessToForm(first);
+    if (rest.length === 0) return;
+    try {
+      for (const g of rest) {
+        await createItem({
+          name: g.name,
+          vendor: g.vendor,
+          partNumber: g.partNumber,
+          description: g.description,
+          photo,
+        });
+      }
+      Alert.alert(
+        "Items added",
+        `${rest.length} item${rest.length === 1 ? "" : "s"} added to inventory. Review the first below, then tap Save.`,
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Some items couldn't be saved.";
+      Alert.alert("Error", msg);
     }
   }
 
@@ -178,6 +222,13 @@ export default function NewInventoryScreen() {
           numberOfLines={3}
         />
       </KeyboardAwareScrollViewCompat>
+
+      <IdentifyResultsSheet
+        visible={sheetVisible}
+        results={pendingResults}
+        onConfirm={handleConfirmResults}
+        onCancel={() => setSheetVisible(false)}
+      />
     </>
   );
 }
