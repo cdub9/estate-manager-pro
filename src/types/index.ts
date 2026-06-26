@@ -54,6 +54,33 @@ export interface Task {
   comments: TaskComment[];
 }
 
+export type MaintenanceIntervalUnit = "day" | "week" | "month" | "year";
+
+// "completion" → next due is measured from when the work is last done.
+// "calendar"   → next due advances on a fixed calendar from the prior due date.
+export type MaintenanceAnchor = "completion" | "calendar";
+
+export interface MaintenanceSchedule {
+  id: string;
+  title: string;
+  /** Free-text label of what's maintained when not linked to inventory (e.g. "Front lawn"). */
+  subject: string;
+  /** Optional linked inventory asset. */
+  inventoryId: string | null;
+  intervalUnit: MaintenanceIntervalUnit;
+  intervalCount: number;
+  anchor: MaintenanceAnchor;
+  assigneeIds: string[];
+  categoryId: string | null;
+  nextDue: number;
+  lastCompletedAt: number | null;
+  notes: string;
+  active: boolean;
+  createdById: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface InventoryItem {
   id: string;
   name: string;

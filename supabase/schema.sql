@@ -69,6 +69,30 @@ create table if not exists inventory (
   updated_at  bigint not null
 );
 
+-- 6. Maintenance schedules (preventive maintenance)
+-- Each schedule tracks recurring upkeep for an inventory asset OR a
+-- free-text subject (e.g. "Front lawn"). next_due is rolled forward when
+-- the work is logged as serviced.
+create table if not exists maintenance_schedules (
+  id                uuid primary key default gen_random_uuid(),
+  estate_id         uuid not null references estates(id) on delete cascade,
+  title             text not null,
+  subject           text not null default '',
+  inventory_id      uuid references inventory(id) on delete set null,
+  interval_unit     text not null default 'month',
+  interval_count    integer not null default 1,
+  anchor            text not null default 'completion',
+  assignee_ids      uuid[] not null default '{}',
+  category_id       uuid references categories(id) on delete set null,
+  next_due          bigint not null,
+  last_completed_at bigint,
+  notes             text not null default '',
+  active            boolean not null default true,
+  created_by_id     uuid references profiles(id) on delete set null,
+  created_at        bigint not null,
+  updated_at        bigint not null
+);
+
 -- ============================================================
 -- Row-Level Security
 -- ============================================================
@@ -78,6 +102,7 @@ alter table profiles  enable row level security;
 alter table categories enable row level security;
 alter table tasks     enable row level security;
 alter table inventory enable row level security;
+alter table maintenance_schedules enable row level security;
 
 -- Helper: returns the calling user's estate_id (NULL before profile exists)
 create or replace function get_my_estate_id()
@@ -141,6 +166,16 @@ create policy "update estate inventory"
   on inventory for update using (estate_id = get_my_estate_id());
 create policy "delete estate inventory"
   on inventory for delete using (estate_id = get_my_estate_id());
+
+-- Maintenance schedules
+create policy "read estate maintenance"
+  on maintenance_schedules for select using (estate_id = get_my_estate_id());
+create policy "insert estate maintenance"
+  on maintenance_schedules for insert with check (estate_id = get_my_estate_id());
+create policy "update estate maintenance"
+  on maintenance_schedules for update using (estate_id = get_my_estate_id());
+create policy "delete estate maintenance"
+  on maintenance_schedules for delete using (estate_id = get_my_estate_id());
 
 -- ============================================================
 -- Registration RPCs (security definer = bypass RLS)

@@ -49,6 +49,7 @@ import { WelcomeInvite } from "@/components/WelcomeInvite";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { CategoriesProvider } from "@/contexts/CategoriesContext";
 import { InventoryProvider } from "@/contexts/InventoryContext";
+import { MaintenanceProvider } from "@/contexts/MaintenanceContext";
 import { TasksProvider } from "@/contexts/TasksContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { useColors } from "@/hooks/useColors";
@@ -60,7 +61,9 @@ function AppProviders({ children }: { children: React.ReactNode }) {
     <AuthProvider>
       <CategoriesProvider>
         <InventoryProvider>
-          <TasksProvider>{children}</TasksProvider>
+          <MaintenanceProvider>
+            <TasksProvider>{children}</TasksProvider>
+          </MaintenanceProvider>
         </InventoryProvider>
       </CategoriesProvider>
     </AuthProvider>
@@ -135,6 +138,8 @@ function RootNavigator() {
         <Stack.Screen name="task/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="inventory/new" options={{ presentation: "modal", headerShown: false }} />
         <Stack.Screen name="inventory/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="maintenance/new" options={{ presentation: "modal", headerShown: false }} />
+        <Stack.Screen name="maintenance/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="categories" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" options={{ headerShown: false }} />
       </Stack>

@@ -129,6 +129,24 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="maintenance"
+        options={{
+          title: "Maintenance",
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon
+              name="tool"
+              color={color}
+              size={22}
+              focused={focused}
+              goldColor={colors.gold}
+            />
+          ),
+          tabBarLabel: ({ color, focused }) => (
+            <TabLabel label="Maintenance" color={color} focused={focused} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
