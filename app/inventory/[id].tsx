@@ -16,6 +16,7 @@ import { SinglePhotoPicker } from "@/components/SinglePhotoPicker";
 import { TextField } from "@/components/TextField";
 import { useInventory } from "@/contexts/InventoryContext";
 import { useColors } from "@/hooks/useColors";
+import { hasAnthropicKey } from "@/lib/anthropic";
 import { formatDate } from "@/utils/dates";
 import { InventoryItem } from "@/types";
 import { identifyInventoryFromPhoto } from "@/utils/identifyInventory";
@@ -268,7 +269,7 @@ export default function InventoryDetailScreen() {
           ) : (
             <>
               <SinglePhotoPicker value={photo} onChange={setPhoto} label="Item" />
-              {photo && (
+              {photo && hasAnthropicKey && (
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel="Identify item with AI"

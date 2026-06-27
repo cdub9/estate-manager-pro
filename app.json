@@ -21,7 +21,7 @@
       "infoPlist": {
         "NSCameraUsageDescription": "Used to attach photos to tasks and equipment.",
         "NSPhotoLibraryUsageDescription": "Used to attach photos to tasks and equipment.",
-        "NSPhotoLibraryAddUsageDescription": "Used to save photos of tasks and equipment."
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -34,10 +34,12 @@
       },
       "permissions": [
         "android.permission.CAMERA",
-        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_IMAGES"
+      ],
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO",
         "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.WRITE_EXTERNAL_STORAGE"
       ]
     },
     "web": {
@@ -60,7 +62,7 @@
         {
           "color": "#103b2f"
         }
-      ],
+      ]
     ],
     "experiments": {
       "typedRoutes": false

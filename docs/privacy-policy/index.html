@@ -66,7 +66,7 @@
     <header>
       <h1>Privacy Policy</h1>
       <div class="app-name">Estate Manager Pro</div>
-      <div class="updated">Last updated: May 27, 2026</div>
+      <div class="updated">Last updated: June 27, 2026</div>
     </header>
 
     <h2>Overview</h2>
@@ -96,6 +96,7 @@
       <li>To provide core app functionality: managing tasks, inventory, and team members</li>
       <li>To send push notifications when tasks are assigned to you (only if you grant permission)</li>
       <li>To identify you within your estate and display your name to other members</li>
+      <li>To identify equipment from a photo when you choose to use the "Identify with AI" feature (see "AI-Powered Identification" below)</li>
     </ul>
     <div class="highlight">
       <p>We do <strong>not</strong> sell your data. We do <strong>not</strong> use your data for advertising.</p>
@@ -107,6 +108,7 @@
       <li><strong>Other members of your estate</strong> — they can see tasks, inventory, and member names/emails within the shared estate</li>
       <li><strong>Supabase</strong> — our database and authentication provider. <a href="https://supabase.com/privacy" target="_blank" rel="noopener">Supabase Privacy Policy</a></li>
       <li><strong>Expo</strong> — our push notification delivery service. <a href="https://expo.dev/privacy" target="_blank" rel="noopener">Expo Privacy Policy</a></li>
+      <li><strong>Anthropic</strong> — when, and only when, you use the optional "Identify with AI" feature, the photo you select is sent to Anthropic's API to identify the equipment shown. <a href="https://www.anthropic.com/legal/privacy" target="_blank" rel="noopener">Anthropic Privacy Policy</a></li>
     </ul>
     <p>No other third parties receive your data.</p>
 
@@ -116,6 +118,15 @@
       <li>Authentication is handled by Supabase Auth with industry-standard password hashing</li>
       <li>Row-level security (RLS) ensures you can only access data belonging to your estate</li>
       <li>We do not store payment information</li>
+    </ul>
+
+    <h2>AI-Powered Identification</h2>
+    <p>Estate Manager Pro offers an optional feature that uses artificial intelligence to identify equipment from a photo. This feature only runs when you explicitly tap <strong>"Identify with AI"</strong> on an inventory item.</p>
+    <ul>
+      <li>When you use it, the single photo you selected is sent to <strong>Anthropic</strong> (the provider of the Claude AI model) to analyze and suggest a name, vendor, part number, and description.</li>
+      <li>The suggestions are returned to you to review and edit before anything is saved. Nothing is submitted automatically.</li>
+      <li>If you never use this feature, no photos are sent to Anthropic.</li>
+      <li>Anthropic does not use data submitted through its API to train its models. See the <a href="https://www.anthropic.com/legal/privacy" target="_blank" rel="noopener">Anthropic Privacy Policy</a> for details.</li>
     </ul>
 
     <h2>Data Retention</h2>

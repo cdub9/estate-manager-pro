@@ -11,11 +11,7 @@
 
 export const ANTHROPIC_API_KEY = process.env.EXPO_PUBLIC_ANTHROPIC_API_KEY ?? "";
 
-if (!ANTHROPIC_API_KEY) {
-  throw new Error(
-    "Missing Anthropic configuration.\n\n" +
-    "EXPO_PUBLIC_ANTHROPIC_API_KEY must be set.\n" +
-    "For EAS builds, add it to the 'env' section of each build profile in eas.json.\n" +
-    "For local dev, add it to your .env file.",
-  );
-}
+// Whether AI identification is available in this build. When false, callers
+// should hide/disable the "Identify with AI" affordance rather than crash —
+// the rest of the app works fine without it.
+export const hasAnthropicKey = ANTHROPIC_API_KEY.length > 0;

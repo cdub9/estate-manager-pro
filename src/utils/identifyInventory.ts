@@ -1,6 +1,6 @@
 import { EncodingType, readAsStringAsync } from "expo-file-system/legacy";
 
-import { ANTHROPIC_API_KEY } from "@/lib/anthropic";
+import { ANTHROPIC_API_KEY, hasAnthropicKey } from "@/lib/anthropic";
 
 export interface InventoryGuess {
   name: string;
@@ -65,6 +65,10 @@ async function requestIdentification(
   prompt: string,
   maxTokens: number,
 ): Promise<string> {
+  if (!hasAnthropicKey) {
+    throw new Error("AI identification isn't available in this build.");
+  }
+
   const base64 = await readAsStringAsync(photoUri, { encoding: EncodingType.Base64 });
   const mediaType = mimeTypeFromUri(photoUri);
 

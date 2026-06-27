@@ -18,6 +18,7 @@ import { SinglePhotoPicker } from "@/components/SinglePhotoPicker";
 import { TextField } from "@/components/TextField";
 import { useInventory } from "@/contexts/InventoryContext";
 import { useColors } from "@/hooks/useColors";
+import { hasAnthropicKey } from "@/lib/anthropic";
 import { identifyMultipleFromPhoto, InventoryGuess } from "@/utils/identifyInventory";
 
 export default function NewInventoryScreen() {
@@ -160,7 +161,7 @@ export default function NewInventoryScreen() {
         <View style={styles.fieldGroup}>
           <Text style={[styles.label, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>Photo</Text>
           <SinglePhotoPicker value={photo} onChange={setPhoto} label="Item" />
-          {photo && (
+          {photo && hasAnthropicKey && (
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Identify item with AI"
