@@ -242,6 +242,7 @@ export default function TasksScreen() {
           renderItem={renderItem}
           onDragEnd={handleDragEnd}
           activationDistance={filtersActive ? 99999 : 10}
+          style={styles.listContainer}
           contentContainerStyle={styles.list}
           ListEmptyComponent={
             <EmptyState
@@ -316,10 +317,14 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     borderRadius: 8,
   },
+  listContainer: {
+    flex: 1,
+  },
   list: {
     padding: 20,
     gap: 9,
     paddingBottom: 40,
+    flexGrow: 1,
   },
   errorState: {
     flex: 1,
