@@ -108,5 +108,11 @@ Reviewers can’t sign up into a shared estate blind. Before submitting:
 - [ ] Provide the `google-service-account.json` referenced in `eas.json` for `eas submit`.
 
 ### Before you build
-- [ ] Decide on the Anthropic key for production (see code note): either add `EXPO_PUBLIC_ANTHROPIC_API_KEY` to each `eas.json` profile’s `env` (extractable from the binary) or proxy via a Supabase Edge Function. If unset, the “Identify with AI” button is simply hidden — no crash.
+- [ ] **Deploy the AI Edge Function** (the Anthropic key is now server-side, not in the app). From the project root, with the Supabase CLI linked to your project:
+  ```bash
+  supabase secrets set ANTHROPIC_API_KEY=sk-ant-...      # server-only secret
+  supabase functions deploy identify-inventory           # keeps JWT verification on
+  ```
+  The function lives at `supabase/functions/identify-inventory/`. Until it's deployed with the secret, tapping "Identify with AI" shows a friendly error (no crash). No `EXPO_PUBLIC_ANTHROPIC_API_KEY` is needed anywhere anymore.
+  - _Note:_ photos are sent to the function as base64 (picker quality 0.85). If very large photos ever fail on the Supabase request-size limit, add client-side downscaling (e.g. `expo-image-manipulator`) before the call.
 - [ ] Redeploy GitHub Pages if it doesn’t auto-publish from the committed `docs/` so the live privacy policy stays current.

@@ -1,6 +1,6 @@
 import { EncodingType, readAsStringAsync } from "expo-file-system/legacy";
 
-import { ANTHROPIC_API_KEY, hasAnthropicKey } from "@/lib/anthropic";
+import { supabase } from "@/lib/supabase";
 
 export interface InventoryGuess {
   name: string;
@@ -9,34 +9,9 @@ export interface InventoryGuess {
   description: string;
 }
 
-// Vision-capable model — Haiku tier is cheap and fast, and identification
-// is a simple classification task that doesn't need Sonnet reasoning.
-const MODEL = "claude-haiku-4-5";
-
-// Upper bound on items returned from a single photo — bounds output tokens
-// and keeps the review UI manageable.
+// Upper bound on items returned from a single photo — matches the cap the
+// server prompt enforces; also guards the parsed array here.
 const MAX_ITEMS = 10;
-
-const FIELD_GUIDE =
-  "`name` should be a short product name (e.g. 'DeWalt 20V Cordless Drill'). " +
-  "`vendor` is the brand or manufacturer. " +
-  "`partNumber` is the SKU or model number if visible on the item. " +
-  "`description` should be one sentence summarizing what it is and notable features visible. " +
-  "Use empty strings for fields you cannot determine.";
-
-const SINGLE_PROMPT =
-  "Identify this piece of equipment. Respond with ONLY valid JSON " +
-  "matching this schema, with no prose or markdown fences: " +
-  '{"name": string, "vendor": string, "partNumber": string, "description": string}. ' +
-  FIELD_GUIDE;
-
-const MULTI_PROMPT =
-  "Identify each distinct piece of equipment visible in this photo. " +
-  "Respond with ONLY a valid JSON array (no prose or markdown fences) where each " +
-  'element matches this schema: {"name": string, "vendor": string, "partNumber": string, "description": string}. ' +
-  "Include one array element per distinct item. If only one item is present, return an array " +
-  `with a single element. Limit to at most ${MAX_ITEMS} items. ` +
-  FIELD_GUIDE;
 
 function mimeTypeFromUri(uri: string): "image/jpeg" | "image/png" | "image/webp" | "image/gif" {
   const lower = uri.toLowerCase().split("?")[0];
@@ -57,67 +32,34 @@ function coerceGuess(raw: unknown): InventoryGuess {
 }
 
 /**
- * Send a photo + prompt to Claude and return the cleaned text response.
- * Throws a user-friendly Error on network failure or a bad HTTP response.
+ * Send a photo to the `identify-inventory` Supabase Edge Function (which holds
+ * the Anthropic key server-side) and return the model's cleaned text response.
+ * Throws a user-friendly Error on network failure or a server error.
  */
-async function requestIdentification(
-  photoUri: string,
-  prompt: string,
-  maxTokens: number,
-): Promise<string> {
-  if (!hasAnthropicKey) {
-    throw new Error("AI identification isn't available in this build.");
-  }
-
+async function requestIdentification(photoUri: string, mode: "single" | "multiple"): Promise<string> {
   const base64 = await readAsStringAsync(photoUri, { encoding: EncodingType.Base64 });
   const mediaType = mimeTypeFromUri(photoUri);
 
-  let response: Response;
-  try {
-    response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: maxTokens,
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "image",
-                source: { type: "base64", media_type: mediaType, data: base64 },
-              },
-              { type: "text", text: prompt },
-            ],
-          },
-        ],
-      }),
-    });
-  } catch {
-    throw new Error("Network error. Check your connection and try again.");
-  }
+  const { data, error } = await supabase.functions.invoke<{ text?: string; error?: string }>(
+    "identify-inventory",
+    { body: { image: base64, mediaType, mode } },
+  );
 
-  if (!response.ok) {
-    // Try to surface Anthropic's error message; fall back to status text.
-    let detail = response.statusText;
+  if (error) {
+    // FunctionsHttpError exposes the raw Response on `context`; surface the
+    // server's message when we can, otherwise a generic one.
+    let message = "Couldn't reach the identification service. Please try again.";
     try {
-      const body = (await response.json()) as { error?: { message?: string } };
-      if (body?.error?.message) detail = body.error.message;
+      const body = await (error as { context?: { json?: () => Promise<{ error?: string }> } }).context?.json?.();
+      if (body?.error) message = body.error;
     } catch {
-      // Ignore parse failures — we'll use statusText.
+      // keep the generic message
     }
-    throw new Error(`Identification failed (${response.status}): ${detail}`);
+    throw new Error(message);
   }
+  if (data?.error) throw new Error(data.error);
 
-  const payload = (await response.json()) as {
-    content?: Array<{ type: string; text?: string }>;
-  };
-  const text = payload.content?.find((c) => c.type === "text")?.text;
+  const text = data?.text;
   if (!text) throw new Error("Empty response from identification service.");
 
   // Strip optional ```json fences in case the model adds them despite instructions.
@@ -125,11 +67,11 @@ async function requestIdentification(
 }
 
 /**
- * Ask Claude to identify the single piece of equipment shown in a photo.
+ * Identify the single piece of equipment shown in a photo.
  * Throws a user-friendly Error on network failure, bad response, or parse failure.
  */
 export async function identifyInventoryFromPhoto(photoUri: string): Promise<InventoryGuess> {
-  const cleaned = await requestIdentification(photoUri, SINGLE_PROMPT, 400);
+  const cleaned = await requestIdentification(photoUri, "single");
 
   let parsed: unknown;
   try {
@@ -142,13 +84,12 @@ export async function identifyInventoryFromPhoto(photoUri: string): Promise<Inve
 }
 
 /**
- * Ask Claude to identify every distinct piece of equipment in a photo.
+ * Identify every distinct piece of equipment in a photo.
  * Returns one guess per detected item (named items only), capped at MAX_ITEMS.
  * Throws a user-friendly Error on network failure, bad response, or parse failure.
  */
 export async function identifyMultipleFromPhoto(photoUri: string): Promise<InventoryGuess[]> {
-  // Larger budget than the single-item call to fit several JSON objects.
-  const cleaned = await requestIdentification(photoUri, MULTI_PROMPT, 1500);
+  const cleaned = await requestIdentification(photoUri, "multiple");
 
   let parsed: unknown;
   try {
