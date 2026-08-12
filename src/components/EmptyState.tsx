@@ -18,15 +18,20 @@ export function EmptyState({ icon, title, description, action }: Props) {
       <View
         style={[
           styles.iconBox,
-          { backgroundColor: colors.secondary, borderRadius: colors.radius * 2 },
+          {
+            backgroundColor: colors.secondary,
+            borderRadius: 999,
+            borderWidth: 1,
+            borderColor: colors.goldHair,
+          },
         ]}
       >
-        <Feather name={icon} size={28} color={colors.primary} />
+        <Feather name={icon} size={26} color={colors.goldDeep} />
       </View>
       <Text
         style={[
           styles.title,
-          { color: colors.foreground, fontFamily: "Inter_600SemiBold" },
+          { color: colors.foreground, fontFamily: "Raleway_500Medium" },
         ]}
       >
         {title}
@@ -62,8 +67,9 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   title: {
-    fontSize: 17,
+    fontSize: 18,
     textAlign: "center",
+    letterSpacing: 0.2,
   },
   desc: {
     fontSize: 14,

@@ -4,12 +4,13 @@ import React from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
+import { EmeraldFill } from "@/components/Gradients";
 import { useColors } from "@/hooks/useColors";
 import { Category, Task, User } from "@/types";
 
 interface Props {
   task: Task;
-  assignee: User | null;
+  assignees: User[];
   category: Category | null;
   inventoryCount: number;
   onPress: () => void;
@@ -24,6 +25,7 @@ type DueTone = "today" | "soon" | "later" | "overdue";
 function formatDue(due: number | null): { label: string; tone: DueTone } | null {
   if (!due) return null;
   const d = new Date(due);
+  d.setHours(0, 0, 0, 0);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const dayMs = 86400000;
@@ -43,7 +45,7 @@ function formatDue(due: number | null): { label: string; tone: DueTone } | null 
 
 export function TaskCard({
   task,
-  assignee,
+  assignees,
   category,
   inventoryCount,
   onPress,
@@ -58,11 +60,12 @@ export function TaskCard({
 
   function dueColor(tone: DueTone): string {
     if (tone === "today" || tone === "overdue") return colors.destructive;
-    if (tone === "soon") return colors.accent;
+    if (tone === "soon") return colors.goldDeep;
     return colors.mutedForeground;
   }
 
-  const accentColor = category?.color ?? "transparent";
+  // 3px category accent stripe — default gold when no category.
+  const accentColor = category?.color ?? colors.gold;
 
   return (
     <Pressable
@@ -77,11 +80,12 @@ export function TaskCard({
         {
           backgroundColor: colors.card,
           borderRadius: colors.radius,
-          borderColor: isDragging ? colors.primary : colors.border,
+          borderColor: isDragging ? colors.gold : colors.border,
           opacity: pressed && !isDragging ? 0.92 : isDone ? 0.62 : 1,
-          shadowOpacity: isDragging ? 0.18 : 0,
-          shadowRadius: isDragging ? 14 : 0,
-          shadowOffset: { width: 0, height: 6 },
+          shadowColor: "#1b2a23",
+          shadowOpacity: isDragging ? 0.18 : 0.03,
+          shadowRadius: isDragging ? 14 : 2,
+          shadowOffset: { width: 0, height: isDragging ? 6 : 1 },
           elevation: isDragging ? 6 : 0,
         },
         isDragging ? { transform: [{ scale: 1.02 }] } : null,
@@ -118,10 +122,10 @@ export function TaskCard({
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text
             style={{
-              fontSize: 15.5,
-              lineHeight: 19,
+              fontSize: 20,
+              lineHeight: 24,
               color: colors.foreground,
-              fontFamily: "Inter_600SemiBold",
+              fontFamily: "Raleway_500Medium",
               textDecorationLine: isDone ? "line-through" : "none",
             }}
             numberOfLines={1}
@@ -137,7 +141,7 @@ export function TaskCard({
                   style={{
                     color: dueColor(due.tone),
                     fontFamily: "Inter_600SemiBold",
-                    fontSize: 12,
+                    fontSize: 11.5,
                     marginLeft: 4,
                   }}
                 >
@@ -153,7 +157,7 @@ export function TaskCard({
                   style={{
                     color: category.color,
                     fontFamily: "Inter_600SemiBold",
-                    fontSize: 12,
+                    fontSize: 11.5,
                   }}
                   numberOfLines={1}
                 >
@@ -171,7 +175,7 @@ export function TaskCard({
                     style={{
                       color: colors.mutedForeground,
                       fontFamily: "Inter_500Medium",
-                      fontSize: 12,
+                      fontSize: 11.5,
                       marginLeft: 4,
                     }}
                   >
@@ -190,7 +194,7 @@ export function TaskCard({
                     style={{
                       color: colors.mutedForeground,
                       fontFamily: "Inter_500Medium",
-                      fontSize: 12,
+                      fontSize: 11.5,
                       marginLeft: 4,
                     }}
                   >
@@ -212,7 +216,7 @@ export function TaskCard({
         </View>
 
         <View style={styles.right}>
-          <Avatar user={assignee} size={28} fallbackLabel="—" />
+          <AssigneeStack assignees={assignees} />
           {draggable ? (
             <Feather
               name="menu"
@@ -224,6 +228,51 @@ export function TaskCard({
         </View>
       </View>
     </Pressable>
+  );
+}
+
+function AssigneeStack({ assignees }: { assignees: User[] }) {
+  const colors = useColors();
+  if (assignees.length === 0) {
+    return <Avatar user={null} size={28} fallbackLabel="—" />;
+  }
+  const visible = assignees.slice(0, 3);
+  const overflow = assignees.length - visible.length;
+  const totalWidth = 28 + (visible.length - 1) * 17 + (overflow > 0 ? 20 : 0);
+  return (
+    <View style={{ width: totalWidth, height: 28, position: "relative" }}>
+      {visible.map((u, i) => (
+        <View key={u.id} style={{ position: "absolute", left: i * 17 }}>
+          <Avatar user={u} size={28} />
+        </View>
+      ))}
+      {overflow > 0 && (
+        <View
+          style={{
+            position: "absolute",
+            left: visible.length * 17,
+            width: 28,
+            height: 28,
+            borderRadius: 14,
+            backgroundColor: colors.secondary,
+            borderWidth: 1,
+            borderColor: colors.goldHair,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text
+            style={{
+              color: colors.goldDeep,
+              fontFamily: "Inter_600SemiBold",
+              fontSize: 10,
+            }}
+          >
+            +{overflow}
+          </Text>
+        </View>
+      )}
+    </View>
   );
 }
 
@@ -239,28 +288,33 @@ function StatusIndicator({
       <View
         style={[
           styles.dot,
-          { backgroundColor: colors.primary, borderColor: colors.primary },
+          {
+            borderColor: colors.goldHair,
+            backgroundColor: "transparent",
+            overflow: "hidden",
+          },
         ]}
       >
-        <Feather name="check" size={13} color="#fff" />
+        <EmeraldFill borderRadius={11} />
+        <Feather name="check" size={12} color={colors.onEmeraldIcon} />
       </View>
     );
   }
   if (status === "in_progress") {
     return (
-      <View style={[styles.dot, { borderColor: colors.primary }]}>
+      <View style={[styles.dot, { borderColor: colors.gold }]}>
         <View
           style={{
-            width: 10,
-            height: 10,
-            borderRadius: 5,
-            backgroundColor: colors.primary,
+            width: 9,
+            height: 9,
+            borderRadius: 4.5,
+            backgroundColor: colors.gold,
           }}
         />
       </View>
     );
   }
-  return <View style={[styles.dot, { borderColor: colors.mutedForeground }]} />;
+  return <View style={[styles.dot, { borderColor: colors.faint }]} />;
 }
 
 function MetaItem({ children }: { children: React.ReactNode }) {
@@ -268,11 +322,7 @@ function MetaItem({ children }: { children: React.ReactNode }) {
 }
 
 function Bullet({ colors }: { colors: ReturnType<typeof useColors> }) {
-  return (
-    <View
-      style={[styles.bullet, { backgroundColor: colors.bulletColor }]}
-    />
-  );
+  return <View style={[styles.bullet, { backgroundColor: colors.faint }]} />;
 }
 
 const styles = StyleSheet.create({
@@ -280,20 +330,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "stretch",
     borderWidth: 1,
-    shadowColor: "#000",
     overflow: "hidden",
   },
   accent: {
-    width: 4,
+    width: 3,
     alignSelf: "stretch",
   },
   body: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
-    paddingLeft: 12,
-    paddingRight: 12,
+    paddingVertical: 14,
+    paddingLeft: 14,
+    paddingRight: 14,
     gap: 12,
   },
   statusBtn: {
@@ -303,7 +352,7 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
-    borderWidth: 2,
+    borderWidth: 1.5,
     alignItems: "center",
     justifyContent: "center",
   },

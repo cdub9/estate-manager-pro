@@ -6,6 +6,13 @@ export function formatDate(ts: number): string {
   });
 }
 
+export function formatDateTime(ts: number): string {
+  const d = new Date(ts);
+  const date = d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  return `${date} at ${time}`;
+}
+
 export function startOfDay(ts: number): number {
   const d = new Date(ts);
   d.setHours(0, 0, 0, 0);

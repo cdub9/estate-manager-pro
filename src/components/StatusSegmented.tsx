@@ -39,6 +39,8 @@ export function StatusSegmented({ value, onChange }: Props) {
               {
                 backgroundColor: active ? colors.card : "transparent",
                 borderRadius: colors.radius - 2,
+                borderWidth: active ? 1 : 0,
+                borderColor: active ? colors.goldHair : "transparent",
                 opacity: pressed ? 0.85 : 1,
                 shadowOpacity: active ? 0.08 : 0,
               },
@@ -46,7 +48,7 @@ export function StatusSegmented({ value, onChange }: Props) {
           >
             <Text
               style={{
-                color: active ? colors.foreground : colors.mutedForeground,
+                color: active ? colors.primary : colors.mutedForeground,
                 fontFamily: active ? "Inter_600SemiBold" : "Inter_500Medium",
                 fontSize: 13,
               }}
