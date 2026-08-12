@@ -85,6 +85,9 @@ export default function NewTaskScreen() {
         recurrence,
       });
       router.back();
+    } catch (err) {
+      console.error("Task save failed:", err);
+      Alert.alert("Couldn't save task", "Something went wrong. Please try again.");
     } finally {
       setSaving(false);
     }
