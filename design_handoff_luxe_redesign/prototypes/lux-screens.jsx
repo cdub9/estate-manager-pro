@@ -109,7 +109,7 @@ function LuxTaskCard({ task }) {
         <StatusGlyph status={task.status} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
-            fontFamily: serif, fontWeight: 500, fontSize: 16, lineHeight: "20px", color: luxe.ink,
+            fontFamily: serif, fontWeight: 500, fontSize: 17, lineHeight: "21px", color: luxe.ink,
             textDecoration: done ? "line-through" : "none",
             overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
           }}>{task.title}</div>
@@ -135,7 +135,7 @@ function LuxInvCard({ item }) {
           <LuxIcon name="package" size={22} color="#cda85c" strokeWidth={1.6} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: serif, fontWeight: 500, fontSize: 16, lineHeight: "20px", color: luxe.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</div>
+          <div style={{ fontFamily: serif, fontWeight: 500, fontSize: 17, lineHeight: "21px", color: luxe.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</div>
           <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", rowGap: 4, marginTop: 5 }}>
             {subtitle && <span style={{ color: luxe.muted, fontFamily: sans, fontWeight: 500, fontSize: 11.5 }}>{subtitle}</span>}
             {item.location && (<>{subtitle && <Dot />}<span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: luxe.muted, fontFamily: sans, fontWeight: 500, fontSize: 11.5 }}><LuxIcon name="map-pin" size={11} color={luxe.muted} />{item.location}</span></>)}
@@ -230,7 +230,7 @@ function LuxProfile() {
         <LuxCard style={{ alignItems: "center", gap: 12, paddingBottom: 20 }}>
           <LuxAvatar name={me.name} colorIdx={me.colorIdx} size={72} />
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontFamily: serif, fontWeight: 600, fontSize: 21, color: luxe.ink }}>{me.name}</div>
+            <div style={{ fontFamily: serif, fontWeight: 600, fontSize: 25, color: luxe.ink }}>{me.name}</div>
             <div style={{ fontFamily: sans, fontSize: 12.5, color: luxe.muted, marginTop: 3 }}>{me.email}</div>
           </div>
           <Flourish width={88} />

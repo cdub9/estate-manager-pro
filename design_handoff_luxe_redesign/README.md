@@ -1,255 +1,195 @@
-# Handoff: Estate Manager Pro — "Luxe" Redesign
+# Handoff: Estate Manager Pro — Luxe Redesign
 
 ## Overview
-This package re-skins the existing **Estate Manager Pro** Expo / React Native app with a
-refined, luxury identity for managing high-end estates. It replaces the current
-cream + forest-green theme with an **estate-emerald + antique-gold on parchment-ivory**
-scheme, introduces a **Playfair Display** serif for display type, and adds a new
-**monogram-crest logo / app icon**.
-
-It is a **restyle, not a re-architecture**. Screen structure, navigation, data flow,
-and component responsibilities are unchanged. The work is almost entirely in:
-- `src/constants/colors.ts` and `src/constants/typography.ts` (tokens + fonts)
-- the shared components (`TaskCard.tsx`, `InventoryCard.tsx`, `Avatar.tsx`, `Button.tsx`, `EmptyState.tsx`, the tab bar in `app/(tabs)/_layout.tsx`)
-- light visual additions (gold hairline rules, a crest asset, status glyphs)
+A high-fidelity redesign of the Estate Manager Pro mobile app using a luxury "estate" aesthetic: estate emerald + antique gold palette, Raleway + Inter typography, and a monogram-crest app identity. This covers the four main screens (Tasks, Inventory, Profile, Edit Task) plus a brand/identity board.
 
 ## About the Design Files
-The files in `prototypes/` are **design references authored in HTML/React (JSX)** — they
-show the intended look, spacing, color, and type, rendered inside an on-screen iPhone
-frame. **They are not production code to copy.** Your task is to reproduce this look in
-the **existing Expo / React Native + expo-router codebase**, using its established
-patterns (`StyleSheet`, the `Feather` icon set from `@expo/vector-icons`, the existing
-`colors.ts` token module, etc.).
+The files in this bundle are **design references built in HTML/JSX** — pixel-perfect prototypes showing intended look and interactions. Your task is to **recreate these designs in your existing app codebase** (React Native, Swift/SwiftUI, Flutter, etc.) using your established patterns and libraries. Do not ship the HTML files directly.
 
-Concretely:
-- The prototype renders web DOM with inline styles. Translate those to React Native
-  `StyleSheet` objects / props.
-- Where the prototype uses CSS `linear-gradient`, use **`expo-linear-gradient`** (the
-  emerald button/header fills and the app icon background are gradients).
-- Where the prototype uses `feather-icons` web, use the matching **`Feather`** glyph
-  (same icon names) you already import.
-- The serif font must be loaded via `expo-font` / `@expo-google-fonts/playfair-display`.
+- `Estate Manager Pro - Luxe Redesign.html` — interactive prototype (open in a browser to explore)
+- `lux-brand.jsx` — design tokens, logo/icon components, shared primitives
+- `lux-screens.jsx` — all four screen implementations
 
 ## Fidelity
-**High-fidelity (hifi).** Colors, type, spacing, and radii below are final — match them
-pixel-for-pixel. Where a value isn't specified, follow the prototype.
+**High-fidelity.** Colors, typography, spacing, border radii, shadows, and interactions are all final. Recreate pixel-precisely using your codebase's component system.
 
 ---
 
 ## Design Tokens
 
-### Color — `src/constants/colors.ts`
-Your file exports `AVATAR_COLORS`, `CATEGORY_COLORS = AVATAR_COLORS`, and a default
-`{ light, dark, radius }`. Below is a **direct drop-in** for the existing keys plus a few
-**new keys** to add (gold/emerald ramp + on-emerald foreground). Keep the same key names
-so no call-sites break; just change values and append the new keys.
+### Colors
+| Token | Hex | Usage |
+|---|---|---|
+| `bg` | `#F3ECDD` | Parchment ivory — screen background |
+| `bgDeep` | `#ECE3D0` | Slightly deeper parchment — segmented control bg |
+| `card` | `#FBF8F1` | Warm paper — card & tab bar surface |
+| `ink` | `#1B2A23` | Deep ink-green — primary text |
+| `inkSoft` | `#3C4A40` | Secondary text |
+| `muted` | `#8A8472` | Sage-taupe — placeholder, metadata |
+| `faint` | `#B6AD97` | Hairline borders, empty states |
+| `emerald` | `#103B2F` | Estate emerald — active states, icons |
+| `emeraldDeep` | `#0B2C22` | Gradient stop |
+| `emeraldSoft` | `#1C5141` | Gradient stop |
+| `gold` | `#B5934D` | Antique gold — accents, tab indicator |
+| `goldBright` | `#CDA85C` | Bright gold |
+| `goldDeep` | `#8F7338` | Deep gold — eyebrow labels |
+| `goldHair` | `rgba(150,121,62,0.42)` | Hairline gold ring — borders on active/emerald elements |
+| `border` | `#E2D9C4` | Default card/input border |
+| `borderSoft` | `#ECE4D3` | Intra-card dividers |
+| `destructive` | `#9C3B32` | Red-brown — overdue dates, delete |
 
-**Replace `AVATAR_COLORS`** (jewel-toned set — also drives `CATEGORY_COLORS`):
-```ts
-export const AVATAR_COLORS = [
-  "#103b2f", "#7d2a32", "#3a4a6b", "#6b3a5a",
-  "#8f7338", "#2f5b5e", "#7a4a2e", "#4a3a6b",
-];
+### Gradients
+```
+Emerald gradient: linear-gradient(160deg, #1C5141 0%, #103B2F 52%, #0B2C22 100%)
+Gold gradient:    linear-gradient(150deg, #E6CD86 0%, #C8A55E 38%, #9C7D3C 72%, #CDAA63 100%)
+```
+The emerald gradient is used for: primary buttons, active chips, tab-bar active icon bg, inventory item icon bg, avatar backgrounds, app icon.
+
+### Typography
+| Role | Font | Weight | Size | Notes |
+|---|---|---|---|---|
+| Display / screen title | Raleway | 600 | 30px | Line-height 1 |
+| Card / item title | Raleway | 500 | 20px | Line-height 24px, ellipsis overflow |
+| Wordmark | Raleway | 600 | 24px | |
+| Nav bar title | Raleway | 600 | 18px | |
+| Profile name | Raleway | 600 | 25px | |
+| Join code | Raleway | 700 | 24px | Letter-spacing 5 |
+| Body / row labels | Inter | 500–600 | 14–14.5px | |
+| Tab bar labels | Inter | 500/600 | 10.5px | Letter-spacing 0.3 |
+| Metadata / subtext | Inter | 500–600 | 11.5px | |
+| Eyebrow caps | Inter | 600 | 10.5px | All-caps, letter-spacing 2, gold-deep color |
+
+**Google Fonts import:**
+```
+Raleway: ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600
+Inter: wght@400;500;600;700
 ```
 
-**`light` — existing keys, new values:**
-
-| Existing key            | New value     | Notes                                         |
-|-------------------------|---------------|-----------------------------------------------|
-| `text`                  | `#1b2a23`     | ink green                                     |
-| `tint`                  | `#103b2f`     | emerald                                        |
-| `background`            | `#f3ecdd`     | parchment ivory                               |
-| `foreground`            | `#1b2a23`     |                                               |
-| `card`                  | `#fbf8f1`     | warm paper                                    |
-| `cardForeground`        | `#1b2a23`     |                                               |
-| `primary`               | `#103b2f`     | emerald (use gradient fill where prominent)   |
-| `primaryForeground`     | `#ecdcb0`     | warm gold-cream text on emerald               |
-| `secondary`             | `#ece3d0`     | secondary surface / segmented track           |
-| `secondaryForeground`   | `#3c4a40`     |                                               |
-| `muted`                 | `#ece4d3`     | muted surface (inner dividers/wells)          |
-| `mutedForeground`       | `#8a8472`     | meta text, placeholders (sage-taupe)          |
-| `accent`                | `#b5934d`     | **now antique gold** (was orange)             |
-| `accentForeground`      | `#1b2a23`     | dark ink on gold                              |
-| `destructive`           | `#9c3b32`     | overdue / delete                              |
-| `destructiveForeground` | `#f4ecd8`     |                                               |
-| `border`                | `#e2d9c4`     |                                               |
-| `input`                 | `#e2d9c4`     |                                               |
-| `success`               | `#1c5141`     | emerald-leaning success                       |
-| `warning`               | `#c79a3e`     | gold-amber                                    |
-| `statusInProgressBg`    | `#f3e7c9`     | soft gold                                     |
-| `statusInProgressFg`    | `#8f7338`     | deep gold                                     |
-| `statusDoneBg`          | `#d8e6da`     | emerald tint                                  |
-| `statusDoneFg`          | `#103b2f`     | emerald                                       |
-| `bulletColor`           | `#b6ad97`     | faint sage                                    |
-
-**`light` — NEW keys to add** (referenced by the redesign for hairlines, gradients, gold):
-
-| New key          | Value                      | Usage                                         |
-|------------------|----------------------------|-----------------------------------------------|
-| `gold`           | `#b5934d`                  | antique gold solid                            |
-| `goldBright`     | `#cda85c`                  | gold highlight / icons on emerald (`#e8cf88`) |
-| `goldDeep`       | `#8f7338`                  | gold text on light, label caps                |
-| `goldHair`       | `rgba(150,121,62,0.42)`    | hairline borders, avatar/button rings         |
-| `emeraldDeep`    | `#0b2c22`                  | gradient end / deep pine                      |
-| `emeraldSoft`    | `#1c5141`                  | gradient start                                |
-| `borderSoft`     | `#ece4d3`                  | inner list-row dividers                       |
-| `faint`          | `#b6ad97`                  | disabled, empty-avatar outline                |
-| `onEmerald`      | `#ecdcb0`                  | text on emerald fills (`primaryForeground`)   |
-| `onEmeraldIcon`  | `#e8cf88`                  | icon color on emerald fills                   |
-
-**`dark` theme:** out of scope for this pass. To keep it compiling, mirror the new keys
-into `dark` (the object is typed `typeof light`, so every new key must exist there too) —
-reuse sensible dark equivalents, e.g. `gold:"#cda85c"`, `goldDeep:"#cda85c"`,
-`goldHair:"rgba(205,168,92,0.35)"`, `emeraldDeep:"#0b2c22"`, `emeraldSoft:"#1c5141"`,
-`onEmerald:"#ecdcb0"`, `onEmeraldIcon:"#e8cf88"`, `borderSoft:"#2e3822"`, `faint:"#4a5240"`.
-A polished jewel-toned dark variant can be a follow-up.
-
-**`radius`:** change the exported `radius: 14` → **`radius: 16`**.
-
-**Gradients** (use `expo-linear-gradient`):
-- **Emerald fill** (buttons, header add-button, tab-icon chips, active chips/pills):
-  `['#1c5141', '#103b2f', '#0b2c22']`, direction ≈ top-left → bottom-right (start `{x:0,y:0}` → end `{x:0.4,y:1}`).
-- **Gold** (crest, monogram, small numerals): `['#e8cf88', '#c8a55e', '#9c7d3c', '#d2ad64']`,
-  start `{x:0,y:0}` → end `{x:0.7,y:1}`. For gold *text* in RN, use a `MaskedView` over a
-  `LinearGradient`, or fall back to solid `goldDeep`/`goldBright` if a mask is overkill.
-
-### Spacing & radii
-- Screen horizontal padding: **20px** (was 16). Card internal padding: **14–18px**.
-- Gap between list cards: **9px**. Section gaps on Profile: **14px**.
-- Radii: cards/inputs **16px** (`radius`), small inputs/box **12px**, pills **999px**,
-  avatars fully round. App icon corner radius = **22.5%** of icon size (iOS squircle).
-- Card shadow (very soft): `0 1px 2px rgba(27,42,35,0.03)`. Emerald buttons add
-  `0 0 0 1px goldHair` ring + `0 4px 10px rgba(11,44,34,0.18)`.
-
-### Typography — `src/constants/typography.ts`
-Keep Inter (already loaded). **Add Playfair Display** for display/titles.
-
-| Role                  | Family                       | Size / weight / spacing                       |
-|-----------------------|------------------------------|-----------------------------------------------|
-| Screen title          | Playfair Display 600         | 30px, letter-spacing 0.2                      |
-| Card title (task/item)| Playfair Display 500         | 16px, line-height 20px                        |
-| Detail header title   | Playfair Display 600         | 18px                                          |
-| Big numerals (counts) | Playfair Display 600         | 17px (gold)                                   |
-| Eyebrow / labels      | Inter 600                    | 10.5px, **letter-spacing 2**, UPPERCASE, gold |
-| Body / meta           | Inter 400/500                | 11.5–14.5px                                   |
-| Button / chip text    | Inter 600                    | 12–13.5px                                     |
-
-Load via:
-```
-import { useFonts } from 'expo-font';
-import { PlayfairDisplay_500Medium, PlayfairDisplay_600SemiBold } from '@expo-google-fonts/playfair-display';
-```
-(`expo install @expo-google-fonts/playfair-display expo-linear-gradient`)
+### Spacing & Shape
+| Token | Value |
+|---|---|
+| Card border radius | 16px |
+| Input/field radius | 12px |
+| Chip radius | 999px (pill) |
+| Avatar ring | `box-shadow: 0 0 0 1px rgba(150,121,62,0.42)` |
+| Card shadow | `0 1px 2px rgba(27,42,35,0.03)` |
+| Emerald button shadow | `0 0 0 1px rgba(150,121,62,0.42)` |
 
 ---
 
-## Screens / Views
+## Screens
 
-### 1. Tasks — `app/(tabs)/index.tsx` + `src/components/TaskCard.tsx`
-- **Header:** small gold eyebrow with the estate name (e.g. "HOLLOWAY ESTATE") above a
-  30px Playfair "Tasks" title. Right side: round 42px **emerald-gradient** add button with
-  a gold `plus` and a `goldHair` ring. 1px `border` bottom rule on the header.
-- **Search row:** `card` surface, 1px `border`, 12px radius, `search` icon in `muted`.
-- **Filter chips:** pills. Active = emerald-gradient fill + `onEmerald` text + goldHair
-  border; inactive = transparent + `border` + `inkSoft`. (`All`, `Mine · 3`, `Completed`.)
-- **Task card** (restyle existing `TaskCard`):
-  - Left **3px category accent stripe** (category color; default gold).
-  - **Status glyph** (22px): `done` = emerald-gradient circle w/ goldHair ring + gold check;
-    `in_progress` = gold ring + gold dot; `open` = `faint` hollow ring.
-  - **Title** in Playfair 500 16px; strike-through + 0.6 opacity when done.
-  - **Meta row:** due (calendar icon + label; tone color: overdue/today = destructive,
-    soon = goldDeep, later = muted), category name in its color, inventory count (`tool`
-    icon), recurring (`repeat` icon). Items separated by a 3px `faint` dot.
-  - **Assignee stack** right-aligned: overlapping 25px avatars (gold-ring), `+N` chip past 3.
-- Card = `card` bg, 1px `border`, 16px radius, soft shadow.
+### 1. Tasks
+**Purpose:** Main task list with filter chips and search.
 
-### 2. Inventory — `app/(tabs)/inventory.tsx` + `src/components/InventoryCard.tsx`
-- Same header pattern (eyebrow + "Inventory"), search, chips (`Active`, `Archived · 4`).
-- **Inventory card:** 54px **emerald-gradient** thumbnail tile with goldHair inset ring and
-  a gold `package` icon (use the real photo when present, this is the empty state).
-  Title Playfair 500 16px. Meta: `vendor · partNumber`, then location (`map-pin`).
-  Right edge: large **gold numeral** task-count over a tiny "TASKS" eyebrow (hidden if 0).
+**Layout (top → bottom):**
+- Status bar spacer: 56px height
+- `LuxHeader` — eyebrow "Holloway Estate" + title "Tasks" + emerald `+` FAB (42×42, pill)
+- Search bar — 14px Inter placeholder, 1px border, 12px radius, 10px/13px padding
+- Filter chips — "All" (active, emerald gradient), "Mine · 3", "Completed" — pill, 6px/14px padding
+- Task list — `flex column`, gap 9px, 20px horizontal padding
 
-### 3. Profile — `app/(tabs)/profile.tsx`
-- Title row "Profile" (with "ACCOUNT" eyebrow) + `edit-2` in goldDeep, 1px bottom rule.
-- **Identity card:** centered 72px gold-ring avatar, Playfair 21px name, muted email, a
-  **gold flourish divider** (hairline–diamond–hairline), then a timezone eyebrow.
-- **Estate card:** "THE ESTATE" eyebrow; private join code in Playfair 24px emerald with
-  wide letter-spacing (e.g. `K7M·9XP`); emerald-gradient "Invite" button (`share-2`).
-  Hairline divider. "MEMBERS" eyebrow; member rows = 36px avatar + name (`· You` for self)
-  + role + `chevron-right`, separated by `borderSoft` rules.
-- **Settings card:** rows ("Manage categories" `tag`, "Notifications" `bell`) with goldDeep
-  icons + chevrons.
-- **Appearance** (keep existing light/dark/system control if present): segmented control,
-  active segment = emerald-gradient.
+**TaskCard anatomy:**
+- 3px left accent bar (category color)
+- 22×22 StatusGlyph (open = faint ring, in-progress = gold ring + gold dot, done = emerald fill + gold checkmark)
+- Title: Raleway 500 20px / 24px, `#1B2A23`, ellipsis. Strike-through + 0.6 opacity when done.
+- Metadata row (Inter 600 11.5px): due date (color-coded) · category (category color) · inventory count · recurrence icon
+- Assignee stack (right): 28px avatars overlapping by 11px, +N overflow badge
 
-### 4. Edit Task (detail) — `app/task/[id].tsx`
-- **Header bar** on `card` with a gold hairline bottom gradient rule: `arrow-left`,
-  Playfair 18px "Edit Task", `trash-2` in destructive, emerald-gradient **Save** button.
-- **Fields** stacked 18px apart, each with an uppercase gold eyebrow label:
-  - Title (Playfair inside the box), Description (multiline box, 74px min).
-  - **Status** segmented control on a `backgroundDeep` track w/ `border`; active segment =
-    `card` with goldHair ring + soft shadow, emerald text.
-  - **Assignees:** selectable avatar pills — selected = emerald-gradient fill + goldHair
-    border + `onEmerald` text; unselected = `card` + `border`.
-  - **Due date:** box with `calendar` (goldDeep) + value + clearable `x`.
-  - **Recurrence:** pills (`None`/`Daily`/`Weekly`/`Monthly`/`Quarterly`), selected =
-    emerald-gradient.
+**Category colors:**
+- Maintenance: `#7A4A2E`
+- Vendors: `#3A4A6B`
+- Supplies: `#8F7338`
+- Household: `#6B3A5A`
+- Admin: `#2F5B5E`
 
-### Tab bar — `app/(tabs)/_layout.tsx`
-- `card` background, top **gold hairline gradient rule** (transparent→goldHair→transparent).
-- Icons: `check-square` / `package` / `user`. Active = emerald + 600 label + a small
-  **gold diamond** (4px, rotated 45°) under the active tab; inactive = muted.
+**Due date tones:**
+- `today` / `overdue` → `#9C3B32` (destructive)
+- `soon` → `#8F7338` (goldDeep)
+- `later` → `#8A8472` (muted)
 
 ---
 
-## Brand: Logo & App Icon
-See the "Identity" board at the top of the prototype and `lux-brand.jsx` (`Crest`,
-`AppIcon`, `Wordmark`).
+### 2. Inventory
+**Purpose:** Equipment/supplies registry.
 
-- **Crest:** a serif **"E" monogram** centered inside a rounded shield, topped by a small
-  **architectural pediment** (the angled roofline), drawn with **gold double hairline rules**
-  on emerald. Recreate as a single **SVG** (`react-native-svg`) so it scales crisply — the
-  prototype's `Crest` component is the exact geometry (viewBox `0 0 100 100`: pediment path
-  `M27 30 L50 17 L73 30`, outer rect `27,34 46×49 r5`, inner rect inset 3.5 at 70% stroke
-  opacity, "E" centered at baseline y≈68 in Playfair 600 ~40px, gold gradient fill).
-- **App icon:** emerald-gradient squircle (radius 22.5%), faint top-left radial sheen
-  `radial-gradient(120% 90% at 30% 18%, rgba(255,255,255,0.10), transparent 55%)`, crest at
-  ~78% of icon size, no inner background. Export the required iOS/Android sizes via your
-  `app.json` `icon` / `adaptive-icon` (1024px master). I can generate PNGs if you want them.
-- **Wordmark:** crest + "Estate Manager" (Playfair 600) with an italic gold "Pro", and a
-  small gold rule + "PRO" caps lockup beneath.
+**Layout:** Same shell as Tasks (status bar → header → search → chips → list → tab bar).
+
+**InventoryCard anatomy:**
+- 54×54 icon thumbnail: emerald gradient bg, 11px radius, gold hairline inset border, package icon 22px `#CDA85C`
+- Title: Raleway 500 20px / 24px
+- Subtext: `vendor · partNumber` · location (with map-pin icon), Inter 500 11.5px muted
+- Task count badge (right, if > 0): gold-gradient text Raleway 600 17px + "TASKS" eyebrow 8px
+
+---
+
+### 3. Profile
+**Purpose:** User account, estate join code, team roster, settings.
+
+**Layout:**
+- Status bar spacer 56px
+- Page header (inline, no separate component): eyebrow "Account" + title "Profile" (30px) + edit icon
+- Avatar card: centered 72px avatar, name Raleway 600 25px, email Inter 12.5px muted, gold flourish rule, timezone eyebrow
+- Estate card: join code Raleway 700 24px letter-spacing-5, emerald Invite button with share icon
+- Members list: 36px avatars, name Inter 600 14px, role Inter 11.5px muted, chevron
+- Settings rows: icon (17px goldDeep) + label Inter 500 14.5px + chevron, 13px padding block
+
+**Gold flourish rule:** thin hairline lines with a 4×4px rotated diamond in the center.
+
+---
+
+### 4. Edit Task (Detail)
+**Purpose:** Edit an existing task's fields.
+
+**Layout:**
+- Status bar spacer 56px
+- Nav bar: back arrow + "Edit Task" Raleway 600 18px + trash icon + emerald Save button
+- Scrollable form fields with 18px gaps: Title, Description, Status segmented control, Assignees, Due date, Recurrence
+
+**Status segmented control:** 3-segment pill on `#ECE3D0` bg, active segment gets white card bg + gold hairline shadow.
+
+**Recurrence chips:** same pill style as filter chips.
+
+**Assignee chips:** small avatar (22px) + first name, emerald gradient when selected.
+
+---
+
+## Tab Bar
+Three tabs: Tasks (check-square), Inventory (package), Profile (user).
+
+- Active: emerald color `#103B2F`, weight 2 stroke, 4×4px rotated gold diamond indicator below label
+- Inactive: muted `#8A8472`, weight 1.7 stroke
+- Surface: `#FBF8F1` (card), 1px top border, gold hairline gradient overlay at top edge
+- Labels: Inter 500/600 10.5px, letter-spacing 0.3
+
+---
+
+## App Icon & Identity
+
+**App Icon:** Squircle (border-radius ≈ 22.5% of size), emerald gradient fill, radial highlight at top-left, centered crest at 92% of icon size.
+
+**Crest:** SVG monogram — architectural pediment (triangle) above a double-rule shield, gold "E" letterform at center. All strokes use gold gradient. Rendered as an SVG with inline `<linearGradient>` definitions.
+
+**Wordmark:** 52px crest + column of ["Estate Manager" Raleway 600 24px + gold hairline rule + "PRO" spaced caps with gold gradient text].
 
 ---
 
 ## Interactions & Behavior
-No new flows. Preserve all existing handlers: tap task → `app/task/[id]`, tap add →
-create, status glyph tap cycles/toggles status, assignee pills toggle, chips filter,
-search filters, pull-to-refresh, haptics (the existing `expo-haptics` calls in `TaskCard`
-stay). Keep current transitions; the redesign adds no new animation requirements beyond
-matching active/selected states above.
+- Completed tasks: 0.6 opacity + strikethrough title
+- Active filter chip: emerald gradient bg, `#ECDCB0` text, gold hairline border
+- Active tab: emerald icon + bold label + gold diamond pip
+- Status segmented control: white card segment with gold hairline for active state
+- Selected assignee chip: emerald gradient bg
 
-## State Management
-Unchanged. This is a visual layer only — no new state, data fetching, or storage.
+---
+
+## Icons
+Uses **Feather Icons** (`feather-icons` npm package). Key icons used:
+`check-square`, `package`, `user`, `plus`, `search`, `calendar`, `tool`, `repeat`, `map-pin`, `chevron-right`, `arrow-left`, `trash-2`, `edit-2`, `share-2`, `bell`, `tag`, `check`, `x`
+
+All icons: stroke-based, stroke-width 1.7–2.0, sized 11–22px depending on context.
+
+---
 
 ## Assets
-- **Crest / app icon:** ready-made PNGs are in `icons/` (`icon.png` 1024 master,
-  `adaptive-icon-foreground.png` + `adaptive-icon-background.png` for Android, `favicon.png`,
-  plus a masked preview). Wiring + `app.json` snippet are in `icons/ICONS.md`. For the crest
-  used *inside* the UI, recreate as SVG (geometry above) so it scales and themes cleanly.
-- **Icons:** existing `Feather` set (`@expo/vector-icons`) — same names as the prototype.
-- **Fonts:** Inter (existing) + Playfair Display (add via `@expo-google-fonts`).
-
-## Files in this bundle (`prototypes/`)
-- `Estate Manager Pro - Luxe Redesign.html` — open in a browser to see all screens + the brand board on a canvas.
-- `lux-brand.jsx` — tokens, `Crest`, `AppIcon`, `Wordmark`, avatars, icon helper (source of truth for exact values).
-- `lux-screens.jsx` — all four screens + shared chrome (header, search, chips, tab bar, cards).
-- `ios-frame.jsx`, `design-canvas.jsx` — presentation scaffolding only; **ignore** for implementation.
-
-## Suggested implementation order
-1. Update `colors.ts` (light theme) + load Playfair in `typography.ts` / root layout.
-2. Add `expo-linear-gradient` + a small `<EmeraldFill>` / `<GoldText>` helper.
-3. Build the `Crest` SVG; wire `app.json` icon.
-4. Restyle shared components: `Avatar`, `TaskCard`, `InventoryCard`, tab bar, `Button`, `EmptyState`.
-5. Restyle screens: Tasks → Inventory → Profile → Edit Task.
-6. QA against the prototype screen-by-screen.
+No external images. All visual elements are CSS gradients, SVG, or icon glyphs. The monogram crest is a self-contained inline SVG (see `Crest` component in `lux-brand.jsx`).
