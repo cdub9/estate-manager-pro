@@ -241,7 +241,6 @@ export default function TasksScreen() {
           keyExtractor={(t) => t.id}
           renderItem={renderItem}
           onDragEnd={handleDragEnd}
-          activationDistance={filtersActive ? 99999 : 10}
           style={styles.listContainer}
           contentContainerStyle={styles.list}
           ListEmptyComponent={
