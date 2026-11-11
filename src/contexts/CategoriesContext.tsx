@@ -9,7 +9,7 @@ import React, {
 
 import { useAuth } from "@/contexts/AuthContext";
 import { CATEGORY_COLORS } from "@/constants/colors";
-import { asyncStorage } from "@/storage/asyncStorage";
+import { supabase } from "@/lib/supabase";
 import { Category } from "@/types";
 import { uuid } from "@/utils/uuid";
 
@@ -19,10 +19,7 @@ interface CategoriesContextValue {
   loading: boolean;
   categories: Category[];
   createCategory: (name: string, color: string) => Promise<Category>;
-  updateCategory: (
-    id: string,
-    updates: Partial<Pick<Category, "name" | "color">>,
-  ) => Promise<void>;
+  updateCategory: (id: string, updates: Partial<Pick<Category, "name" | "color">>) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   getCategory: (id: string | null) => Category | undefined;
   refresh: () => Promise<void>;
@@ -31,26 +28,37 @@ interface CategoriesContextValue {
 const CategoriesContext = createContext<CategoriesContextValue | null>(null);
 
 export function CategoriesProvider({ children }: { children: React.ReactNode }) {
-  const { currentUser } = useAuth();
+  const { currentUser, estateId } = useAuth();
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<Category[]>([]);
 
   const refresh = useCallback(async () => {
-    if (!currentUser) {
+    if (!currentUser || !estateId) {
       setCategories([]);
       setLoading(false);
       return;
     }
     setLoading(true);
     try {
-      const all = await asyncStorage.getCategories();
-      setCategories(all);
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      setCategories(
+        (data ?? []).map((row) => ({
+          id: row.id as string,
+          name: row.name as string,
+          color: row.color as string,
+          createdAt: row.created_at as number,
+        })),
+      );
     } catch (err) {
       console.error("CategoriesContext refresh failed:", err);
     } finally {
       setLoading(false);
     }
-  }, [currentUser]);
+  }, [currentUser, estateId]);
 
   useEffect(() => {
     refresh().catch(() => setLoading(false));
@@ -58,56 +66,68 @@ export function CategoriesProvider({ children }: { children: React.ReactNode }) 
 
   const createCategory = useCallback<CategoriesContextValue["createCategory"]>(
     async (name, color) => {
+      if (!estateId) throw new Error("Not signed in");
       const trimmed = name.trim();
       if (!trimmed) throw new Error("Category name is required");
-      if (!/^#[0-9a-fA-F]{3,8}$/.test(color)) {
-        throw new Error("Invalid color format");
-      }
-      const all = await asyncStorage.getCategories();
-      if (all.some((c) => c.name.toLowerCase() === trimmed.toLowerCase())) {
+      if (!/^#[0-9a-fA-F]{3,8}$/.test(color)) throw new Error("Invalid color format");
+      if (categories.some((c) => c.name.toLowerCase() === trimmed.toLowerCase())) {
         throw new Error("A category with that name already exists");
       }
-      const category: Category = {
+
+      const now = Date.now();
+      const row = {
         id: uuid(),
+        estate_id: estateId,
         name: trimmed,
         color,
-        createdAt: Date.now(),
+        created_at: now,
       };
-      const updated = [...all, category];
-      await asyncStorage.saveCategories(updated);
-      setCategories(updated);
+
+      const { data, error } = await supabase.from("categories").insert(row).select().single();
+      if (error) throw error;
+
+      const category: Category = {
+        id: data.id,
+        name: data.name,
+        color: data.color,
+        createdAt: data.created_at,
+      };
+      setCategories((prev) => [...prev, category]);
       return category;
     },
-    [],
+    [estateId, categories],
   );
 
   const updateCategory = useCallback<CategoriesContextValue["updateCategory"]>(
     async (id, updates) => {
-      const all = await asyncStorage.getCategories();
-      const existing = all.find((c) => c.id === id);
+      const existing = categories.find((c) => c.id === id);
       if (!existing) return;
+
       const trimmedName = updates.name?.trim();
-      if (trimmedName !== undefined && !trimmedName) {
-        throw new Error("Category name cannot be empty");
-      }
+      if (trimmedName !== undefined && !trimmedName) throw new Error("Category name cannot be empty");
+
+      const dbUpdate: Record<string, unknown> = {};
+      if (trimmedName) dbUpdate.name = trimmedName;
+      if (updates.color) dbUpdate.color = updates.color;
+
+      const { error } = await supabase.from("categories").update(dbUpdate).eq("id", id);
+      if (error) throw error;
+
       const updated: Category = {
         ...existing,
         ...(trimmedName ? { name: trimmedName } : {}),
         ...(updates.color ? { color: updates.color } : {}),
       };
-      const newAll = all.map((c) => (c.id === id ? updated : c));
-      await asyncStorage.saveCategories(newAll);
-      setCategories(newAll);
+      setCategories((prev) => prev.map((c) => (c.id === id ? updated : c)));
     },
-    [],
+    [categories],
   );
 
   const deleteCategory = useCallback<CategoriesContextValue["deleteCategory"]>(
     async (id) => {
-      const all = await asyncStorage.getCategories();
-      const updated = all.filter((c) => c.id !== id);
-      await asyncStorage.saveCategories(updated);
-      setCategories(updated);
+      const { error } = await supabase.from("categories").delete().eq("id", id);
+      if (error) throw error;
+      setCategories((prev) => prev.filter((c) => c.id !== id));
     },
     [],
   );
@@ -121,28 +141,15 @@ export function CategoriesProvider({ children }: { children: React.ReactNode }) 
   );
 
   const value = useMemo<CategoriesContextValue>(
-    () => ({
-      loading,
-      categories,
-      createCategory,
-      updateCategory,
-      deleteCategory,
-      getCategory,
-      refresh,
-    }),
+    () => ({ loading, categories, createCategory, updateCategory, deleteCategory, getCategory, refresh }),
     [loading, categories, createCategory, updateCategory, deleteCategory, getCategory, refresh],
   );
 
-  return (
-    <CategoriesContext.Provider value={value}>
-      {children}
-    </CategoriesContext.Provider>
-  );
+  return <CategoriesContext.Provider value={value}>{children}</CategoriesContext.Provider>;
 }
 
 export function useCategories() {
   const ctx = useContext(CategoriesContext);
-  if (!ctx)
-    throw new Error("useCategories must be used within CategoriesProvider");
+  if (!ctx) throw new Error("useCategories must be used within CategoriesProvider");
   return ctx;
 }

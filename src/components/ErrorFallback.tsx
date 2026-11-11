@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { useColors } from "@/hooks/useColors";
 
@@ -11,15 +11,24 @@ interface Props {
 
 export function ErrorFallback({ error, onReset }: Props) {
   const colors = useColors();
+  const stack = error.stack ?? error.message;
   return (
     <View style={[styles.wrap, { backgroundColor: colors.background }]}>
       <Feather name="alert-triangle" size={40} color={colors.destructive} />
       <Text style={[styles.heading, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
         Something went wrong
       </Text>
-      <Text style={[styles.message, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+      <Text style={[styles.message, { color: colors.destructive, fontFamily: "Inter_600SemiBold" }]}>
         {error.message}
       </Text>
+      <ScrollView
+        style={[styles.stackBox, { backgroundColor: colors.secondary, borderRadius: colors.radius }]}
+        contentContainerStyle={{ padding: 12 }}
+      >
+        <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_400Regular", fontSize: 11, lineHeight: 16 }}>
+          {stack}
+        </Text>
+      </ScrollView>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Try again"
@@ -51,6 +60,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
     lineHeight: 20,
+  },
+  stackBox: {
+    width: "100%",
+    maxHeight: 280,
+    marginTop: 4,
   },
   btn: {
     marginTop: 12,

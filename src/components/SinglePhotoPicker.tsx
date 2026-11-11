@@ -1,8 +1,9 @@
 import { Feather } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import React from "react";
+import React, { useState } from "react";
 import { Alert, Image, Pressable, StyleSheet, Text, View } from "react-native";
 
+import { PhotoViewer } from "@/components/PhotoViewer";
 import { useColors } from "@/hooks/useColors";
 
 interface Props {
@@ -13,6 +14,7 @@ interface Props {
 
 export function SinglePhotoPicker({ value, onChange, label = "Photo" }: Props) {
   const colors = useColors();
+  const [viewerOpen, setViewerOpen] = useState(false);
 
   async function pick() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -28,8 +30,7 @@ export function SinglePhotoPicker({ value, onChange, label = "Photo" }: Props) {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       quality: 0.85,
-      allowsEditing: true,
-      aspect: [4, 3],
+      allowsEditing: false,
     });
 
     if (!result.canceled && result.assets[0]) {
@@ -50,8 +51,7 @@ export function SinglePhotoPicker({ value, onChange, label = "Photo" }: Props) {
 
     const result = await ImagePicker.launchCameraAsync({
       quality: 0.85,
-      allowsEditing: true,
-      aspect: [4, 3],
+      allowsEditing: false,
     });
 
     if (!result.canceled && result.assets[0]) {
@@ -77,10 +77,23 @@ export function SinglePhotoPicker({ value, onChange, label = "Photo" }: Props) {
   if (value) {
     return (
       <View style={styles.wrap}>
-        <Image
-          source={{ uri: value }}
-          style={[styles.preview, { borderRadius: colors.radius }]}
-          accessibilityLabel={`${label} photo`}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`View ${label} photo full size`}
+          onPress={() => setViewerOpen(true)}
+          style={{ borderRadius: colors.radius, overflow: "hidden" }}
+        >
+          <Image
+            source={{ uri: value }}
+            style={[styles.preview, { borderRadius: colors.radius }]}
+            accessibilityLabel={`${label} photo`}
+          />
+        </Pressable>
+
+        <PhotoViewer
+          photos={[value]}
+          visible={viewerOpen}
+          onClose={() => setViewerOpen(false)}
         />
         <View style={styles.actions}>
           <Pressable

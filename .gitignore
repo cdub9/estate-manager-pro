@@ -44,6 +44,15 @@ Thumbs.db
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 
+# Private / internal docs
+FOLLOWUPS.md
+
+# Secrets — never commit these
+.env
+.env.local
+.env.*.local
+google-service-account.json
+
 # Replit
 .cache/
 .local/

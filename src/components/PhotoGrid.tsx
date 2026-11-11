@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import React from "react";
+import React, { useState } from "react";
 import {
   Alert,
   Image,
@@ -11,11 +11,12 @@ import {
   View,
 } from "react-native";
 
+import { PhotoViewer } from "@/components/PhotoViewer";
 import { useColors } from "@/hooks/useColors";
 
 interface Props {
   photos: string[];
-  onAdd: (uri: string) => void;
+  onAdd: (uris: string[]) => void;
   onRemove: (uri: string) => void;
   maxPhotos?: number;
 }
@@ -23,6 +24,7 @@ interface Props {
 export function PhotoGrid({ photos, onAdd, onRemove, maxPhotos = 6 }: Props) {
   const colors = useColors();
   const canAdd = photos.length < maxPhotos;
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
 
   async function pickPhoto() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -35,14 +37,17 @@ export function PhotoGrid({ photos, onAdd, onRemove, maxPhotos = 6 }: Props) {
       return;
     }
 
+    const remaining = maxPhotos - photos.length;
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       quality: 0.85,
       allowsEditing: false,
+      allowsMultipleSelection: true,
+      selectionLimit: remaining,
     });
 
-    if (!result.canceled && result.assets[0]) {
-      onAdd(result.assets[0].uri);
+    if (!result.canceled && result.assets.length > 0) {
+      onAdd(result.assets.map((a) => a.uri));
     }
   }
 
@@ -63,7 +68,7 @@ export function PhotoGrid({ photos, onAdd, onRemove, maxPhotos = 6 }: Props) {
     });
 
     if (!result.canceled && result.assets[0]) {
-      onAdd(result.assets[0].uri);
+      onAdd([result.assets[0].uri]);
     }
   }
 
@@ -91,11 +96,18 @@ export function PhotoGrid({ photos, onAdd, onRemove, maxPhotos = 6 }: Props) {
       >
         {photos.map((uri, i) => (
           <View key={uri} style={[styles.tile, { borderRadius: colors.radius }]}>
-            <Image
-              source={{ uri }}
-              style={[styles.image, { borderRadius: colors.radius }]}
-              accessibilityLabel={`Attached photo ${i + 1}`}
-            />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`View photo ${i + 1} full size`}
+              onPress={() => setViewerIndex(i)}
+              style={{ borderRadius: colors.radius, overflow: "hidden" }}
+            >
+              <Image
+                source={{ uri }}
+                style={[styles.image, { borderRadius: colors.radius }]}
+                accessibilityLabel={`Attached photo ${i + 1}`}
+              />
+            </Pressable>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={`Remove photo ${i + 1}`}
@@ -146,9 +158,16 @@ export function PhotoGrid({ photos, onAdd, onRemove, maxPhotos = 6 }: Props) {
             marginTop: 4,
           }}
         >
-          {photos.length}/{maxPhotos} photos
+          {photos.length}/{maxPhotos} photos · tap to view
         </Text>
       )}
+
+      <PhotoViewer
+        photos={photos}
+        initialIndex={viewerIndex ?? 0}
+        visible={viewerIndex !== null}
+        onClose={() => setViewerIndex(null)}
+      />
     </View>
   );
 }

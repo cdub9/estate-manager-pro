@@ -7,9 +7,11 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  View,
   ViewStyle,
 } from "react-native";
 
+import { EmeraldFill } from "@/components/Gradients";
 import { useColors } from "@/hooks/useColors";
 
 type Variant = "primary" | "secondary" | "ghost" | "destructive";
@@ -42,27 +44,31 @@ export function Button({
 }: Props) {
   const colors = useColors();
 
-  const bg =
-    variant === "primary"
-      ? colors.primary
-      : variant === "destructive"
-        ? colors.destructive
-        : variant === "secondary"
-          ? colors.secondary
-          : "transparent";
-  const fg =
-    variant === "primary" || variant === "destructive"
-      ? "#ffffff"
+  // Primary uses an emerald gradient; others stay solid.
+  const isPrimary = variant === "primary";
+  const solidBg =
+    variant === "destructive"
+      ? colors.destructive
+      : variant === "secondary"
+        ? colors.secondary
+        : variant === "ghost"
+          ? "transparent"
+          : undefined;
+  const fg = isPrimary
+    ? colors.onEmerald
+    : variant === "destructive"
+      ? colors.destructiveForeground
       : variant === "secondary"
         ? colors.secondaryForeground
         : colors.primary;
 
   const padV = size === "lg" ? 16 : size === "sm" ? 8 : 12;
   const padH = size === "lg" ? 22 : size === "sm" ? 12 : 16;
-  const fontSize = size === "lg" ? 17 : size === "sm" ? 13 : 15;
+  const fontSize = size === "lg" ? 16 : size === "sm" ? 12.5 : 14;
 
   const isDisabled = disabled || loading;
   const accessibilityState: AccessibilityState = { disabled: isDisabled };
+  const borderRadius = colors.radius;
 
   return (
     <Pressable
@@ -81,46 +87,67 @@ export function Button({
       style={({ pressed }) => [
         styles.base,
         {
-          backgroundColor: bg,
-          borderRadius: colors.radius,
+          backgroundColor: solidBg,
+          borderRadius,
           paddingVertical: padV,
           paddingHorizontal: padH,
           opacity: isDisabled ? 0.45 : pressed ? 0.85 : 1,
           alignSelf: fullWidth ? "stretch" : "auto",
+          overflow: "hidden",
+          // Primary buttons get a goldHair ring + soft shadow.
+          borderWidth: isPrimary ? 1 : 0,
+          borderColor: isPrimary ? colors.goldHair : "transparent",
+          ...(isPrimary
+            ? {
+                shadowColor: "#0b2c22",
+                shadowOpacity: 0.18,
+                shadowRadius: 10,
+                shadowOffset: { width: 0, height: 4 },
+                elevation: 3,
+              }
+            : null),
         },
         style,
       ]}
     >
-      {loading ? (
-        <ActivityIndicator
-          color={fg}
-          accessibilityLiveRegion="polite"
-          accessibilityLabel="Loading"
-        />
-      ) : (
-        <>
-          {icon}
-          <Text
-            style={[
-              styles.label,
-              {
-                color: fg,
-                fontSize,
-                fontFamily: "Inter_600SemiBold",
-                marginLeft: icon ? 8 : 0,
-              },
-            ]}
-          >
-            {title}
-          </Text>
-        </>
-      )}
+      {isPrimary ? <EmeraldFill borderRadius={borderRadius} /> : null}
+      <View style={styles.inner}>
+        {loading ? (
+          <ActivityIndicator
+            color={fg}
+            accessibilityLiveRegion="polite"
+            accessibilityLabel="Loading"
+          />
+        ) : (
+          <>
+            {icon}
+            <Text
+              style={[
+                styles.label,
+                {
+                  color: fg,
+                  fontSize,
+                  fontFamily: "Inter_600SemiBold",
+                  marginLeft: icon ? 8 : 0,
+                },
+              ]}
+            >
+              {title}
+            </Text>
+          </>
+        )}
+      </View>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   base: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  inner: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",

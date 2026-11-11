@@ -1,7 +1,5 @@
+import * as Crypto from "expo-crypto";
+
 export function uuid(): string {
-  if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  // Fallback for environments without crypto.randomUUID
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 11);
+  return Crypto.randomUUID();
 }
